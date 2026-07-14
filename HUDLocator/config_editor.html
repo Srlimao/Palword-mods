@@ -475,6 +475,13 @@
         </div>
 
         <div class="form-row">
+          <div class="form-group checkbox-group" onclick="toggleCheckbox('chk-show-caves')">
+            <input type="checkbox" id="chk-show-caves" checked>
+            <span class="checkbox-text">Show Caves</span>
+          </div>
+        </div>
+
+        <div class="form-row">
           <div class="form-group" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem 1rem;">
             <label style="margin-bottom: 0;">Egg Filter</label>
             <select id="sel-egg-filter" style="width: 100%; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.6rem 0.8rem; color: var(--text-main); font-family: var(--font-jakarta); margin-top: 0.5rem; outline: none; cursor: pointer;">
@@ -538,6 +545,10 @@
           <div class="form-group">
             <label>Egg Font Scale <span class="val-label" id="val-egg-font-scale">1.2</span></label>
             <input type="range" id="rng-egg-font-scale" min="0.5" max="2.5" step="0.1" value="1.2">
+          </div>
+          <div class="form-group">
+            <label>Cave Font Scale <span class="val-label" id="val-cave-font-scale">1.2</span></label>
+            <input type="range" id="rng-cave-font-scale" min="0.5" max="2.5" step="0.1" value="1.2">
           </div>
         </div>
 
@@ -625,6 +636,13 @@
               <input type="text" id="txt-egg-color" readonly>
             </div>
           </div>
+          <div class="form-group">
+            <label>Cave Tag Color</label>
+            <div class="color-picker-wrapper">
+              <input type="color" id="col-cave-color" value="#9933e6">
+              <input type="text" id="txt-cave-color" readonly>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -656,6 +674,11 @@
             <div id="sim-egg" class="hud-label item-label" style="top: 60px; right: 60px;">
               Egg [8m]
             </div>
+
+            <!-- Simulated Cave -->
+            <div id="sim-cave" class="hud-label item-label" style="top: 100px; left: 80px;">
+              Cave [110m]
+            </div>
           </div>
           <div class="preview-legend">Simulated overlay on standard 1080p screen space</div>
         </div>
@@ -679,6 +702,7 @@
       ShowPlayers: true,
       ShowRelics: true,
       ShowChests: true,
+      ShowCaves: true,
       EggFilter: "All",
       DrawBox: false,
       Debug: false,
@@ -687,6 +711,7 @@
       RelicFontScale: 1.2,
       ChestFontScale: 1.2,
       EggFontScale: 1.2,
+      CaveFontScale: 1.2,
       FontCharW: 8.0,
       FontLineH: 12.0,
       TextOffsetZ: 120.0,
@@ -702,6 +727,7 @@
       RelicColor: { R: 0.1, G: 0.9, B: 0.9, A: 1.0 },
       ChestColor: { R: 0.9, G: 0.7, B: 0.1, A: 1.0 },
       EggColor: { R: 0.8, G: 0.5, B: 0.8, A: 1.0 },
+      CaveColor: { R: 0.6, G: 0.2, B: 0.9, A: 1.0 },
       ScanIntervalMs: 1500,
       GraceRadiusM: 30
     };
@@ -738,6 +764,7 @@
       document.getElementById('chk-show-players').checked = CONFIG.ShowPlayers;
       document.getElementById('chk-show-relics').checked = CONFIG.ShowRelics;
       document.getElementById('chk-show-chests').checked = CONFIG.ShowChests;
+      document.getElementById('chk-show-caves').checked = CONFIG.ShowCaves;
       document.getElementById('sel-egg-filter').value = CONFIG.EggFilter || "All";
       document.getElementById('chk-draw-box').checked = CONFIG.DrawBox;
 
@@ -749,6 +776,7 @@
       document.getElementById('rng-relic-font-scale').value = CONFIG.RelicFontScale || 1.2;
       document.getElementById('rng-chest-font-scale').value = CONFIG.ChestFontScale || 1.2;
       document.getElementById('rng-egg-font-scale').value = CONFIG.EggFontScale || 1.2;
+      document.getElementById('rng-cave-font-scale').value = CONFIG.CaveFontScale || 1.2;
       document.getElementById('rng-text-offset').value = CONFIG.TextOffsetZ;
       document.getElementById('rng-item-text-offset').value = CONFIG.ItemTextOffsetZ;
       document.getElementById('rng-box-pad-x').value = CONFIG.BoxPadX;
@@ -762,6 +790,7 @@
       document.getElementById('col-relic-color').value = rgbToHex(CONFIG.RelicColor);
       document.getElementById('col-chest-color').value = rgbToHex(CONFIG.ChestColor);
       document.getElementById('col-egg-color').value = rgbToHex(CONFIG.EggColor);
+      document.getElementById('col-cave-color').value = rgbToHex(CONFIG.CaveColor);
 
       updateLabels();
       drawPreview();
@@ -773,6 +802,7 @@
       CONFIG.ShowPlayers = document.getElementById('chk-show-players').checked;
       CONFIG.ShowRelics = document.getElementById('chk-show-relics').checked;
       CONFIG.ShowChests = document.getElementById('chk-show-chests').checked;
+      CONFIG.ShowCaves = document.getElementById('chk-show-caves').checked;
       CONFIG.EggFilter = document.getElementById('sel-egg-filter').value;
       CONFIG.DrawBox = document.getElementById('chk-draw-box').checked;
 
@@ -784,6 +814,7 @@
       CONFIG.RelicFontScale = parseFloat(document.getElementById('rng-relic-font-scale').value);
       CONFIG.ChestFontScale = parseFloat(document.getElementById('rng-chest-font-scale').value);
       CONFIG.EggFontScale = parseFloat(document.getElementById('rng-egg-font-scale').value);
+      CONFIG.CaveFontScale = parseFloat(document.getElementById('rng-cave-font-scale').value);
       CONFIG.TextOffsetZ = parseFloat(document.getElementById('rng-text-offset').value);
       CONFIG.ItemTextOffsetZ = parseFloat(document.getElementById('rng-item-text-offset').value);
       CONFIG.BoxPadX = parseFloat(document.getElementById('rng-box-pad-x').value);
@@ -796,6 +827,7 @@
       CONFIG.RelicColor = hexToRgb(document.getElementById('col-relic-color').value);
       CONFIG.ChestColor = hexToRgb(document.getElementById('col-chest-color').value);
       CONFIG.EggColor = hexToRgb(document.getElementById('col-egg-color').value);
+      CONFIG.CaveColor = hexToRgb(document.getElementById('col-cave-color').value);
 
       updateLabels();
       drawPreview();
@@ -811,6 +843,7 @@
       document.getElementById('val-relic-font-scale').innerText = CONFIG.RelicFontScale;
       document.getElementById('val-chest-font-scale').innerText = CONFIG.ChestFontScale;
       document.getElementById('val-egg-font-scale').innerText = CONFIG.EggFontScale;
+      document.getElementById('val-cave-font-scale').innerText = CONFIG.CaveFontScale;
       document.getElementById('val-text-offset').innerText = CONFIG.TextOffsetZ + 'cm';
       document.getElementById('val-item-text-offset').innerText = CONFIG.ItemTextOffsetZ + 'cm';
       document.getElementById('val-box-pad-x').innerText = CONFIG.BoxPadX + 'px';
@@ -824,6 +857,7 @@
       document.getElementById('txt-relic-color').value = rgbToHex(CONFIG.RelicColor).toUpperCase();
       document.getElementById('txt-chest-color').value = rgbToHex(CONFIG.ChestColor).toUpperCase();
       document.getElementById('txt-egg-color').value = rgbToHex(CONFIG.EggColor).toUpperCase();
+      document.getElementById('txt-cave-color').value = rgbToHex(CONFIG.CaveColor).toUpperCase();
     }
 
     // Simulated Canvas Drawing
@@ -908,6 +942,14 @@
         }
         simEgg.style.color = rgbToHex(CONFIG.EggColor);
         simEgg.style.fontSize = (CONFIG.EggFontScale * 14) + 'px';
+      }
+
+      // 6. Cave visibility and colors
+      const simCave = document.getElementById('sim-cave');
+      simCave.style.display = CONFIG.ShowCaves ? 'block' : 'none';
+      if (CONFIG.ShowCaves) {
+        simCave.style.color = rgbToHex(CONFIG.CaveColor);
+        simCave.style.fontSize = (CONFIG.CaveFontScale * 14) + 'px';
       }
     }
 

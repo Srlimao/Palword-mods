@@ -1,0 +1,230 @@
+-- Palworld Accessory Toggler Mod
+-- Built for Palworld v1.0
+-- Uses UE4SS Lua Scripting API
+
+local configMod = require("AccessoryToggler.config")
+local toggler = require("AccessoryToggler.toggler")
+local renderer = require("AccessoryToggler.renderer")
+local popup = require("AccessoryToggler.popup")
+
+local CONFIG = configMod.CONFIG
+local DebugPrint = configMod.DebugPrint
+
+DebugPrint("Initializing Accessory Toggler Mod...")
+
+
+
+
+-- State variables for HUD Edit Mode real-time keyboard inputs
+local keyState = {
+    Up = false,
+    Down = false,
+    Left = false,
+    Right = false,
+    Equals = false,
+    Add = false,
+    Hyphen = false,
+    Subtract = false,
+}
+
+local holdFrames = 0
+
+-- Helper to safely adjust HUD coordinates and scale continuously
+local function HandleEditModeHolding()
+    if not configMod.EditModeActive then 
+        holdFrames = 0
+        return 
+    end
+    
+    local dx = 0
+    local dy = 0
+    local dScale = 0
+    local isAnyHeld = false
+    
+    if keyState.Left then dx = dx - 1; isAnyHeld = true end
+    if keyState.Right then dx = dx + 1; isAnyHeld = true end
+    if keyState.Up then dy = dy - 1; isAnyHeld = true end
+    if keyState.Down then dy = dy + 1; isAnyHeld = true end
+    
+    if keyState.Equals or keyState.Add then dScale = dScale + 1; isAnyHeld = true end
+    if keyState.Hyphen or keyState.Subtract then dScale = dScale - 1; isAnyHeld = true end
+    
+    if isAnyHeld then
+        holdFrames = holdFrames + 1
+    else
+        holdFrames = 0
+        return
+    end
+    
+    local speedMultiplier = 1.0
+    if holdFrames > 60 then
+        speedMultiplier = 3.5
+    elseif holdFrames > 15 then
+        speedMultiplier = 2.0
+    end
+    
+    -- Adjust coordinates and scale
+    local moveAmount = 1.5 * speedMultiplier
+    local scaleAmount = 0.005 * speedMultiplier
+    
+    pcall(function()
+        if not configMod.CONFIG.HUDX then configMod.CONFIG.HUDX = 800.0 end
+        if not configMod.CONFIG.HUDY then configMod.CONFIG.HUDY = 800.0 end
+        
+        configMod.CONFIG.HUDX = configMod.CONFIG.HUDX + (dx * moveAmount)
+        configMod.CONFIG.HUDY = configMod.CONFIG.HUDY + (dy * moveAmount)
+        
+        if dScale ~= 0 then
+            local currentScale = configMod.CONFIG.HUDScale or 1.0
+            local newScale = math.max(0.5, math.min(3.0, currentScale + (dScale * scaleAmount)))
+            configMod.CONFIG.HUDScale = tonumber(string.format("%.3f", newScale))
+        end
+    end)
+end
+
+-- Hook into HUD Draw frame tick (ReceiveDrawHUD)
+local isHUDHooked = false
+local hasLoggedDraw = false
+
+local function RegisterHUDHook()
+    if isHUDHooked then return end
+    
+    local status = pcall(function()
+        RegisterHook("/Game/Pal/Blueprint/UI/BP_PalHUD_InGame.BP_PalHUD_InGame_C:ReceiveDrawHUD", function(self, SizeX, SizeY)
+            if not hasLoggedDraw then
+                hasLoggedDraw = true
+                configMod.DebugPrint("ReceiveDrawHUD hook called!")
+            end
+            local hud = self:get()
+            if not hud or not hud:IsValid() then return end
+            
+            -- Apply continuous holding checks in edit mode
+            HandleEditModeHolding()
+            
+            local drawStatus, drawErr = pcall(function()
+                renderer.Draw(hud, SizeX, SizeY)
+                popup.Draw(hud, SizeX, SizeY)
+            end)
+            if not drawStatus then
+                print("[AccessoryToggler] ERROR in ReceiveDrawHUD draw: " .. tostring(drawErr))
+            end
+        end)
+    end)
+    
+    if status then
+        isHUDHooked = true
+        configMod.DebugPrint("HUD ReceiveDrawHUD hook successfully registered!")
+    else
+        configMod.DebugPrint("Failed to register ReceiveDrawHUD hook (class might not be loaded yet).")
+    end
+end
+
+-- Try to hook immediately
+RegisterHUDHook()
+
+-- Listen for new HUD objects to hook when loaded (handles level loading)
+NotifyOnNewObject("/Game/Pal/Blueprint/UI/BP_PalHUD_InGame.BP_PalHUD_InGame_C", function(hudObj)
+    configMod.DebugPrint("NotifyOnNewObject fired for BP_PalHUD_InGame_C!")
+    RegisterHUDHook()
+end)
+
+-- Start periodic background scan loop
+local function StartPeriodicScan()
+    local function loop()
+        local status, err = pcall(toggler.Scan)
+        if not status then
+            print("[AccessoryToggler] ERROR in Scan loop: " .. tostring(err))
+        end
+        ExecuteWithDelay(CONFIG.ScanIntervalMs, loop)
+    end
+    ExecuteWithDelay(CONFIG.ScanIntervalMs, loop)
+end
+
+-- Safely resolve key bindings for different engine versions/mappings
+local key1 = Key.FIVE or Key.NUM_5 or Key.N5 or Key["5"]
+local key2 = Key.SIX or Key.NUM_6 or Key.N6 or Key["6"]
+local key3 = Key.SEVEN or Key.NUM_7 or Key.N7 or Key["7"]
+local key4 = Key.EIGHT or Key.NUM_8 or Key.N8 or Key["8"]
+
+-- Register ALT + 5..8 key binds
+if key1 then
+    RegisterKeyBind(key1, {}, function()
+        pcall(function() toggler.ToggleSlot(1) end)
+    end)
+else
+    print("[AccessoryToggler] WARNING: Failed to resolve Key.FIVE")
+end
+
+if key2 then
+    RegisterKeyBind(key2, {}, function()
+        pcall(function() toggler.ToggleSlot(2) end)
+    end)
+else
+    print("[AccessoryToggler] WARNING: Failed to resolve Key.SIX")
+end
+
+if key3 then
+    RegisterKeyBind(key3, {}, function()
+        pcall(function() toggler.ToggleSlot(3) end)
+    end)
+else
+    print("[AccessoryToggler] WARNING: Failed to resolve Key.SEVEN")
+end
+
+if key4 then
+    RegisterKeyBind(key4, {}, function()
+        pcall(function() toggler.ToggleSlot(4) end)
+    end)
+else
+    print("[AccessoryToggler] WARNING: Failed to resolve Key.EIGHT")
+end
+
+-- Start scanning
+StartPeriodicScan()
+
+-- ----------------------------------------------------
+-- HUD EDIT MODE INTERACTIVE CONFIGURATION KEYBINDS
+-- ----------------------------------------------------
+local keyF7 = Key.F7
+
+-- Alt+F7 toggles edit mode
+if keyF7 then
+    RegisterKeyBind(keyF7, { ModifierKey.ALT }, function()
+        pcall(function() 
+            configMod.ToggleEditMode() 
+            if not configMod.EditModeActive then
+                -- Reset all key states when exiting edit mode
+                for k, _ in pairs(keyState) do
+                    keyState[k] = false
+                end
+                holdFrames = 0
+            end
+        end)
+    end)
+else
+    configMod.DebugPrint("WARNING: Failed to resolve Key.F7")
+end
+
+-- Hook PlayerInput:InputKey to monitor held keys in real-time
+local statusInput = pcall(function()
+    RegisterHook("/Script/Engine.PlayerInput:InputKey", function(self, Key, Event, AmountDepressed, bGamepad)
+        pcall(function()
+            local k = Key:get()
+            local keyName = k.KeyName:ToString()
+            local evt = Event:get()
+            
+            if keyState[keyName] ~= nil then
+                if evt == 0 then -- Pressed
+                    keyState[keyName] = true
+                elseif evt == 1 then -- Released
+                    keyState[keyName] = false
+                end
+            end
+        end)
+    end)
+end)
+if not statusInput then
+    configMod.DebugPrint("WARNING: Failed to register InputKey hook.")
+end
+
+configMod.DebugPrint("Mod Loaded Successfully!")

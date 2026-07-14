@@ -7,6 +7,7 @@ local configMod = require("HUDLocator.config")
 local tracker = require("HUDLocator.tracker")
 local renderer = require("HUDLocator.renderer")
 local popup = require("HUDLocator.popup")
+local menu = require("HUDLocator.menu")
 
 local CONFIG = configMod.CONFIG
 local DebugPrint = configMod.DebugPrint
@@ -30,6 +31,7 @@ local function RegisterHUDHook()
                 tracker.activeRelics, 
                 tracker.activeChests, 
                 tracker.activeEggs,
+                tracker.activeCaves,
                 tracker.cachedLocalPlayer,
                 SizeX, SizeY
             )
@@ -62,59 +64,27 @@ local function StartPeriodicScan()
 end
 
 -- Setup hotkeys
--- 1. Toggle Player Locator (Alt + F7)
-RegisterKeyBind(Key.F7, {ModifierKey.ALT}, function()
-    CONFIG.ShowPlayers = not CONFIG.ShowPlayers
-    if CONFIG.ShowPlayers then
-        popup.Show("Players: Enabled")
-    else
-        popup.Show("Players: Disabled")
-        tracker.activePlayers = {}
-    end
+
+-- 5. HUD Config Menu Toggle (Alt + F6)
+RegisterKeyBind(Key.F6, {ModifierKey.ALT}, function()
+    menu.Toggle()
 end)
 
--- 2. Toggle Items Finder (Alt + F8)
-RegisterKeyBind(Key.F8, {ModifierKey.ALT}, function()
-    local toggleVal = not (CONFIG.ShowRelics or CONFIG.ShowChests or CONFIG.EggFilter ~= "None")
-    CONFIG.ShowRelics = toggleVal
-    CONFIG.ShowChests = toggleVal
-    if toggleVal then
-        CONFIG.EggFilter = "All"
-        popup.Show("Items: Enabled")
-    else
-        CONFIG.EggFilter = "None"
-        popup.Show("Items: Disabled")
-        tracker.activeRelics = {}
-        tracker.activeChests = {}
-        tracker.activeEggs = {}
-    end
+-- 6. HUD Config Menu Navigation
+RegisterKeyBind(Key.UP_ARROW, {ModifierKey.ALT}, function()
+    if menu.isOpen then menu.Navigate("up") end
 end)
 
--- 3. Cycle Egg Filter (Alt + F9)
-RegisterKeyBind(Key.F9, {ModifierKey.ALT}, function()
-    local states = {"All", "Large+", "HugeOnly", "None"}
-    local nextState = "All"
-    for i, state in ipairs(states) do
-        if CONFIG.EggFilter == state then
-            nextState = states[(i % #states) + 1]
-            break
-        end
-    end
-    CONFIG.EggFilter = nextState
-    popup.Show("Egg Filter: " .. nextState)
-    if nextState == "None" then
-        tracker.activeEggs = {}
-    end
+RegisterKeyBind(Key.DOWN_ARROW, {ModifierKey.ALT}, function()
+    if menu.isOpen then menu.Navigate("down") end
 end)
 
--- 4. Toggle Player Nameplate Box style (Alt + F10)
-RegisterKeyBind(Key.F10, {ModifierKey.ALT}, function()
-    CONFIG.DrawBox = not CONFIG.DrawBox
-    if CONFIG.DrawBox then
-        popup.Show("Nameplate: Box")
-    else
-        popup.Show("Nameplate: Simple")
-    end
+RegisterKeyBind(Key.LEFT_ARROW, {ModifierKey.ALT}, function()
+    if menu.isOpen then menu.Navigate("left") end
+end)
+
+RegisterKeyBind(Key.RIGHT_ARROW, {ModifierKey.ALT}, function()
+    if menu.isOpen then menu.Navigate("right") end
 end)
 
 -- Start scanning

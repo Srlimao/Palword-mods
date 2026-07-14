@@ -137,4 +137,43 @@ function M.parse(str)
     end
 end
 
+-- Lightweight JSON stringifier
+function M.stringify(val)
+    local t = type(val)
+    if t == "table" then
+        local is_array = true
+        local max_idx = 0
+        for k, v in pairs(val) do
+            if type(k) ~= "number" or k <= 0 or math.floor(k) ~= k then
+                is_array = false
+                break
+            end
+            if k > max_idx then max_idx = k end
+        end
+        if is_array then
+            local parts = {}
+            for i = 1, max_idx do
+                table.insert(parts, M.stringify(val[i]))
+            end
+            return "[" .. table.concat(parts, ", ") .. "]"
+        else
+            local parts = {}
+            -- Sort keys to maintain a clean config layout
+            local keys = {}
+            for k in pairs(val) do table.insert(keys, k) end
+            table.sort(keys)
+            for _, k in ipairs(keys) do
+                table.insert(parts, '"' .. k .. '": ' .. M.stringify(val[k]))
+            end
+            return "{\n  " .. table.concat(parts, ",\n  ") .. "\n}"
+        end
+    elseif t == "string" then
+        return '"' .. val .. '"'
+    elseif t == "number" or t == "boolean" then
+        return tostring(val)
+    else
+        return "null"
+    end
+end
+
 return M

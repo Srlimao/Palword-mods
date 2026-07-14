@@ -9,7 +9,29 @@ M.activePlayers = {}
 M.activeRelics = {}
 M.activeChests = {}
 M.activeEggs = {}
+M.activeCaves = {}
 M.cachedLocalPlayer = nil
+
+local hasLoggedDungeons = false
+
+local dungeonClasses = {
+    "BP_DungeonFixedEntrance_C",
+    "BP_DungeonFixedEntrance_forest_1_C",
+    "BP_DungeonFixedEntrance_forest_2_C",
+    "BP_DungeonFixedEntrance_forest_3_C",
+    "BP_DungeonFixedEntrance_forest_4_C",
+    "BP_DungeonFixedEntrance_forest_5_C",
+    "BP_DungeonFixedEntrance_grass_1_C",
+    "BP_DungeonFixedEntrance_grass_2_C",
+    "BP_DungeonFixedEntrance_grass_3_C",
+    "BP_DungeonFixedEntrance_grass_4_C",
+    "BP_DungeonFixedEntrance_grass_5_C",
+    "BP_DungeonFixedEntrance_grass_6_C",
+    "BP_DungeonFixedEntrance_grass_7_C",
+    "PalDungeonEntrance"
+}
+local currentClassIndex = 1
+local tempCaves = {}
 
 -- Helper to safely check if a relic has been picked up
 local function IsRelicPicked(relic)
@@ -73,6 +95,33 @@ local function IsEggPicked(egg)
     if status then return picked else return false end
 end
 
+-- Helper to safely retrieve dungeon level and active/cooldown state
+local function GetDungeonDetails(cave)
+    local level = nil
+    local state = "Closed"
+    
+    pcall(function()
+        if cave:IsValid() then
+            local stageModel = cave.StageModel
+            if stageModel and stageModel:IsValid() then
+                local instanceModel = stageModel.InstanceModel
+                if instanceModel and instanceModel:IsValid() then
+                    level = instanceModel.Level
+                    
+                    local bossState = instanceModel.BossState
+                    if bossState == 1 then
+                        state = "Cleared"
+                    else
+                        state = "Open"
+                    end
+                end
+            end
+        end
+    end)
+    
+    return level, state
+end
+
 -- Scan players, relics, and chests
 function M.scan()
     if not CONFIG.Enabled then
@@ -80,6 +129,7 @@ function M.scan()
         M.activeRelics = {}
         M.activeChests = {}
         M.activeEggs = {}
+        M.activeCaves = {}
         return
     end
 
@@ -90,6 +140,7 @@ function M.scan()
         M.activeRelics = {}
         M.activeChests = {}
         M.activeEggs = {}
+        M.activeCaves = {}
         return
     end
 
@@ -237,6 +288,68 @@ function M.scan()
         M.activeEggs = newEggs
     else
         M.activeEggs = {}
+    end
+
+    -- 5. Scan Caves
+    if CONFIG.ShowCaves then
+        local cls = dungeonClasses[currentClassIndex]
+        tempCaves[cls] = {}
+
+        local caves = FindAllOf(cls) or {}
+        local successCount = 0
+        local closestDistSq = math.huge
+
+        for _, cave in ipairs(caves) do
+            if cave:IsValid() then
+                local status, err = pcall(function()
+                    local cavePos = cave:K2_GetActorLocation()
+                    if cavePos then
+                        successCount = successCount + 1
+                        local dx = cavePos.X - playerPos.X
+                        local dy = cavePos.Y - playerPos.Y
+                        local dz = cavePos.Z - playerPos.Z
+                        local distSq = dx*dx + dy*dy + dz*dz
+                        if distSq < closestDistSq then
+                            closestDistSq = distSq
+                        end
+                        if distSq <= maxDistSq then
+                            local level, state = GetDungeonDetails(cave)
+                            table.insert(tempCaves[cls], { 
+                                X = cavePos.X, 
+                                Y = cavePos.Y, 
+                                Z = cavePos.Z,
+                                Level = level,
+                                State = state
+                            })
+                        end
+                    end
+                end)
+            end
+        end
+
+        currentClassIndex = currentClassIndex + 1
+        if currentClassIndex > #dungeonClasses then
+            currentClassIndex = 1
+        end
+
+        local merged = {}
+        for _, classCaves in pairs(tempCaves) do
+            for _, c in ipairs(classCaves) do
+                table.insert(merged, c)
+            end
+        end
+        M.activeCaves = merged
+
+        if not hasLoggedDungeons and successCount > 0 then
+            hasLoggedDungeons = true
+            logger.log("Cave Scan (Initial detection): Found " .. tostring(successCount) .. " active caves for class " .. cls)
+            if closestDistSq ~= math.huge then
+                logger.log("Cave Scan (Initial detection): Closest is " .. tostring(math.sqrt(closestDistSq) / 100.0) .. " meters away.")
+            end
+        end
+    else
+        M.activeCaves = {}
+        tempCaves = {}
     end
 end
 

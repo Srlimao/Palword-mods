@@ -1,0 +1,195 @@
+{
+  "note": "THIS JSON FILE WAS CREATED USING THE `DekModConfigMenu` MOD FOR PALWORLD! DO NOT MANUALLY EDIT THIS FILE UNLESS YOU KNOW WHAT YOU'RE DOING -- USE THE `DekModConfigMenu` MOD INSTEAD <3",
+  "meta": {
+    "game": true,
+    "vers": "0.6.0",
+    "auth": "SvenBrnn",
+    "desc": "Adds a minimap to the game ui.",
+    "link": {
+      "nexus-mod-id": "146"
+    }
+  },
+  "General": {
+    "type": "object",
+    "desc": "General settings for the overlay.",
+    "data": {
+      "Mod Logic Enabled": {
+        "type": "boolean",
+        "desc": "Whether the minimap mod is enabled or not.",
+        "init": true,
+        "live": true
+      },
+      "Rotate Map": {
+        "type": "boolean",
+        "desc": "Rotate the map. Disable to always point to north.",
+        "init": true,
+        "live": true
+      },
+      "Opacity": {
+        "type": "float",
+        "desc": "Map opacity in percent.",
+        "opts": {
+          "min": 0,
+          "max": 100,
+          "step": 1
+        },
+        "init": 100,
+        "live": 100
+      },
+      "Debug": {
+        "type": "boolean",
+        "desc": "Whether debug logging is enabled.",
+        "init": false,
+        "live": false
+
+      }
+    }
+  },
+  "Position and Size": {
+    "type": "object",
+    "desc": "Position and Size of the Map.",
+    "data": {
+      "Size": {
+        "type": "float",
+        "desc": "Size of the map.",
+        "opts": {
+          "min": 100,
+          "max": 400,
+          "step": 0.5
+        },
+        "init": 200,
+        "live": 200
+      },
+      "PosX": {
+        "type": "float",
+        "desc": "X Position of the map. Can be altered ingame using CTRL + F8.",
+        "opts": {
+          "min": 0,
+          "max": 4000,
+          "step": 0.5
+        },
+        "init": 80,
+        "live": 80
+      },
+      "PosY": {
+        "type": "float",
+        "desc": "Y Position of the map. Can be altered ingame using CTRL + F8.",
+        "opts": {
+          "min": 0,
+          "max": 4000,
+          "step": 0.5
+        },
+        "init": 80,
+        "live": 80
+      }
+    }
+  },
+  "Scan": {
+    "type": "object",
+    "desc": "Scan for items.",
+    "data": {
+      "Treasure": {
+        "type": "boolean",
+        "desc": "Whether to show traesure on map.",
+        "init": true,
+        "live": true
+      },
+      "Pals": {
+        "type": "boolean",
+        "desc": "Whether to show Pals on map.",
+        "init": true,
+        "live": true
+      },
+      "Egg": {
+        "type": "boolean",
+        "desc": "Whether to show Eggs on map.",
+        "init": true,
+        "live": true
+      },
+      "Relics": {
+        "type": "boolean",
+        "desc": "Whether to show Relics on map.",
+        "init": true,
+        "live": true
+      },
+      "Notes": {
+        "type": "boolean",
+        "desc": "Whether to show Relics on map.",
+        "init": true,
+        "live": true
+      },
+      "Dungeon": {
+        "type": "boolean",
+        "desc": "Whether to show Dungeons on map.",
+        "init": true,
+        "live": true
+      },
+      "FastTravel": {
+        "type": "boolean",
+        "desc": "Whether to show Fast Travel on map.",
+        "init": true,
+        "live": true
+      }
+    }
+  },
+  "Keymap": {
+    "type": "object",
+    "desc": "Keymap for hotkeys",
+    "data": {
+      "Zoom": {
+        "type": "keybind",
+        "desc": "Key to zoom in and out",
+        "init": {"key": "Z","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+        "live": {"key": "Z","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+      },
+      "Map Move Mode": {
+        "type": "keybind",
+        "desc": "Key toggle the map move mode",
+        "init": {"key": "F8","bShift": false,"bCtrl": true,"bAlt": false,"bCmd": false},
+        "live": {"key": "F8","bShift": false,"bCtrl": true,"bAlt": false,"bCmd": false}
+      },
+      "Toggle Map": {
+        "type": "keybind",
+        "desc": "Key to toggle map visibility",
+        "init": {"key": "H","bShift": false,"bCtrl": true,"bAlt": false,"bCmd": false},
+        "live": {"key": "H","bShift": false,"bCtrl": true,"bAlt": false,"bCmd": false}
+      },
+      "Map Up": {
+        "type": "keybind",
+        "desc": "Key to move map up in move mode",
+        "init": {"key": "Up","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+        "live": {"key": "Up","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+      },
+      "Map Down": {
+        "type": "keybind",
+        "desc": "Key to move map down in move mode",
+        "init": {"key": "Down","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+        "live": {"key": "Down","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+      },
+      "Map Left": {
+        "type": "keybind",
+        "desc": "Key to move map left in move mode",
+        "init": {"key": "Left","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+        "live": {"key": "Left","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+      },
+      "Map Right": {
+        "type": "keybind",
+        "desc": "Key to move map right in move mode",
+        "init": {"key": "Right","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+        "live": {"key": "Right","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+      },
+      "Map Bigger": {
+        "type": "keybind",
+        "desc": "Key increese size in move mode",
+        "init": {"key": "Add","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+        "live": {"key": "Add","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+      },
+      "Map Smaller": {
+        "type": "keybind",
+        "desc": "Key decreese size in move mode",
+        "init": {"key": "Subtract","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+        "live": {"key": "Subtract","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+      }
+    }
+  }
+}

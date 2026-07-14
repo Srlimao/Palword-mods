@@ -1,0 +1,12 @@
+# Ignore large dumped headers
+CXXHeaderDump/
+
+# Ignore compiled zip archives
+*.zip
+HUDLocator/*.zip
+AccessoryToggler/*.zip
+
+# Ignore local temporary/IDE files
+.gemini/
+.idea/
+.vscode/

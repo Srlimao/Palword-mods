@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Palworld Mod Configurator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #070913;
+      --bg-secondary: #0e1225;
+      --bg-card: rgba(20, 26, 48, 0.65);
+      --bg-input: #151a30;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: #00f2fe;
+      --text-primary: #f1f3f9;
+      --text-secondary: #8b98b9;
+      --accent-blue: #00f2fe;
+      --accent-blue-glow: rgba(0, 242, 254, 0.3);
+      --accent-purple: #9d4edd;
+      --accent-purple-glow: rgba(157, 78, 221, 0.3);
+      --accent-green: #00f5d4;
+      --accent-green-glow: rgba(0, 245, 212, 0.3);
+      --accent-red: #ff5a5f;
+      --accent-red-glow: rgba(255, 90, 95, 0.3);
+      --accent-yellow: #ffb703;
+      --accent-yellow-glow: rgba(255, 183, 3, 0.3);
+      --font-sans: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --shadow-neon: 0 0 20px rgba(0, 242, 254, 0.15);
+      --border-glow: 0 0 10px rgba(0, 242, 254, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 50%, #0e1225 0%, #070913 100%);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e2544;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-blue);
+      box-shadow: var(--shadow-neon);
+    }
+
+    /* Header Bar */
+    header {
+      background: rgba(7, 9, 19, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-neon);
+    }
+
+    .brand-logo svg {
+      width: 22px;
+      height: 22px;
+      fill: var(--bg-primary);
+    }
+
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: linear-gradient(to right, var(--text-primary) 30%, var(--accent-blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text span {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-top: -2px;
+    }
+
+    .file-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.6rem 1.2rem;
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn:hover {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+      border: none;
+      box-shadow: 0 4px 15px rgba(0, 114, 255, 0.25);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 4px 20px rgba(0, 114, 255, 0.4), var(--shadow-neon);
+      filter: brightness(1.1);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #00f5d4 0%, #00bbf9 100%);
+      border: none;
+      color: var(--bg-primary);
+      font-weight: 600;
+    }
+
+    .btn-success:hover {
+      box-shadow: 0 4px 20px rgba(0, 245, 212, 0.4), 0 0 15px rgba(0, 245, 212, 0.2);
+      filter: brightness(1.1);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+      border-color: var(--border-color) !important;
+    }
+
+    .file-status {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .file-status-name {
+      color: var(--accent-blue);
+      font-family: var(--font-mono);
+      font-weight: bold;
+    }
+
+    /* Layout Wrapper */
+    .app-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Main Area Split */
+    .main-content {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.25fr 0.95fr;
+      height: calc(100vh - 69px);
+      overflow: hidden;
+    }
+
+    @media (max-width: 1024px) {
+      .main-content {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow-y: auto;
+      }
+    }
+
+    /* Left Scrollable Form Pane */
+    .config-pane {
+      padding: 2rem;
+      overflow-y: auto;
+      height: 100%;
+      border-right: 1px solid var(--border-color);
+    }
+
+    /* Right Preview and Code Pane */
+    .visual-pane {
+      padding: 2rem;
+      background: rgba(7, 9, 19, 0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    /* Info Alert box */
+    .alert-banner {
+      background: rgba(157, 78, 221, 0.08);
+      border: 1px solid rgba(157, 78, 221, 0.2);
+      border-left: 4px solid var(--accent-purple);
+      border-radius: 8px;
+      padding: 0.85rem 1.2rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      color: #dfc8ff;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .alert-banner svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--accent-purple);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Drop Zone / Fallback Banner */
+    .drop-zone {
+      border: 2px dashed rgba(0, 242, 254, 0.3);
+      background: rgba(0, 242, 254, 0.02);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent-blue);
+      background: rgba(0, 242, 254, 0.06);
+      box-shadow: inset 0 0 15px rgba(0, 242, 254, 0.05);
+    }
+
+    .drop-zone svg {
+      width: 32px;
+      height: 32px;
+      fill: var(--text-secondary);
+      transition: fill 0.3s;
+    }
+
+    .drop-zone:hover svg {
+      fill: var(--accent-blue);
+    }
+
+    .drop-zone-text {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .drop-zone-text strong {
+      color: var(--accent-blue);
+    }
+
+    /* Configuration Sections Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      border-color: rgba(0, 242, 254, 0.15);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25), 0 0 15px rgba(0, 242, 254, 0.02);
+    }
+
+    .card-header {
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title-group h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-title-group h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background: var(--accent-blue);
+      border-radius: 2px;
+      box-shadow: var(--shadow-neon);
+    }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+    }
+
+    /* Form Fields Grid */
+    .field-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .field-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .field-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .field-label-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .field-label {
+      font-weight: 500;
+      font-size: 0.925rem;
+      color: var(--text-primary);
+    }
+
+    .field-desc {
+      font-size: 0.775rem;
+      color: var(--text-secondary);
+      margin-top: 0.15rem;
+      max-width: 420px;
+    }
+
+    .field-control {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .reset-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 2px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.3;
+      transition: all 0.2s;
+    }
+
+    .field-row:hover .reset-btn, .reset-btn.changed {
+      opacity: 0.85;
+    }
+
+    .reset-btn:hover {
+      color: var(--accent-red);
+      background: rgba(255, 90, 95, 0.1);
+      transform: rotate(-45deg);
+    }
+
+    .reset-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* Boolean Toggle styling */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #212845;
+      border: 1px solid var(--border-color);
+      transition: .25s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--text-primary);
+      transition: .25s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent-green);
+      box-shadow: 0 0 10px rgba(0, 245, 212, 0.2);
+      border-color: rgba(0, 245, 212, 0.4);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(22px);
+      background-color: var(--bg-primary);
+    }
+
+    /* Number/Range Slider styling */
+    .range-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .slider-input {
+      -webkit-appearance: none;
+      width: 120px;
+      height: 6px;
+      background: #212845;
+      border-radius: 3px;
+      outline: none;
+    }
+
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      box-shadow: var(--shadow-neon);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .slider-input::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .num-input {
+      width: 70px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.4rem 0.5rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      text-align: right;
+    }
+
+    .num-input:focus {
+      border-color: var(--accent-blue);
+      outline: none;
+      box-shadow: 0 0 8px rgba(0, 242, 254, 0.15);
+    }
+
+    /* Keybind Input styling */
+    .keybind-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .key-badge {
+      background: #242c4b;
+      border: 1px solid #36416a;
+      border-bottom-width: 3px;
+      color: #b8c4e4;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: bold;
+      letter-spacing: 0.02em;
+      min-width: 24px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .key-badge.modifier {
+      background: rgba(157, 78, 221, 0.15);
+      border-color: rgba(157, 78, 221, 0.4);
+      color: #dfc8ff;
+    }
+
+    .key-badge.plus {
+      background: none;
+      border: none;
+      box-shadow: none;
+      color: var(--text-secondary);
+      padding: 0;
+      min-width: auto;
+    }
+
+    .keybind-record-btn {
+      background: #192038;
+      border: 1px solid var(--border-color);
+      color: var(--accent-blue);
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .keybind-record-btn:hover {
+      background: var(--accent-blue);
+      color: var(--bg-primary);
+      border-color: var(--accent-blue);
+      box-shadow: var(--shadow-neon);
+    }
+
+    .keybind-record-btn.recording {
+      background: var(--accent-red);
+      color: var(--text-primary);
+      border-color: var(--accent-red);
+      box-shadow: 0 0 10px rgba(255, 90, 95, 0.3);
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+
+    /* Color picker styling */
+    .color-picker-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .color-preview-box {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .color-preview-box input[type="color"] {
+      position: absolute;
+      top: -5px; left: -5px; width: 40px; height: 40px;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .rgba-inputs {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .rgba-val {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+      padding: 0.15rem 0.3rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+    }
+
+    /* HUD Simulator Panel */
+    .hud-card {
+      background: #060810;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.5rem;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    .hud-card-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-blue);
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .hud-simulator {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: linear-gradient(to bottom, #111b33 0%, #0d1222 100%);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    /* Simulated Landscape inside HUD via Inline SVG Background */
+    .hud-bg-svg {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    /* Simulated Game Overlays */
+    .sim-bar-hp {
+      position: absolute;
+      bottom: 12px; left: 16px;
+      width: 150px;
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .sim-bar-hp-fill {
+      width: 75%;
+      height: 100%;
+      background: linear-gradient(to right, #39ff14, #00f5d4);
+      border-radius: 3px;
+    }
+
+    .sim-compass-tape {
+      position: absolute;
+      top: 10px; left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+      display: flex;
+      justify-content: center;
+      font-size: 0.55rem;
+      font-family: var(--font-mono);
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.3em;
+    }
+
+    /* Target Minimap Overlay */
+    .sim-minimap {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.85);
+      background: radial-gradient(circle, #1a2238 20%, #0d111d 90%);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      width: 120px;
+      height: 120px;
+      top: 24px;
+      left: 24px;
+      transform-origin: center center;
+      transition: width 0.2s cubic-bezier(0.1, 0.8, 0.25, 1), 
+                  height 0.2s cubic-bezier(0.1, 0.8, 0.25, 1), 
+                  opacity 0.2s ease,
+                  transform 0.2s cubic-bezier(0.1, 0.8, 0.25, 1);
+    }
+
+    /* Compass markings on map circle */
+    .sim-map-mark {
+      position: absolute;
+      font-size: 0.5rem;
+      font-weight: bold;
+      color: rgba(255,255,255,0.85);
+      text-shadow: 0 0 2px #000;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-sans);
+    }
+    .sim-mark-n { top: 7%; left: 50%; }
+    .sim-mark-e { top: 50%; left: 93%; }
+    .sim-mark-s { top: 93%; left: 50%; }
+    .sim-mark-w { top: 50%; left: 7%; }
+
+    /* Map Content / Grid Lines */
+    .sim-map-content {
+      width: 100%; height: 100%;
+      position: relative;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    .sim-map-grid {
+      position: absolute;
+      top: -20%; left: -20%; width: 140%; height: 140%;
+      background-image: 
+        radial-gradient(circle, transparent 35%, rgba(0, 242, 254, 0.03) 36%, rgba(0, 242, 254, 0.03) 38%, transparent 39%),
+        radial-gradient(circle, transparent 65%, rgba(0, 242, 254, 0.03) 66%, rgba(0, 242, 254, 0.03) 68%, transparent 69%),
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 15px 15px, 15px 15px;
+      background-position: center center;
+    }
+
+    /* Player Marker in map center */
+    .sim-player-pin {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px; height: 12px;
+      fill: var(--accent-yellow);
+      filter: drop-shadow(0 0 2px rgba(255, 183, 3, 0.8));
+    }
+
+    /* Map Scan Pins */
+    .sim-pin {
+      position: absolute;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      scale: 0.1;
+    }
+
+    .sim-pin.active {
+      opacity: 0.9;
+      scale: 1;
+    }
+
+    .sim-pin-treasure { background: var(--accent-yellow); box-shadow: 0 0 5px var(--accent-yellow); top: 30%; left: 68%; }
+    .sim-pin-pals { background: var(--accent-blue); box-shadow: 0 0 5px var(--accent-blue); top: 65%; left: 75%; }
+    .sim-pin-egg { background: var(--accent-purple); box-shadow: 0 0 5px var(--accent-purple); top: 78%; left: 35%; border-radius: 40% 40% 50% 50%; height: 8px; }
+    .sim-pin-relics { background: var(--accent-green); box-shadow: 0 0 5px var(--accent-green); top: 22%; left: 40%; transform: translate(-50%, -50%) rotate(45deg); width: 5px; height: 5px; }
+    .sim-pin-notes { background: #dfc8ff; box-shadow: 0 0 5px #dfc8ff; top: 40%; left: 22%; border-radius: 0; }
+    .sim-pin-dungeon { background: var(--accent-red); box-shadow: 0 0 5px var(--accent-red); top: 55%; left: 18%; }
+    .sim-pin-fasttravel { background: #00f5d4; box-shadow: 0 0 5px #00f5d4; top: 18%; left: 58%; }
+
+    /* Code Pane tab control */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .tab {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .tab.active {
+      color: var(--accent-blue);
+      background: rgba(0, 242, 254, 0.08);
+    }
+
+    .code-editor-card {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 250px;
+    }
+
+    .json-textarea {
+      width: 100%;
+      flex: 1;
+      min-height: 280px;
+      background: #04060b;
+      border: 1px solid var(--border-color);
+      color: #9eccf5;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.4;
+      padding: 1rem;
+      border-radius: 8px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .json-textarea:focus {
+      border-color: var(--accent-blue);
+      box-shadow: inset 0 0 10px rgba(0,242,254,0.05);
+    }
+
+    .json-textarea.invalid {
+      border-color: var(--accent-red);
+      box-shadow: 0 0 8px var(--accent-red-glow);
+      color: #ffa3a6;
+    }
+
+    .json-status {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+      font-family: var(--font-mono);
+    }
+
+    .json-status.invalid .status-msg {
+      color: var(--accent-red);
+    }
+    .json-status.valid .status-msg {
+      color: var(--accent-green);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #11162c;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.85rem 1.5rem;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 1000;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-left: 4px solid var(--accent-green);
+    }
+
+    .toast.error {
+      border-left: 4px solid var(--accent-red);
+    }
+
+    .toast svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .toast.success svg { fill: var(--accent-green); }
+    .toast.error svg { fill: var(--accent-red); }
+
+    /* Modal / File Overlay Dialog */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(3, 4, 9, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: #0e1225;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 460px;
+      padding: 2rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), var(--shadow-neon);
+      transform: scale(0.9);
+      transition: transform 0.3s;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .modal-desc {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    /* Helper badge */
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 0.15rem 0.4rem;
+      border-radius: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    .sync-badge.active {
+      background: rgba(0, 245, 212, 0.1);
+      color: var(--accent-green);
+      border: 1px solid rgba(0, 245, 212, 0.2);
+    }
+
+    .sync-badge.inactive {
+      background: rgba(255, 183, 3, 0.1);
+      color: var(--accent-yellow);
+      border: 1px solid rgba(255, 183, 3, 0.2);
+    }
+
+    /* Reset All Configuration Widget */
+    .actions-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">
+        <!-- Minimalistic compass-gear outline -->
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Palworld Mod Configurator</h1>
+        <span>Sleek Local Mod Configuration Tool</span>
+      </div>
+    </div>
+
+    <div class="file-controls">
+      <div class="file-status">
+        <span>Active Config File:</span>
+        <span class="file-status-name" id="status-filename">default_minimap_template.json</span>
+      </div>
+      
+      <button class="btn" id="btn-open-direct">
+        <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24">
+          <path d="M19 20H5V8h14v12M16.5 5l-1.5-2h-6L7.5 5H3v2h18V5h-4.5z"/>
+        </svg>
+        Open Config
+      </button>
+
+      <button class="btn btn-primary" id="btn-save-direct" disabled>
+        <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24">
+          <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+        </svg>
+        Save File
+      </button>
+
+      <button class="btn" id="btn-download" style="display: none;">
+        <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24">
+          <path d="M5 20h14v-2H5v2zm7-18L5.33 8.67h4V14h5.33V8.67h4L12 2z"/>
+        </svg>
+        Download JSON
+      </button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <div class="main-content">
+      
+      <!-- Left Column: Form Controls -->
+      <div class="config-pane">
+        
+        <div class="alert-banner">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+          <div>
+            <strong>Game Integration Note:</strong> This visual editor modifies configuration files locally. If running directly in a browser, use <strong>Open Config</strong> to enable two-way sync directly to your game folder, or save and replace the files manually in the game's mod directory.
+          </div>
+        </div>
+
+        <div class="actions-panel">
+          <div class="sync-status">
+            <span class="sync-badge inactive" id="sync-indicator">
+              <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor"></span>
+              Manual Download Mode
+            </span>
+          </div>
+          <button class="btn btn-secondary" id="btn-reset-all" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+            <svg style="width:14px;height:14px;fill:currentColor;vertical-align:middle;margin-right:3px" viewBox="0 0 24 24">
+              <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+            </svg>
+            Reset All to Defaults
+          </button>
+        </div>
+
+        <!-- HTML5 Drop File Area -->
+        <div class="drop-zone" id="drag-drop-zone">
+          <svg viewBox="0 0 24 24">
+            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+          </svg>
+          <span class="drop-zone-text">Drag and drop any <strong>.modconfig.json</strong> here, or click to browse</span>
+          <input type="file" id="file-picker-fallback" accept=".json" style="display: none;">
+        </div>
+
+        <!-- Dynamic Form Fields will be injected here -->
+        <div id="form-container">
+          <!-- Populated by JavaScript -->
+        </div>
+
+      </div>
+
+      <!-- Right Column: Visual HUD Live Preview & Raw Code Editor -->
+      <div class="visual-pane">
+        
+        <!-- Interactive HUD Simulator -->
+        <div class="hud-card">
+          <div class="hud-card-title">
+            <span>HUD Live Simulator</span>
+            <span style="color:var(--text-secondary);font-size:0.7rem" id="hud-scale-label">Scale: 1.00x</span>
+          </div>
+          <div class="hud-simulator" id="hud-sim-screen">
+            <!-- Simulated background mountains/hills/trees -->
+            <svg class="hud-bg-svg" viewBox="0 0 480 270" preserveAspectRatio="none">
+              <!-- Sky -->
+              <rect x="0" y="0" width="480" height="270" fill="transparent"/>
+              <!-- Mountains -->
+              <polygon points="0,270 120,130 260,270" fill="#141829"/>
+              <polygon points="180,270 320,100 480,270" fill="#192038"/>
+              <polygon points="80,270 200,160 380,270" fill="#1d2642" opacity="0.5"/>
+              <!-- Flat Ground -->
+              <rect x="0" y="230" width="480" height="40" fill="#1b223c"/>
+            </svg>
+
+            <!-- Health Bar Overlay -->
+            <div class="sim-bar-hp">
+              <div class="sim-bar-hp-fill"></div>
+            </div>
+
+            <!-- Top Compass Ribbon -->
+            <div class="sim-compass-tape">
+              <span>W &bull;&bull;&bull; NW &bull;&bull;&bull; 330 &bull;&bull;&bull; <b>N</b> &bull;&bull;&bull; 030 &bull;&bull;&bull; NE</span>
+            </div>
+
+            <!-- Minimap Component Under Test -->
+            <div class="sim-minimap" id="hud-minimap">
+              <div class="sim-map-content">
+                <div class="sim-map-grid" id="hud-map-grid"></div>
+
+                <!-- Compass indicators inside the map frame -->
+                <div class="sim-map-mark sim-mark-n" id="mark-n">N</div>
+                <div class="sim-map-mark sim-mark-e" id="mark-e">E</div>
+                <div class="sim-map-mark sim-mark-s" id="mark-s">S</div>
+                <div class="sim-map-mark sim-mark-w" id="mark-w">W</div>
+
+                <!-- Live-interactive markers -->
+                <div class="sim-pin sim-pin-treasure" id="pin-treasure"></div>
+                <div class="sim-pin sim-pin-pals" id="pin-pals"></div>
+                <div class="sim-pin sim-pin-egg" id="pin-egg"></div>
+                <div class="sim-pin sim-pin-relics" id="pin-relics"></div>
+                <div class="sim-pin sim-pin-notes" id="pin-notes"></div>
+                <div class="sim-pin sim-pin-dungeon" id="pin-dungeon"></div>
+                <div class="sim-pin sim-pin-fasttravel" id="pin-fasttravel"></div>
+
+                <!-- Center Player Indicator -->
+                <svg class="sim-player-pin" viewBox="0 0 24 28">
+                  <polygon points="12,0 24,28 12,20 0,28"/>
+                </svg>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+
+        <!-- Raw JSON Textarea and Editor -->
+        <div class="card code-editor-card" style="margin-bottom:0">
+          <div class="card-header" style="border-bottom:none;padding-bottom:0;margin-bottom:0.75rem">
+            <div class="tabs">
+              <button class="tab active" id="tab-visual-label">Visual Editor Sync</button>
+              <button class="tab" id="tab-code-label">Raw Config JSON</button>
+            </div>
+          </div>
+          
+          <textarea class="json-textarea" id="json-editor-input" spellcheck="false"></textarea>
+          
+          <div class="json-status valid" id="json-val-status">
+            <span class="status-msg">✓ Valid JSON Config</span>
+            <span class="status-size" id="json-val-size">0 bytes</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Element -->
+  <div class="toast" id="toast-notify">
+    <svg viewBox="0 0 24 24" id="toast-icon-success" style="display:none">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+    </svg>
+    <svg viewBox="0 0 24 24" id="toast-icon-error" style="display:none">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+    </svg>
+    <span id="toast-message">Message here</span>
+  </div>
+
+  <!-- Modal Dialog for direct file access info -->
+  <div class="modal-overlay" id="modal-access">
+    <div class="modal">
+      <h3 class="modal-title">Direct File Access</h3>
+      <p class="modal-desc">
+        Your browser supports direct file editing! Give permission to save edits back into your <strong>.modconfig.json</strong> file instantly. 
+        If you decline or change browsers, you can always download your configuration as a new file.
+      </p>
+      <div class="modal-buttons">
+        <button class="btn" id="modal-btn-dismiss">Understood</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Implementation -->
+  <script>
+    // Embedded template copy of YetAnotherMinimap.modconfig.json in schema format
+    const MINIMAP_SCHEMA_TEMPLATE = {
+      "note": "THIS JSON FILE WAS CREATED USING THE `DekModConfigMenu` MOD FOR PALWORLD! DO NOT MANUALLY EDIT THIS FILE UNLESS YOU KNOW WHAT YOU'RE DOING -- USE THE `DekModConfigMenu` MOD INSTEAD <3",
+      "meta": {
+        "game": true,
+        "vers": "0.6.0",
+        "auth": "SvenBrnn",
+        "desc": "Adds a minimap to the game ui.",
+        "link": {
+          "nexus-mod-id": "146"
+        }
+      },
+      "General": {
+        "type": "object",
+        "desc": "General settings for the overlay.",
+        "data": {
+          "Mod Logic Enabled": {
+            "type": "boolean",
+            "desc": "Whether the minimap mod is enabled or not.",
+            "init": true,
+            "live": true
+          },
+          "Rotate Map": {
+            "type": "boolean",
+            "desc": "Rotate the map. Disable to always point to north.",
+            "init": true,
+            "live": true
+          },
+          "Opacity": {
+            "type": "float",
+            "desc": "Map opacity in percent.",
+            "opts": {
+              "min": 0,
+              "max": 100,
+              "step": 1
+            },
+            "init": 100,
+            "live": 100
+          },
+          "Debug": {
+            "type": "boolean",
+            "desc": "Whether debug logging is enabled.",
+            "init": false,
+            "live": false
+          }
+        }
+      },
+      "Position and Size": {
+        "type": "object",
+        "desc": "Position and Size of the Map.",
+        "data": {
+          "Size": {
+            "type": "float",
+            "desc": "Size of the map.",
+            "opts": {
+              "min": 100,
+              "max": 400,
+              "step": 0.5
+            },
+            "init": 200,
+            "live": 200
+          },
+          "PosX": {
+            "type": "float",
+            "desc": "X Position of the map. Can be altered ingame using CTRL + F8.",
+            "opts": {
+              "min": 0,
+              "max": 4000,
+              "step": 0.5
+            },
+            "init": 80,
+            "live": 80
+          },
+          "PosY": {
+            "type": "float",
+            "desc": "Y Position of the map. Can be altered ingame using CTRL + F8.",
+            "opts": {
+              "min": 0,
+              "max": 4000,
+              "step": 0.5
+            },
+            "init": 80,
+            "live": 80
+          }
+        }
+      },
+      "Scan": {
+        "type": "object",
+        "desc": "Scan for items.",
+        "data": {
+          "Treasure": {
+            "type": "boolean",
+            "desc": "Whether to show treasure on map.",
+            "init": true,
+            "live": true
+          },
+          "Pals": {
+            "type": "boolean",
+            "desc": "Whether to show Pals on map.",
+            "init": true,
+            "live": true
+          },
+          "Egg": {
+            "type": "boolean",
+            "desc": "Whether to show Eggs on map.",
+            "init": true,
+            "live": true
+          },
+          "Relics": {
+            "type": "boolean",
+            "desc": "Whether to show Relics on map.",
+            "init": true,
+            "live": true
+          },
+          "Notes": {
+            "type": "boolean",
+            "desc": "Whether to show Notes on map.",
+            "init": true,
+            "live": true
+          },
+          "Dungeon": {
+            "type": "boolean",
+            "desc": "Whether to show Dungeons on map.",
+            "init": true,
+            "live": true
+          },
+          "FastTravel": {
+            "type": "boolean",
+            "desc": "Whether to show Fast Travel portals on map.",
+            "init": true,
+            "live": true
+          }
+        }
+      },
+      "Keymap": {
+        "type": "object",
+        "desc": "Keymap for hotkeys",
+        "data": {
+          "Zoom": {
+            "type": "keybind",
+            "desc": "Key to zoom in and out",
+            "init": {"key": "Z","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+            "live": {"key": "Z","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+          },
+          "Map Move Mode": {
+            "type": "keybind",
+            "desc": "Key toggle the map move mode",
+            "init": {"key": "F8","bShift": false,"bCtrl": true,"bAlt": false,"bCmd": false},
+            "live": {"key": "F8","bShift": false,"bCtrl": true,"bAlt": false,"bCmd": false}
+          },
+          "Toggle Map": {
+            "type": "keybind",
+            "desc": "Key to toggle map visibility",
+            "init": {"key": "H","bShift": false,"bCtrl": true,"bAlt": false,"bCmd": false},
+            "live": {"key": "H","bShift": false,"bCtrl": true,"bAlt": false,"bCmd": false}
+          },
+          "Map Up": {
+            "type": "keybind",
+            "desc": "Key to move map up in move mode",
+            "init": {"key": "Up","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+            "live": {"key": "Up","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+          },
+          "Map Down": {
+            "type": "keybind",
+            "desc": "Key to move map down in move mode",
+            "init": {"key": "Down","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+            "live": {"key": "Down","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+          },
+          "Map Left": {
+            "type": "keybind",
+            "desc": "Key to move map left in move mode",
+            "init": {"key": "Left","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+            "live": {"key": "Left","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+          },
+          "Map Right": {
+            "type": "keybind",
+            "desc": "Key to move map right in move mode",
+            "init": {"key": "Right","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+            "live": {"key": "Right","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+          },
+          "Map Bigger": {
+            "type": "keybind",
+            "desc": "Key increase size in move mode",
+            "init": {"key": "Add","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+            "live": {"key": "Add","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+          },
+          "Map Smaller": {
+            "type": "keybind",
+            "desc": "Key decrease size in move mode",
+            "init": {"key": "Subtract","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false},
+            "live": {"key": "Subtract","bShift": false,"bCtrl": false,"bAlt": false,"bCmd": false}
+          }
+        }
+      }
+    };
+
+    // State Variables
+    let currentConfig = JSON.parse(JSON.stringify(MINIMAP_SCHEMA_TEMPLATE));
+    let originalConfig = JSON.parse(JSON.stringify(MINIMAP_SCHEMA_TEMPLATE));
+    let fileHandle = null;
+    let recordingField = null; // Stores info about keybind currently recording
+
+    // DOM Elements
+    const formContainer = document.getElementById('form-container');
+    const jsonEditor = document.getElementById('json-editor-input');
+    const jsonStatus = document.getElementById('json-val-status');
+    const jsonSize = document.getElementById('json-val-size');
+    const statusFilename = document.getElementById('status-filename');
+    const btnSaveDirect = document.getElementById('btn-save-direct');
+    const btnOpenDirect = document.getElementById('btn-open-direct');
+    const btnDownload = document.getElementById('btn-download');
+    const btnResetAll = document.getElementById('btn-reset-all');
+    const syncIndicator = document.getElementById('sync-indicator');
+    
+    // Drag and Drop
+    const dragDropZone = document.getElementById('drag-drop-zone');
+    const filePickerFallback = document.getElementById('file-picker-fallback');
+
+    // Minimap DOM Elements
+    const hudMinimap = document.getElementById('hud-minimap');
+    const hudMapGrid = document.getElementById('hud-map-grid');
+    const markN = document.getElementById('mark-n');
+    const markE = document.getElementById('mark-e');
+    const markS = document.getElementById('mark-s');
+    const markW = document.getElementById('mark-w');
+    const hudScaleLabel = document.getElementById('hud-scale-label');
+
+    // Browser Feature Detection
+    const hasFileSystemAccess = 'showOpenFilePicker' in window;
+
+    // Toast utility
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast-notify');
+      const msgSpan = document.getElementById('toast-message');
+      const successIcon = document.getElementById('toast-icon-success');
+      const errorIcon = document.getElementById('toast-icon-error');
+
+      msgSpan.textContent = message;
+      toast.className = 'toast show ' + type;
+
+      if (type === 'success') {
+        successIcon.style.display = 'block';
+        errorIcon.style.display = 'none';
+      } else {
+        successIcon.style.display = 'none';
+        errorIcon.style.display = 'block';
+      }
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3500);
+    }
+
+    // Modal dialogue dismiss
+    document.getElementById('modal-btn-dismiss').addEventListener('click', () => {
+      document.getElementById('modal-access').classList.remove('active');
+    });
+
+    // Initialize Page
+    window.addEventListener('DOMContentLoaded', () => {
+      if (hasFileSystemAccess) {
+        syncIndicator.className = 'sync-badge active';
+        syncIndicator.innerHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor"></span> Direct File Access Mode';
+        btnSaveDirect.style.display = 'inline-flex';
+        btnDownload.style.display = 'none';
+      } else {
+        syncIndicator.className = 'sync-badge inactive';
+        syncIndicator.innerHTML = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor"></span> Browser Download Fallback';
+        btnSaveDirect.style.display = 'none';
+        btnDownload.style.display = 'inline-flex';
+      }
+
+      loadConfigData(currentConfig);
+    });
+
+    // Load configuration to UI
+    function loadConfigData(config) {
+      currentConfig = config;
+      // Sync form GUI
+      generateFormGUI(currentConfig);
+      // Sync Textarea editor
+      const configStr = JSON.stringify(currentConfig, null, 2);
+      jsonEditor.value = configStr;
+      jsonEditor.classList.remove('invalid');
+      updateCodeSizeBadge(configStr);
+      // Sync visual preview
+      updateHUDPreview(currentConfig);
+    }
+
+    // Helper to determine config format
+    function isSchemaConfig(config) {
+      if (!config || typeof config !== 'object') return false;
+      return Object.values(config).some(v => v && typeof v === 'object' && v.type === 'object' && v.data);
+    }
+
+    // Generate Form GUI dynamically
+    function generateFormGUI(config) {
+      formContainer.innerHTML = '';
+      
+      const isSchema = isSchemaConfig(config);
+
+      if (isSchema) {
+        // Run through top level sections
+        for (const [sectionName, section] of Object.entries(config)) {
+          if (sectionName === 'meta' || sectionName === 'note') continue;
+          if (section && typeof section === 'object' && section.type === 'object') {
+            const card = createSectionCard(sectionName, section);
+            formContainer.appendChild(card);
+          }
+        }
+
+        // Render meta fields at the bottom
+        if (config.meta) {
+          const metaCard = createMetaCard(config.meta);
+          formContainer.appendChild(metaCard);
+        }
+      } else {
+        // Fallback: render flat fields directly
+        const card = createFlatSectionCard("Global Parameters", config);
+        formContainer.appendChild(card);
+      }
+    }
+
+    // Create a Section Card for schema format
+    function createSectionCard(sectionName, section) {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const header = document.createElement('div');
+      header.className = 'card-header';
+      header.innerHTML = `
+        <div class="card-title-group">
+          <h2>${sectionName}</h2>
+          <div class="card-desc">${section.desc || ''}</div>
+        </div>
+      `;
+      card.appendChild(header);
+
+      const fieldsContainer = document.createElement('div');
+      fieldsContainer.className = 'fields-list';
+
+      for (const [key, field] of Object.entries(section.data || {})) {
+        if (!field || typeof field !== 'object') continue;
+
+        const row = document.createElement('div');
+        row.className = 'field-row';
+
+        const info = document.createElement('div');
+        info.className = 'field-info';
+
+        const labelGroup = document.createElement('div');
+        labelGroup.className = 'field-label-group';
+        labelGroup.innerHTML = `
+          <span class="field-label">${key}</span>
+          <span class="field-desc">${field.desc || ''}</span>
+        `;
+        info.appendChild(labelGroup);
+
+        const control = document.createElement('div');
+        control.className = 'field-control';
+
+        // Render inputs depending on type
+        const inputControl = createInputControl(sectionName, key, field);
+        control.appendChild(inputControl);
+
+        // Add Reset button to initial value if changed
+        const isChanged = hasFieldChanged(field);
+        const resetBtn = document.createElement('button');
+        resetBtn.className = `reset-btn ${isChanged ? 'changed' : ''}`;
+        resetBtn.title = `Reset to default: ${JSON.stringify(field.init)}`;
+        resetBtn.innerHTML = `
+          <svg viewBox="0 0 24 24">
+            <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+          </svg>
+        `;
+        resetBtn.addEventListener('click', () => {
+          field.live = JSON.parse(JSON.stringify(field.init));
+          loadConfigData(currentConfig);
+          showToast(`Reset ${key} to default.`, 'success');
+        });
+        control.appendChild(resetBtn);
+
+        info.appendChild(control);
+        row.appendChild(info);
+        fieldsContainer.appendChild(row);
+      }
+
+      card.appendChild(fieldsContainer);
+      return card;
+    }
+
+    // Check if field differs from default init
+    function hasFieldChanged(field) {
+      if (field.live === undefined || field.init === undefined) return false;
+      return JSON.stringify(field.live) !== JSON.stringify(field.init);
+    }
+
+    // Create Metadata card
+    function createMetaCard(meta) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.opacity = '0.85';
+
+      const header = document.createElement('div');
+      header.className = 'card-header';
+      header.innerHTML = `
+        <div class="card-title-group">
+          <h2>Mod Information</h2>
+          <div class="card-desc">Author and version metadata loaded from configuration.</div>
+        </div>
+      `;
+      card.appendChild(header);
+
+      const fieldsContainer = document.createElement('div');
+      fieldsContainer.className = 'fields-list';
+
+      for (const [key, value] of Object.entries(meta)) {
+        if (typeof value === 'object') {
+          for (const [subKey, subVal] of Object.entries(value)) {
+            fieldsContainer.appendChild(createStaticMetaRow(`${key}.${subKey}`, subVal));
+          }
+        } else {
+          fieldsContainer.appendChild(createStaticMetaRow(key, value));
+        }
+      }
+
+      card.appendChild(fieldsContainer);
+      return card;
+    }
+
+    function createStaticMetaRow(label, value) {
+      const row = document.createElement('div');
+      row.className = 'field-row';
+      row.style.borderBottom = 'none';
+      row.style.padding = '0.5rem 0';
+      row.innerHTML = `
+        <div class="field-info" style="align-items: center">
+          <span style="font-weight:600;font-size:0.85rem;color:var(--text-secondary);text-transform:uppercase">${label}</span>
+          <span style="font-family:var(--font-mono);font-size:0.85rem;color:var(--text-primary)">${value}</span>
+        </div>
+      `;
+      return row;
+    }
+
+    // Dynamic input controls creator
+    function createInputControl(sectionName, key, field) {
+      const type = field.type;
+      const val = field.live;
+
+      const container = document.createElement('div');
+
+      if (type === 'boolean') {
+        container.className = 'switch-container';
+        container.innerHTML = `
+          <label class="switch">
+            <input type="checkbox" ${val ? 'checked' : ''}>
+            <span class="slider"></span>
+          </label>
+        `;
+        const checkbox = container.querySelector('input');
+        checkbox.addEventListener('change', (e) => {
+          field.live = e.target.checked;
+          // Soft sync code field & HUD
+          updateFromGUIForm();
+        });
+      }
+      else if (type === 'float' || type === 'number') {
+        container.className = 'range-group';
+        const opts = field.opts || { min: 0, max: 100, step: 1 };
+        
+        container.innerHTML = `
+          <input type="range" class="slider-input" min="${opts.min}" max="${opts.max}" step="${opts.step}" value="${val}">
+          <input type="number" class="num-input" min="${opts.min}" max="${opts.max}" step="${opts.step}" value="${val}">
+        `;
+        
+        const slider = container.querySelector('.slider-input');
+        const numInput = container.querySelector('.num-input');
+
+        function updateVal(newVal) {
+          let numericVal = parseFloat(newVal);
+          if (isNaN(numericVal)) return;
+          
+          // Clamp within limits
+          if (numericVal < opts.min) numericVal = opts.min;
+          if (numericVal > opts.max) numericVal = opts.max;
+
+          field.live = numericVal;
+          slider.value = numericVal;
+          numInput.value = numericVal;
+          updateFromGUIForm();
+        }
+
+        slider.addEventListener('input', (e) => updateVal(e.target.value));
+        numInput.addEventListener('change', (e) => updateVal(e.target.value));
+      }
+      else if (type === 'keybind') {
+        container.className = 'keybind-container';
+        renderKeybind(container, field, sectionName, key);
+      }
+      else {
+        // Standard Text input for unknown/untyped schema properties
+        const input = document.createElement('input');
+        input.className = 'num-input';
+        input.style.width = '180px';
+        input.style.textAlign = 'left';
+        input.value = typeof val === 'object' ? JSON.stringify(val) : val;
+        input.addEventListener('change', (e) => {
+          try {
+            field.live = JSON.parse(e.target.value);
+          } catch(err) {
+            field.live = e.target.value;
+          }
+          updateFromGUIForm();
+        });
+        container.appendChild(input);
+      }
+
+      return container;
+    }
+
+    // Render keybind controls
+    function renderKeybind(container, field, sectionName, key) {
+      container.innerHTML = '';
+      const val = field.live;
+
+      const keysList = [];
+      if (val.bCtrl) keysList.push('Ctrl');
+      if (val.bShift) keysList.push('Shift');
+      if (val.bAlt) keysList.push('Alt');
+      if (val.bCmd) keysList.push('Cmd');
+      if (val.key) keysList.push(val.key);
+
+      if (keysList.length === 0) {
+        container.innerHTML = `<span class="key-badge" style="opacity: 0.5; font-style: italic;">None</span>`;
+      } else {
+        keysList.forEach((k, idx) => {
+          if (idx > 0) {
+            const plus = document.createElement('span');
+            plus.className = 'key-badge plus';
+            plus.textContent = '+';
+            container.appendChild(plus);
+          }
+          const badge = document.createElement('span');
+          badge.className = `key-badge ${['Ctrl','Shift','Alt','Cmd'].includes(k) ? 'modifier' : ''}`;
+          badge.textContent = k;
+          container.appendChild(badge);
+        });
+      }
+
+      const recBtn = document.createElement('button');
+      recBtn.className = 'keybind-record-btn';
+      recBtn.innerHTML = `
+        <svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 24 24">
+          <path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 6h-2v-2h2v2zm0-3h-2V8h2v2z"/>
+        </svg>
+        Record
+      `;
+
+      recBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (recordingField && recordingField.btn === recBtn) {
+          // Cancel recording
+          stopRecording();
+          return;
+        }
+        startRecording(sectionName, key, field, recBtn);
+      });
+
+      container.appendChild(recBtn);
+    }
+
+    // Keybind recording handlers
+    function startRecording(sectionName, keyName, field, btn) {
+      if (recordingField) stopRecording();
+
+      recordingField = { sectionName, keyName, field, btn };
+      btn.className = 'keybind-record-btn recording';
+      btn.textContent = 'Recording...';
+      
+      window.addEventListener('keydown', handleKeybindPress, true);
+      // Prevent browser shortcuts while recording
+      window.addEventListener('keypress', preventDefault, true);
+    }
+
+    function stopRecording() {
+      if (!recordingField) return;
+      
+      recordingField.btn.className = 'keybind-record-btn';
+      recordingField.btn.innerHTML = `
+        <svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 24 24">
+          <path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 6h-2v-2h2v2zm0-3h-2V8h2v2z"/>
+        </svg>
+        Record
+      `;
+      
+      window.removeEventListener('keydown', handleKeybindPress, true);
+      window.removeEventListener('keypress', preventDefault, true);
+      recordingField = null;
+    }
+
+    function preventDefault(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Map browser key string to mod key strings (UE friendly)
+    function cleanKeyName(browserKey) {
+      if (browserKey === ' ') return 'Space';
+      if (browserKey === 'Control') return '';
+      if (browserKey === 'Shift') return '';
+      if (browserKey === 'Alt') return '';
+      if (browserKey === 'Meta') return '';
+
+      // Normalize common keys
+      const keyMap = {
+        'ArrowUp': 'Up',
+        'ArrowDown': 'Down',
+        'ArrowLeft': 'Left',
+        'ArrowRight': 'Right',
+        'Escape': 'Escape',
+        'Enter': 'Enter',
+        'Backspace': 'Backspace',
+        'Tab': 'Tab',
+        'Insert': 'Insert',
+        'Delete': 'Delete',
+        'PageUp': 'PageUp',
+        'PageDown': 'PageDown',
+        'Home': 'Home',
+        'End': 'End',
+        '+': 'Add',
+        '-': 'Subtract',
+        '*': 'Multiply',
+        '/': 'Divide'
+      };
+
+      if (keyMap[browserKey]) return keyMap[browserKey];
+      
+      // Capitalize single characters
+      if (browserKey.length === 1) return browserKey.toUpperCase();
+
+      return browserKey;
+    }
+
+    function handleKeybindPress(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const key = cleanKeyName(e.key);
+      const bCtrl = e.ctrlKey;
+      const bShift = e.shiftKey;
+      const bAlt = e.altKey;
+      const bCmd = e.metaKey;
+
+      // Only complete recording if a non-modifier key is pressed
+      if (key !== '') {
+        recordingField.field.live = {
+          key,
+          bShift,
+          bCtrl,
+          bAlt,
+          bCmd
+        };
+        
+        const fName = recordingField.keyName;
+        stopRecording();
+        loadConfigData(currentConfig);
+        showToast(`Recorded keybind for ${fName}.`, 'success');
+      }
+    }
+
+    // Fallback form for simple flat configurations
+    function createFlatSectionCard(title, config) {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const header = document.createElement('div');
+      header.className = 'card-header';
+      header.innerHTML = `
+        <div class="card-title-group">
+          <h2>${title}</h2>
+          <div class="card-desc">Dynamic settings list (flat JSON mode).</div>
+        </div>
+      `;
+      card.appendChild(header);
+
+      const fieldsContainer = document.createElement('div');
+      fieldsContainer.className = 'fields-list';
+
+      for (const [key, val] of Object.entries(config)) {
+        if (key === 'meta' || key === 'note') continue;
+
+        const row = document.createElement('div');
+        row.className = 'field-row';
+
+        const info = document.createElement('div');
+        info.className = 'field-info';
+
+        const labelGroup = document.createElement('div');
+        labelGroup.className = 'field-label-group';
+        labelGroup.innerHTML = `<span class="field-label">${key}</span>`;
+        info.appendChild(labelGroup);
+
+        const control = document.createElement('div');
+        control.className = 'field-control';
+
+        // Check if value behaves like a color { R, G, B, A }
+        const isRGBA = val && typeof val === 'object' && 'R' in val && 'G' in val && 'B' in val;
+
+        if (isRGBA) {
+          const pickerGroup = createColorPickerControl(config, key, val);
+          control.appendChild(pickerGroup);
+        } else if (typeof val === 'boolean') {
+          // Switch Toggle
+          const switchLabel = document.createElement('label');
+          switchLabel.className = 'switch';
+          switchLabel.innerHTML = `
+            <input type="checkbox" ${val ? 'checked' : ''}>
+            <span class="slider"></span>
+          `;
+          switchLabel.querySelector('input').addEventListener('change', (e) => {
+            config[key] = e.target.checked;
+            updateFromGUIForm();
+          });
+          control.appendChild(switchLabel);
+        } else if (typeof val === 'number') {
+          // Number field
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.className = 'num-input';
+          input.value = val;
+          input.step = val % 1 === 0 ? '1' : '0.1';
+          input.addEventListener('change', (e) => {
+            config[key] = parseFloat(e.target.value);
+            updateFromGUIForm();
+          });
+          control.appendChild(input);
+        } else {
+          // Text/Generic
+          const input = document.createElement('input');
+          input.className = 'num-input';
+          input.style.width = '180px';
+          input.style.textAlign = 'left';
+          input.value = typeof val === 'object' ? JSON.stringify(val) : val;
+          input.addEventListener('change', (e) => {
+            try {
+              config[key] = JSON.parse(e.target.value);
+            } catch(err) {
+              config[key] = e.target.value;
+            }
+            updateFromGUIForm();
+          });
+          control.appendChild(input);
+        }
+
+        info.appendChild(control);
+        row.appendChild(info);
+        fieldsContainer.appendChild(row);
+      }
+
+      card.appendChild(fieldsContainer);
+      return card;
+    }
+
+    // Custom Color Picker Control for {R, G, B, A} objects
+    function createColorPickerControl(configObj, key, val) {
+      const container = document.createElement('div');
+      container.className = 'color-picker-group';
+
+      // Convert R G B float [0,1] to int [0,255]
+      const r = Math.round((val.R || 0) * 255);
+      const g = Math.round((val.G || 0) * 255);
+      const b = Math.round((val.B || 0) * 255);
+      const a = (val.A !== undefined) ? parseFloat(val.A) : 1.0;
+
+      // Hex string for the color picker
+      const hex = rgbToHex(r, g, b);
+
+      container.innerHTML = `
+        <div class="color-preview-box" style="background: rgba(${r},${g},${b},${a})">
+          <input type="color" value="${hex}">
+        </div>
+        <div class="rgba-inputs">
+          <span class="rgba-val">R: ${val.R.toFixed(2)}</span>
+          <span class="rgba-val">G: ${val.G.toFixed(2)}</span>
+          <span class="rgba-val">B: ${val.B.toFixed(2)}</span>
+          <span class="rgba-val">A: ${a.toFixed(1)}</span>
+        </div>
+        <input type="range" class="slider-input" style="width: 50px" min="0" max="1" step="0.1" value="${a}">
+      `;
+
+      const colorInput = container.querySelector('input[type="color"]');
+      const opacitySlider = container.querySelector('input[type="range"]');
+      const previewBox = container.querySelector('.color-preview-box');
+
+      function updateColor() {
+        const hexVal = colorInput.value;
+        const opacityVal = parseFloat(opacitySlider.value);
+        const rgb = hexToRgb(hexVal);
+
+        val.R = parseFloat((rgb.r / 255).toFixed(3));
+        val.G = parseFloat((rgb.g / 255).toFixed(3));
+        val.B = parseFloat((rgb.b / 255).toFixed(3));
+        if ('A' in val) val.A = opacityVal;
+
+        previewBox.style.background = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacityVal})`;
+        
+        const badges = container.querySelectorAll('.rgba-val');
+        badges[0].textContent = `R: ${val.R.toFixed(2)}`;
+        badges[1].textContent = `G: ${val.G.toFixed(2)}`;
+        badges[2].textContent = `B: ${val.B.toFixed(2)}`;
+        if (badges[3]) badges[3].textContent = `A: ${val.A.toFixed(1)}`;
+
+        updateFromGUIForm();
+      }
+
+      colorInput.addEventListener('input', updateColor);
+      opacitySlider.addEventListener('input', updateColor);
+
+      return container;
+    }
+
+    // Color conversion helpers
+    function rgbToHex(r, g, b) {
+      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 255, g: 255, b: 255 };
+    }
+
+    // Synchronize UI edits to Raw JSON panel
+    function updateFromGUIForm() {
+      const jsonStr = JSON.stringify(currentConfig, null, 2);
+      jsonEditor.value = jsonStr;
+      jsonEditor.classList.remove('invalid');
+      updateCodeSizeBadge(jsonStr);
+      updateHUDPreview(currentConfig);
+      enableSaveState();
+    }
+
+    function updateCodeSizeBadge(str) {
+      const bytes = new Blob([str]).size;
+      jsonSize.textContent = bytes + ' bytes';
+    }
+
+    // Enable/Disable Save Buttons depending on status
+    function enableSaveState() {
+      btnSaveDirect.disabled = false;
+      btnSaveDirect.classList.add('btn-success');
+    }
+
+    // Synchronize Raw JSON Textarea edits back to GUI form & preview
+    jsonEditor.addEventListener('input', () => {
+      const rawText = jsonEditor.value;
+      try {
+        const parsed = JSON.parse(rawText);
+        currentConfig = parsed;
+        
+        jsonStatus.className = 'json-status valid';
+        jsonStatus.querySelector('.status-msg').textContent = '✓ Valid JSON Config';
+        jsonEditor.classList.remove('invalid');
+        updateCodeSizeBadge(rawText);
+        
+        // Re-generate forms in background without steeling focus
+        generateFormGUI(currentConfig);
+        updateHUDPreview(currentConfig);
+        enableSaveState();
+      } catch (err) {
+        jsonStatus.className = 'json-status invalid';
+        jsonStatus.querySelector('.status-msg').textContent = '✗ Invalid JSON: ' + err.message;
+        jsonEditor.classList.add('invalid');
+      }
+    });
+
+    // Code Editor Panels Tab Toggle
+    const btnTabVisual = document.getElementById('tab-visual-label');
+    const btnTabCode = document.getElementById('tab-code-label');
+
+    btnTabVisual.addEventListener('click', () => {
+      btnTabVisual.classList.add('active');
+      btnTabCode.classList.remove('active');
+      jsonEditor.style.display = 'none';
+      document.querySelector('.json-status').style.display = 'none';
+      showToast('Visual sync editor active.', 'success');
+    });
+
+    btnTabCode.addEventListener('click', () => {
+      btnTabCode.classList.add('active');
+      btnTabVisual.classList.remove('active');
+      jsonEditor.style.display = 'block';
+      document.querySelector('.json-status').style.display = 'flex';
+    });
+
+    // Default to visual view
+    jsonEditor.style.display = 'none';
+    document.querySelector('.json-status').style.display = 'none';
+
+    // Reset All Configuration values to defaults
+    btnResetAll.addEventListener('click', () => {
+      if (confirm('Are you sure you want to restore all properties to their default initial values?')) {
+        const isSchema = isSchemaConfig(currentConfig);
+        if (isSchema) {
+          // Restore all field.live from field.init
+          for (const [sectionName, section] of Object.entries(currentConfig)) {
+            if (sectionName === 'meta' || sectionName === 'note') continue;
+            if (section && section.data) {
+              for (const [key, field] of Object.entries(section.data)) {
+                if (field && 'init' in field) {
+                  field.live = JSON.parse(JSON.stringify(field.init));
+                }
+              }
+            }
+          }
+        } else {
+          // Flat config fallback
+          currentConfig = JSON.parse(JSON.stringify(originalConfig));
+        }
+        loadConfigData(currentConfig);
+        showToast('All parameters restored to defaults!', 'success');
+      }
+    });
+
+
+    // --- File IO operations ---
+
+    // File Drop Zone listeners
+    dragDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dragDropZone.classList.add('dragover');
+    });
+
+    dragDropZone.addEventListener('dragleave', () => {
+      dragDropZone.classList.remove('dragover');
+    });
+
+    dragDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dragDropZone.classList.remove('dragover');
+
+      if (e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        handleFileInput(file);
+      }
+    });
+
+    dragDropZone.addEventListener('click', () => {
+      filePickerFallback.click();
+    });
+
+    filePickerFallback.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFileInput(e.target.files[0]);
+      }
+    });
+
+    function handleFileInput(file) {
+      if (!file.name.endsWith('.json')) {
+        showToast('Please load a valid JSON modconfig file.', 'error');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          originalConfig = JSON.parse(JSON.stringify(parsed));
+          statusFilename.textContent = file.name;
+          loadConfigData(parsed);
+          showToast(`Successfully loaded ${file.name}!`, 'success');
+        } catch (err) {
+          showToast('Failed to parse file. Invalid JSON structure.', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Direct File System Access API triggers
+    btnOpenDirect.addEventListener('click', async () => {
+      if (!hasFileSystemAccess) {
+        // Fallback open
+        filePickerFallback.click();
+        return;
+      }
+
+      try {
+        const [handle] = await window.showOpenFilePicker({
+          types: [{
+            description: 'Palworld ModConfig JSON',
+            accept: { 'application/json': ['.json'] }
+          }],
+          excludeAcceptAllOption: true,
+          multiple: false
+        });
+
+        fileHandle = handle;
+        const file = await fileHandle.getFile();
+        const content = await file.text();
+        
+        try {
+          const parsed = JSON.parse(content);
+          originalConfig = JSON.parse(JSON.stringify(parsed));
+          statusFilename.textContent = file.name;
+          loadConfigData(parsed);
+          showToast(`Connected directly to ${file.name}!`, 'success');
+          
+          btnSaveDirect.disabled = true; // resets changed flag
+          btnSaveDirect.classList.remove('btn-success');
+        } catch(err) {
+          showToast('Error parsing file: Invalid JSON structure.', 'error');
+        }
+      } catch(err) {
+        if (err.name !== 'AbortError') {
+          showToast('Failed to open file: ' + err.message, 'error');
+        }
+      }
+    });
+
+    btnSaveDirect.addEventListener('click', async () => {
+      if (!fileHandle) {
+        // Direct save as fallback
+        saveAsFallback();
+        return;
+      }
+
+      try {
+        const writable = await fileHandle.createWritable();
+        const content = JSON.stringify(currentConfig, null, 2);
+        await writable.write(content);
+        await writable.close();
+        
+        showToast('Saved changes directly to disk!', 'success');
+        btnSaveDirect.disabled = true;
+        btnSaveDirect.classList.remove('btn-success');
+      } catch(err) {
+        showToast('Write failed: ' + err.message + '. Trying Save As...', 'error');
+        saveAsFallback();
+      }
+    });
+
+    async function saveAsFallback() {
+      if (hasFileSystemAccess) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: fileHandle ? fileHandle.name : 'YetAnotherMinimap.modconfig.json',
+            types: [{
+              description: 'JSON Config Files',
+              accept: { 'application/json': ['.json'] }
+            }]
+          });
+          fileHandle = handle;
+          const writable = await fileHandle.createWritable();
+          await writable.write(JSON.stringify(currentConfig, null, 2));
+          await writable.close();
+          statusFilename.textContent = fileHandle.name;
+          showToast('Saved successfully!', 'success');
+          btnSaveDirect.disabled = true;
+          btnSaveDirect.classList.remove('btn-success');
+        } catch(err) {
+          if (err.name !== 'AbortError') {
+            showToast('Save As failed: ' + err.message, 'error');
+          }
+        }
+      } else {
+        triggerDownload();
+      }
+    }
+
+    btnDownload.addEventListener('click', triggerDownload);
+
+    function triggerDownload() {
+      const filename = statusFilename.textContent === 'default_minimap_template.json' ? 'YetAnotherMinimap.modconfig.json' : statusFilename.textContent;
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentConfig, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", filename);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('Config file downloaded successfully!', 'success');
+    }
+
+
+    // --- Interactive Live Minimap Preview Engine ---
+    function updateHUDPreview(config) {
+      // Set defaults in case we are using flat json
+      let size = 200;
+      let posX = 80;
+      let posY = 80;
+      let opacity = 100;
+      let rotate = true;
+      let scanItems = {
+        Treasure: true, Pals: true, Egg: true, Relics: true,
+        Notes: true, Dungeon: true, FastTravel: true
+      };
+
+      const isSchema = isSchemaConfig(config);
+
+      if (isSchema) {
+        // Read "Position and Size" values
+        if (config["Position and Size"] && config["Position and Size"].data) {
+          const posSizeData = config["Position and Size"].data;
+          if (posSizeData.Size) size = posSizeData.Size.live;
+          if (posSizeData.PosX) posX = posSizeData.PosX.live;
+          if (posSizeData.PosY) posY = posSizeData.PosY.live;
+        }
+        // Read "General" values
+        if (config.General && config.General.data) {
+          const genData = config.General.data;
+          if (genData.Opacity) opacity = genData.Opacity.live;
+          if (genData["Rotate Map"] !== undefined) rotate = genData["Rotate Map"].live;
+          // Hide/Show minimap if mod logic is disabled
+          if (genData["Mod Logic Enabled"] !== undefined) {
+            hudMinimap.style.display = genData["Mod Logic Enabled"].live ? 'block' : 'none';
+          }
+        }
+        // Read "Scan" values
+        if (config.Scan && config.Scan.data) {
+          const scanData = config.Scan.data;
+          for (const key of Object.keys(scanItems)) {
+            if (scanData[key] !== undefined) scanItems[key] = scanData[key].live;
+          }
+        }
+      } else {
+        // Flat JSON mode fallback
+        if (config.Size !== undefined) size = config.Size;
+        if (config.PosX !== undefined) posX = config.PosX;
+        if (config.PosY !== undefined) posY = config.PosY;
+        if (config.Opacity !== undefined) opacity = config.Opacity;
+        if (config.Rotate !== undefined) rotate = config.Rotate;
+        if (config.Enabled !== undefined) {
+          hudMinimap.style.display = config.Enabled ? 'block' : 'none';
+        }
+        // Map other scan properties if flat
+        for (const key of Object.keys(scanItems)) {
+          if (config[key] !== undefined) scanItems[key] = config[key];
+        }
+      }
+
+      // Update scale labels
+      const scaleVal = size / 200;
+      hudScaleLabel.textContent = `Scale: ${scaleVal.toFixed(2)}x (${Math.round(size)}px)`;
+
+      // Set Map Opacity
+      hudMinimap.style.opacity = (opacity / 100);
+
+      // Set Map Size
+      // Map 100px - 400px configuration range to 60px - 180px in HUD simulator window (ratio ~0.45)
+      const renderSize = Math.max(60, Math.min(180, size * 0.45));
+      hudMinimap.style.width = renderSize + 'px';
+      hudMinimap.style.height = renderSize + 'px';
+
+      // Set Map Position
+      // PosX / PosY coordinates are in game space (usually 1920x1080 canvas size)
+      // Screen simulator has resolution of 480x270 (ratio exactly 0.25)
+      // We also offset by map size to position the center/origin appropriately
+      const simX = posX * 0.25;
+      const simY = posY * 0.25;
+
+      // Keep it constrained inside HUD panel boundaries (with a bit of margin)
+      const clampedX = Math.max(10, Math.min(480 - renderSize - 10, simX));
+      const clampedY = Math.max(10, Math.min(270 - renderSize - 10, simY));
+      
+      hudMinimap.style.left = clampedX + 'px';
+      hudMinimap.style.top = clampedY + 'px';
+
+      // Rotate compass indicators if Rotate Map is checked
+      if (rotate) {
+        hudMapGrid.style.transform = 'rotate(-45deg)';
+        hudMapGrid.style.transition = 'transform 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+        // Rotate markers in reverse so they don't offset visually
+        markN.style.transform = 'translate(-50%, -50%) rotate(45deg)';
+        markE.style.transform = 'translate(-50%, -50%) rotate(45deg)';
+        markS.style.transform = 'translate(-50%, -50%) rotate(45deg)';
+        markW.style.transform = 'translate(-50%, -50%) rotate(45deg)';
+      } else {
+        hudMapGrid.style.transform = 'none';
+        markN.style.transform = 'translate(-50%, -50%)';
+        markE.style.transform = 'translate(-50%, -50%)';
+        markS.style.transform = 'translate(-50%, -50%)';
+        markW.style.transform = 'translate(-50%, -50%)';
+      }
+
+      // Hide / Show pin indicators dynamically
+      for (const [key, active] of Object.entries(scanItems)) {
+        const pin = document.getElementById(`pin-${key.toLowerCase()}`);
+        if (pin) {
+          if (active) {
+            pin.classList.add('active');
+          } else {
+            pin.classList.remove('active');
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>

@@ -8,6 +8,7 @@ M.CONFIG = {
     ShowPlayers = true,
     ShowRelics = true,
     ShowChests = true,
+    ShowCaves = true,
     EggFilter = "All",
     DrawBox = false,
     Debug = false,
@@ -16,6 +17,7 @@ M.CONFIG = {
     RelicFontScale = 1.2,
     ChestFontScale = 1.2,
     EggFontScale = 1.2,
+    CaveFontScale = 1.2,
     FontCharW = 8.0,
     FontLineH = 12.0,
     TextOffsetZ = 120.0,
@@ -31,6 +33,7 @@ M.CONFIG = {
     RelicColor = { R = 0.1, G = 0.9, B = 0.9, A = 1.0 },
     ChestColor = { R = 0.9, G = 0.7, B = 0.1, A = 1.0 },
     EggColor = { R = 0.8, G = 0.5, B = 0.8, A = 1.0 },
+    CaveColor = { R = 0.6, G = 0.2, B = 0.9, A = 1.0 },
     ScanIntervalMs = 1500,
     GraceRadiusM = 30
 }
@@ -59,6 +62,7 @@ local defaultJSON = [[{
   "ShowPlayers": true,
   "ShowRelics": true,
   "ShowChests": true,
+  "ShowCaves": true,
   "EggFilter": "All",
   "DrawBox": false,
   "Debug": false,
@@ -67,6 +71,7 @@ local defaultJSON = [[{
   "RelicFontScale": 1.2,
   "ChestFontScale": 1.2,
   "EggFontScale": 1.2,
+  "CaveFontScale": 1.2,
   "FontCharW": 8.0,
   "FontLineH": 12.0,
   "TextOffsetZ": 120.0,
@@ -82,6 +87,7 @@ local defaultJSON = [[{
   "RelicColor": { "R": 0.1, "G": 0.9, "B": 0.9, "A": 1.0 },
   "ChestColor": { "R": 0.9, "G": 0.7, "B": 0.1, "A": 1.0 },
   "EggColor": { "R": 0.8, "G": 0.5, "B": 0.8, "A": 1.0 },
+  "CaveColor": { "R": 0.6, "G": 0.2, "B": 0.9, "A": 1.0 },
   "ScanIntervalMs": 1500,
   "GraceRadiusM": 30
 }
@@ -143,6 +149,23 @@ function M.LoadConfig()
         print("[HUDLocator] Config loaded successfully!")
     else
         print("[HUDLocator] Failed to parse config, using defaults.")
+    end
+end
+
+function M.SaveConfig()
+    local configPath = GetConfigFilePath()
+    local outFile = io.open(configPath, "w")
+    if outFile then
+        local status, str = pcall(function() return json.stringify(M.CONFIG) end)
+        if status and str then
+            outFile:write(str)
+            print("[HUDLocator] Configuration saved successfully to " .. configPath)
+        else
+            print("[HUDLocator] Failed to stringify config: " .. tostring(str))
+        end
+        outFile:close()
+    else
+        print("[HUDLocator] Failed to open config file for writing: " .. configPath)
     end
 end
 

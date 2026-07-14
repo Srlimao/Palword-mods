@@ -1,5 +1,6 @@
 local configMod = require("HUDLocator.config")
 local popup = require("HUDLocator.popup")
+local menu = require("HUDLocator.menu")
 local CONFIG = configMod.CONFIG
 
 local M = {}
@@ -27,6 +28,31 @@ local function DrawTextAbove(hud, pos, textStr, color, fontScale)
         local drawY = textScreen.Y - (height / 2.0)
         
         hud:DrawText(textStr, color, drawX, drawY, nil, fontScale, false)
+    end
+end
+
+-- Render a 3D glowing beam and ground flare at the location
+local function DrawCaveBeacon(hud, pos, color)
+    local baseWorld = { X = pos.X, Y = pos.Y, Z = pos.Z }
+    local topWorld = { X = pos.X, Y = pos.Y, Z = pos.Z + 1500.0 } -- 15 meters tall
+    
+    local screenBase = hud:Project(baseWorld, false)
+    local screenTop = hud:Project(topWorld, false)
+    
+    if screenBase.Z > 0.0 or screenTop.Z > 0.0 then
+        -- Draw glowing cylinder beam using thick Canvas DrawLine calls
+        pcall(hud.DrawLine, hud, screenBase.X, screenBase.Y, screenTop.X, screenTop.Y, { R = color.R, G = color.G, B = color.B, A = 0.05 }, 16.0)
+        pcall(hud.DrawLine, hud, screenBase.X, screenBase.Y, screenTop.X, screenTop.Y, { R = color.R, G = color.G, B = color.B, A = 0.12 }, 8.0)
+        pcall(hud.DrawLine, hud, screenBase.X, screenBase.Y, screenTop.X, screenTop.Y, { R = 1.0, G = 1.0, B = 1.0, A = 0.35 }, 2.0)
+        
+        -- Draw concentric squares for glowing ground flare
+        local steps = 5
+        local baseSize = 24.0
+        for i = 1, steps do
+            local size = baseSize * (1.0 + (i - 1) * 0.6)
+            local alpha = 0.15 * (1.0 - (i - 1) / steps)
+            hud:DrawRect({ R = color.R, G = color.G, B = color.B, A = alpha }, screenBase.X - size/2, screenBase.Y - size/2, size, size)
+        end
     end
 end
 
@@ -111,7 +137,13 @@ local function DrawPlayerPlate(hud, otherPlayer, playerPos)
 end
 
 -- Main entry point for drawing
-function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, cachedLocalPlayer, SizeX, SizeY)
+function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, activeCaves, cachedLocalPlayer, SizeX, SizeY)
+    -- 1. Draw Settings Menu (always allowed, even if mod is disabled)
+    menu.Draw(hud, SizeX, SizeY)
+    
+    -- 2. Draw Popups (always allowed)
+    popup.Draw(hud, SizeX, SizeY)
+
     if not CONFIG.Enabled then return end
     
     if not cachedLocalPlayer or not cachedLocalPlayer:IsValid() then return end
@@ -164,8 +196,29 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, cach
             DrawTextAbove(hud, pos, textStr, CONFIG.EggColor, CONFIG.EggFontScale)
         end
     end
-    -- 5. Draw Popups (highest z-index)
-    popup.Draw(hud, SizeX, SizeY)
+
+    -- 5. Draw Caves
+    if CONFIG.ShowCaves then
+        for _, pos in ipairs(activeCaves) do
+            local dx = pos.X - playerPos.X
+            local dy = pos.Y - playerPos.Y
+            local dz = pos.Z - playerPos.Z
+            local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+            local distMeters = math.floor(dist / 100.0)
+            
+            local textStr
+            if pos.Level then
+                textStr = "Cave Lv." .. pos.Level .. " (" .. pos.State .. ") [" .. distMeters .. "m]"
+            else
+                textStr = "Cave (Closed) [" .. distMeters .. "m]"
+            end
+            
+            -- Draw 3D glowing beacon cylinder
+            --DrawCaveBeacon(hud, pos, CONFIG.CaveColor)
+            
+            DrawTextAbove(hud, pos, textStr, CONFIG.CaveColor, CONFIG.CaveFontScale)
+        end
+    end
 end
 
 return M
