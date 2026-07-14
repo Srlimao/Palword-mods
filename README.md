@@ -44,6 +44,16 @@ Calling `FindAllOf` or iterating large Maps (`UPalLocationManager` map) iterates
 *   **DO NOT** run these scans frequently.
 *   **DO** set scan intervals to 5 seconds (`5000ms`) if you must use `FindAllOf("PalPlayerState")`. A 4ms scan once every 5 seconds is completely imperceptible to the player, whereas running it every frame or every second causes constant stuttering.
 
+### 4. Egg Size and Pickup Status Tracking (Ghost Objects)
+Unreal Engine does not immediately destroy or garbage collect picked-up map items (like Eggs), causing them to linger in memory and reappear on the HUD.
+*   **DO NOT** check physical 3D actor scale using `K2_GetActorScale3D()`. Doing so will throw a `TrivialObject` blocked error in UE4SS.
+*   **DO** read the double property `egg.Scale` to determine egg grades (`0.9` = Normal, `1.1` = Large, `2.0` = Huge).
+*   **DO** verify if the egg is picked up by checking if the actor has been hidden (`egg.bHidden == true`) or if the database model has been unlinked (`not egg.MapObjectModel or not egg.MapObjectModel:IsValid()`).
+
+### 5. UE4SS Canvas Hooks and Font Properties (Crash Protection)
+*   **DO NOT** index font properties on the HUD object (e.g. `hud.EngineMessageFont`, `hud.RobotoFont`). If the properties do not exist on the current version of the game's AHUD, UE4SS will crash the script instantly. Pass `nil` instead to automatically use the safe, default system font.
+*   **DO** safely check and unwrap `RemoteUnrealParam` wrapper objects when handling HUD hook variables like `SizeX` and `SizeY`. Call `SizeX:get()` if `type(SizeX) == "userdata"` to prevent arithmetic crash errors.
+
 ---
 
 ## 📦 Current Deployment Status
