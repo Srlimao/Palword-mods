@@ -52,22 +52,24 @@ local function IsEggPicked(egg)
     local status, picked = pcall(function()
         if not egg:IsValid() then return true end
         
+        -- If the actor is hidden, it has been picked up/disabled
+        if egg.bHidden then return true end
+        
+        -- If the map object model is gone or invalid, it has been picked up
+        local model = egg.MapObjectModel
+        if not model or not model:IsValid() then return true end
+        
         if type(egg.bPickedInClient) == "boolean" and egg.bPickedInClient then return true end
         
-        -- Try to check the concrete model if it exists
-        local model = egg.MapObjectModel
-        if model and model:IsValid() then
-            local concrete = model.ConcreteModel
-            if concrete and concrete:IsValid() then
-                if type(concrete.bPicked) == "boolean" and concrete.bPicked then return true end
-                if type(concrete.bIsPicked) == "boolean" and concrete.bIsPicked then return true end
-            end
+        local concrete = model.ConcreteModel
+        if concrete and concrete:IsValid() then
+            if type(concrete.bPicked) == "boolean" and concrete.bPicked then return true end
+            if type(concrete.bIsPicked) == "boolean" and concrete.bIsPicked then return true end
         end
         
         return false
     end)
     
-    -- If there's an error, we assume it's NOT picked so it doesn't vanish prematurely, but if it is picked, hopefully IsValid() catches it eventually.
     if status then return picked else return false end
 end
 

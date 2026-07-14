@@ -20,13 +20,21 @@ function M.Draw(hud, SizeX, SizeY)
             A = PopupTimer / 60.0
         end
 
-        local font = hud.EngineMessageFont
-        if not font then font = hud.RobotoFont end
-        if not font then font = hud.DefaultFont end
+        -- Unwrap UE4SS RemoteUnrealParams safely
+        local sx = SizeX
+        if type(sx) == "userdata" or type(sx) == "table" then
+            local status, val = pcall(function() return sx:get() end)
+            if status then sx = val end
+        end
+        local sy = SizeY
+        if type(sy) == "userdata" or type(sy) == "table" then
+            local status, val = pcall(function() return sy:get() end)
+            if status then sy = val end
+        end
 
-        -- Use a default 1080p fallback if size is not provided
-        local screenW = (SizeX and SizeX > 0) and SizeX or 1920.0
-        local screenH = (SizeY and SizeY > 0) and SizeY or 1080.0
+        -- Use a default 1080p fallback if size is not provided or invalid
+        local screenW = (type(sx) == "number" and sx > 0) and sx or 1920.0
+        local screenH = (type(sy) == "number" and sy > 0) and sy or 1080.0
         
         local x = screenW / 2.0
         local y = screenH / 4.0
@@ -46,7 +54,7 @@ function M.Draw(hud, SizeX, SizeY)
             PopupText,
             {R=0, G=0, B=0, A=A},
             x+2, y+2,
-            font,
+            nil,
             scale,
             false
         )
@@ -55,7 +63,7 @@ function M.Draw(hud, SizeX, SizeY)
             PopupText,
             {R=R, G=G, B=B, A=A},
             x, y,
-            font,
+            nil,
             scale,
             false
         )
