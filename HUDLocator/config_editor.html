@@ -514,12 +514,30 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label>Font Scale (Name) <span class="val-label" id="val-font-scale">1.2</span></label>
-            <input type="range" id="rng-font-scale" min="0.5" max="2.5" step="0.1" value="1.2">
+            <label>Player Name Font Scale <span class="val-label" id="val-player-font-scale">1.2</span></label>
+            <input type="range" id="rng-player-font-scale" min="0.5" max="2.5" step="0.1" value="1.2">
           </div>
           <div class="form-group">
-            <label>Font Scale (Distance) <span class="val-label" id="val-small-font-scale">0.9</span></label>
-            <input type="range" id="rng-small-font-scale" min="0.5" max="2.0" step="0.1" value="0.9">
+            <label>Player Distance Font Scale <span class="val-label" id="val-player-small-font-scale">0.9</span></label>
+            <input type="range" id="rng-player-small-font-scale" min="0.5" max="2.0" step="0.1" value="0.9">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Relic Font Scale <span class="val-label" id="val-relic-font-scale">1.2</span></label>
+            <input type="range" id="rng-relic-font-scale" min="0.5" max="2.5" step="0.1" value="1.2">
+          </div>
+          <div class="form-group">
+            <label>Chest Font Scale <span class="val-label" id="val-chest-font-scale">1.2</span></label>
+            <input type="range" id="rng-chest-font-scale" min="0.5" max="2.5" step="0.1" value="1.2">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Egg Font Scale <span class="val-label" id="val-egg-font-scale">1.2</span></label>
+            <input type="range" id="rng-egg-font-scale" min="0.5" max="2.5" step="0.1" value="1.2">
           </div>
         </div>
 
@@ -664,8 +682,11 @@
       EggFilter: "All",
       DrawBox: false,
       Debug: false,
-      FontScale: 1.2,
-      SmallFontScale: 0.9,
+      PlayerFontScale: 1.2,
+      PlayerSmallFontScale: 0.9,
+      RelicFontScale: 1.2,
+      ChestFontScale: 1.2,
+      EggFontScale: 1.2,
       FontCharW: 8.0,
       FontLineH: 12.0,
       TextOffsetZ: 120.0,
@@ -723,8 +744,11 @@
       document.getElementById('rng-scan-interval').value = CONFIG.ScanIntervalMs;
       document.getElementById('rng-max-distance').value = CONFIG.MaxDistance;
       document.getElementById('rng-grace-radius').value = CONFIG.GraceRadiusM;
-      document.getElementById('rng-font-scale').value = CONFIG.FontScale;
-      document.getElementById('rng-small-font-scale').value = CONFIG.SmallFontScale;
+      document.getElementById('rng-player-font-scale').value = CONFIG.PlayerFontScale || 1.2;
+      document.getElementById('rng-player-small-font-scale').value = CONFIG.PlayerSmallFontScale || 0.9;
+      document.getElementById('rng-relic-font-scale').value = CONFIG.RelicFontScale || 1.2;
+      document.getElementById('rng-chest-font-scale').value = CONFIG.ChestFontScale || 1.2;
+      document.getElementById('rng-egg-font-scale').value = CONFIG.EggFontScale || 1.2;
       document.getElementById('rng-text-offset').value = CONFIG.TextOffsetZ;
       document.getElementById('rng-item-text-offset').value = CONFIG.ItemTextOffsetZ;
       document.getElementById('rng-box-pad-x').value = CONFIG.BoxPadX;
@@ -755,8 +779,11 @@
       CONFIG.ScanIntervalMs = parseInt(document.getElementById('rng-scan-interval').value);
       CONFIG.MaxDistance = parseFloat(document.getElementById('rng-max-distance').value);
       CONFIG.GraceRadiusM = parseInt(document.getElementById('rng-grace-radius').value);
-      CONFIG.FontScale = parseFloat(document.getElementById('rng-font-scale').value);
-      CONFIG.SmallFontScale = parseFloat(document.getElementById('rng-small-font-scale').value);
+      CONFIG.PlayerFontScale = parseFloat(document.getElementById('rng-player-font-scale').value);
+      CONFIG.PlayerSmallFontScale = parseFloat(document.getElementById('rng-player-small-font-scale').value);
+      CONFIG.RelicFontScale = parseFloat(document.getElementById('rng-relic-font-scale').value);
+      CONFIG.ChestFontScale = parseFloat(document.getElementById('rng-chest-font-scale').value);
+      CONFIG.EggFontScale = parseFloat(document.getElementById('rng-egg-font-scale').value);
       CONFIG.TextOffsetZ = parseFloat(document.getElementById('rng-text-offset').value);
       CONFIG.ItemTextOffsetZ = parseFloat(document.getElementById('rng-item-text-offset').value);
       CONFIG.BoxPadX = parseFloat(document.getElementById('rng-box-pad-x').value);
@@ -779,8 +806,11 @@
       document.getElementById('val-scan-interval').innerText = CONFIG.ScanIntervalMs + 'ms';
       document.getElementById('val-max-distance').innerText = Math.round(CONFIG.MaxDistance / 100) + 'm';
       document.getElementById('val-grace-radius').innerText = CONFIG.GraceRadiusM + 'm';
-      document.getElementById('val-font-scale').innerText = CONFIG.FontScale;
-      document.getElementById('val-small-font-scale').innerText = CONFIG.SmallFontScale;
+      document.getElementById('val-player-font-scale').innerText = CONFIG.PlayerFontScale;
+      document.getElementById('val-player-small-font-scale').innerText = CONFIG.PlayerSmallFontScale;
+      document.getElementById('val-relic-font-scale').innerText = CONFIG.RelicFontScale;
+      document.getElementById('val-chest-font-scale').innerText = CONFIG.ChestFontScale;
+      document.getElementById('val-egg-font-scale').innerText = CONFIG.EggFontScale;
       document.getElementById('val-text-offset').innerText = CONFIG.TextOffsetZ + 'cm';
       document.getElementById('val-item-text-offset').innerText = CONFIG.ItemTextOffsetZ + 'cm';
       document.getElementById('val-box-pad-x').innerText = CONFIG.BoxPadX + 'px';
@@ -822,12 +852,12 @@
           
           previewName.className = "nameplate-name";
           previewName.style.color = rgbToHex(CONFIG.NameColor);
-          previewName.style.fontSize = (CONFIG.FontScale * 14) + 'px';
+          previewName.style.fontSize = (CONFIG.PlayerFontScale * 14) + 'px';
           previewName.style.textShadow = 'none';
 
           previewDist.className = "nameplate-dist";
           previewDist.style.color = rgbToHex(CONFIG.DistColor);
-          previewDist.style.fontSize = (CONFIG.SmallFontScale * 14) + 'px';
+          previewDist.style.fontSize = (CONFIG.PlayerSmallFontScale * 14) + 'px';
           previewDist.style.marginTop = '4px';
           previewDist.style.textShadow = 'none';
           previewDist.style.display = 'block';
@@ -841,7 +871,7 @@
 
           previewName.className = "simple-nameplate";
           previewName.style.color = '#ffffff';
-          previewName.style.fontSize = (CONFIG.FontScale * 14) + 'px';
+          previewName.style.fontSize = (CONFIG.PlayerFontScale * 14) + 'px';
           
           // Recreate simple text: Name [Distance]
           previewName.innerText = `@ PalFriend [156m]`;
@@ -854,7 +884,7 @@
       simRelic.style.display = CONFIG.ShowRelics ? 'block' : 'none';
       if (CONFIG.ShowRelics) {
         simRelic.style.color = rgbToHex(CONFIG.RelicColor);
-        simRelic.style.fontSize = (CONFIG.FontScale * 14) + 'px';
+        simRelic.style.fontSize = (CONFIG.RelicFontScale * 14) + 'px';
       }
 
       // 4. Chest visibility and colors
@@ -862,7 +892,7 @@
       simChest.style.display = CONFIG.ShowChests ? 'block' : 'none';
       if (CONFIG.ShowChests) {
         simChest.style.color = rgbToHex(CONFIG.ChestColor);
-        simChest.style.fontSize = (CONFIG.FontScale * 14) + 'px';
+        simChest.style.fontSize = (CONFIG.ChestFontScale * 14) + 'px';
       }
 
       // 5. Egg visibility and colors
@@ -877,7 +907,7 @@
             simEgg.innerText = "Egg [8m]";
         }
         simEgg.style.color = rgbToHex(CONFIG.EggColor);
-        simEgg.style.fontSize = (CONFIG.FontScale * 14) + 'px';
+        simEgg.style.fontSize = (CONFIG.EggFontScale * 14) + 'px';
       }
     }
 
