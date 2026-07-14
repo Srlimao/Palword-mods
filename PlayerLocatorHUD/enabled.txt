@@ -1,0 +1,5 @@
+Don't forget to add this line to your existing UE4SS Mods\mods.txt file:
+
+PlayerLocatorHUD : 1
+
+Do not replace your complete mods.txt or mods.json file.

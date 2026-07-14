@@ -1,0 +1,22 @@
+{
+  "Enabled": true,
+  "MaxDistance": 15000.0,
+  "FontScale": 1.2,
+  "TextOffsetZ": 80.0,
+  "ScanIntervalMs": 1500,
+  "Debug": true,
+  "ShowRelics": true,
+  "RelicColor": {
+    "R": 0.1,
+    "G": 0.9,
+    "B": 0.9,
+    "A": 1.0
+  },
+  "ShowChests": true,
+  "ChestColor": {
+    "R": 0.9,
+    "G": 0.7,
+    "B": 0.1,
+    "A": 1.0
+  }
+}

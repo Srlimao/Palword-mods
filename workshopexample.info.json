@@ -1,0 +1,24 @@
+{
+    "ModName": "Player Locator HUD",
+    "PackageName": "PlayerLocatorHUD",
+    "Thumbnail": "thumbnail.png",
+    "Version": "1.0.6",
+    "DebugMode": false,
+    "MinRevision": 82182,
+    "Author": "Will",
+    "Dependencies": [
+        "UE4SSExperimentalPW"
+    ],
+    "Tags": [
+        "UE4SS",
+        "User Interface"
+    ],
+    "InstallRule": [
+        {
+            "Type": "Lua",
+            "Targets": [
+                "./Scripts"
+            ]
+        }
+    ]
+}

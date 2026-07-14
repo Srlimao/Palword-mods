@@ -1,0 +1,8 @@
+{
+  "ShowAllHPBars": true,
+  "ShowThroughWalls": true,
+  "MaxDistance": 15000.0,
+  "HideTime": 10.0,
+  "ScanIntervalMs": 1000,
+  "Debug": false
+}
