@@ -174,7 +174,14 @@ function M.scan()
                         local dz = eggPos.Z - playerPos.Z
                         local distSq = dx*dx + dy*dy + dz*dz
                         if distSq <= maxDistSq then
-                            table.insert(newEggs, { X = eggPos.X, Y = eggPos.Y, Z = eggPos.Z })
+                            local sizeStr = ""
+                            local scale = egg:K2_GetActorScale3D()
+                            if scale then
+                                if scale.X >= 1.8 then sizeStr = "Huge "
+                                elseif scale.X >= 1.3 then sizeStr = "Large "
+                                end
+                            end
+                            table.insert(newEggs, { X = eggPos.X, Y = eggPos.Y, Z = eggPos.Z, SizePrefix = sizeStr })
                         end
                     end
                 end)

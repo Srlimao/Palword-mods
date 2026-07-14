@@ -158,7 +158,8 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, cach
             local dz = pos.Z - playerPos.Z
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
-            local textStr = "Egg [" .. distMeters .. "m]"
+            local prefix = pos.SizePrefix or ""
+            local textStr = prefix .. "Egg [" .. distMeters .. "m]"
             DrawTextAbove(hud, pos, textStr, CONFIG.EggColor)
         end
     end
