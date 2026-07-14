@@ -1,5 +1,6 @@
 local UEHelpers = require("UEHelpers")
 local configMod = require("HUDLocator.config")
+local logger = require("HUDLocator.logger")
 local CONFIG = configMod.CONFIG
 
 local M = {}
@@ -44,6 +45,30 @@ local function IsChestOpened(chest)
     else
         return true
     end
+end
+
+-- Helper to safely check if an egg has been picked up
+local function IsEggPicked(egg)
+    local status, picked = pcall(function()
+        if not egg:IsValid() then return true end
+        
+        if type(egg.bPickedInClient) == "boolean" and egg.bPickedInClient then return true end
+        
+        -- Try to check the concrete model if it exists
+        local model = egg.MapObjectModel
+        if model and model:IsValid() then
+            local concrete = model.ConcreteModel
+            if concrete and concrete:IsValid() then
+                if type(concrete.bPicked) == "boolean" and concrete.bPicked then return true end
+                if type(concrete.bIsPicked) == "boolean" and concrete.bIsPicked then return true end
+            end
+        end
+        
+        return false
+    end)
+    
+    -- If there's an error, we assume it's NOT picked so it doesn't vanish prematurely, but if it is picked, hopefully IsValid() catches it eventually.
+    if status then return picked else return false end
 end
 
 -- Scan players, relics, and chests
@@ -161,11 +186,13 @@ function M.scan()
     end
 
     -- 4. Scan Eggs
-    if CONFIG.ShowEggs then
+    if CONFIG.EggFilter ~= "None" then
         local newEggs = {}
         local eggs = FindAllOf("PalMapObjectPalEgg") or {}
+        local dumpedEggProps = false
+        
         for _, egg in ipairs(eggs) do
-            if egg:IsValid() then
+            if egg:IsValid() and not IsEggPicked(egg) then
                 pcall(function()
                     local eggPos = egg:K2_GetActorLocation()
                     if eggPos then
@@ -175,13 +202,31 @@ function M.scan()
                         local distSq = dx*dx + dy*dy + dz*dz
                         if distSq <= maxDistSq then
                             local sizeStr = ""
-                            local scale = egg:K2_GetActorScale3D()
-                            if scale then
-                                if scale.X >= 1.8 then sizeStr = "Huge "
-                                elseif scale.X >= 1.3 then sizeStr = "Large "
+                            local status, scale = pcall(function() return egg.Scale end)
+                            
+                            if status and type(scale) == "number" then
+                                -- if CONFIG.Debug then
+                                --     logger.log("Egg Scale: " .. tostring(scale))
+                                -- end
+                                if scale >= 1.9 then sizeStr = "Huge "
+                                elseif scale >= 1.05 then sizeStr = "Large "
+                                end
+                            else
+                                if CONFIG.Debug then
+                                    logger.log("Failed to get egg scale. Fallback to normal. Error: " .. tostring(scale))
                                 end
                             end
-                            table.insert(newEggs, { X = eggPos.X, Y = eggPos.Y, Z = eggPos.Z, SizePrefix = sizeStr })
+
+                            local shouldAdd = true
+                            if CONFIG.EggFilter == "HugeOnly" and sizeStr ~= "Huge " then
+                                shouldAdd = false
+                            elseif CONFIG.EggFilter == "Large+" and sizeStr == "" then
+                                shouldAdd = false
+                            end
+
+                            if shouldAdd then
+                                table.insert(newEggs, { X = eggPos.X, Y = eggPos.Y, Z = eggPos.Z, SizePrefix = sizeStr })
+                            end
                         end
                     end
                 end)

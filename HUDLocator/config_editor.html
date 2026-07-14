@@ -475,9 +475,14 @@
         </div>
 
         <div class="form-row">
-          <div class="form-group checkbox-group" onclick="toggleCheckbox('chk-show-eggs')">
-            <input type="checkbox" id="chk-show-eggs" checked>
-            <span class="checkbox-text">Show Eggs</span>
+          <div class="form-group" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem 1rem;">
+            <label style="margin-bottom: 0;">Egg Filter</label>
+            <select id="sel-egg-filter" style="width: 100%; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.6rem 0.8rem; color: var(--text-main); font-family: var(--font-jakarta); margin-top: 0.5rem; outline: none; cursor: pointer;">
+              <option value="All" style="color: #000;">Show All</option>
+              <option value="Large+" style="color: #000;">Large+ Only</option>
+              <option value="HugeOnly" style="color: #000;">Huge Only</option>
+              <option value="None" style="color: #000;">None</option>
+            </select>
           </div>
         </div>
 
@@ -656,7 +661,7 @@
       ShowPlayers: true,
       ShowRelics: true,
       ShowChests: true,
-      ShowEggs: true,
+      EggFilter: "All",
       DrawBox: false,
       Debug: false,
       FontScale: 1.2,
@@ -712,7 +717,7 @@
       document.getElementById('chk-show-players').checked = CONFIG.ShowPlayers;
       document.getElementById('chk-show-relics').checked = CONFIG.ShowRelics;
       document.getElementById('chk-show-chests').checked = CONFIG.ShowChests;
-      document.getElementById('chk-show-eggs').checked = CONFIG.ShowEggs;
+      document.getElementById('sel-egg-filter').value = CONFIG.EggFilter || "All";
       document.getElementById('chk-draw-box').checked = CONFIG.DrawBox;
 
       document.getElementById('rng-scan-interval').value = CONFIG.ScanIntervalMs;
@@ -744,7 +749,7 @@
       CONFIG.ShowPlayers = document.getElementById('chk-show-players').checked;
       CONFIG.ShowRelics = document.getElementById('chk-show-relics').checked;
       CONFIG.ShowChests = document.getElementById('chk-show-chests').checked;
-      CONFIG.ShowEggs = document.getElementById('chk-show-eggs').checked;
+      CONFIG.EggFilter = document.getElementById('sel-egg-filter').value;
       CONFIG.DrawBox = document.getElementById('chk-draw-box').checked;
 
       CONFIG.ScanIntervalMs = parseInt(document.getElementById('rng-scan-interval').value);
@@ -862,8 +867,15 @@
 
       // 5. Egg visibility and colors
       const simEgg = document.getElementById('sim-egg');
-      simEgg.style.display = CONFIG.ShowEggs ? 'block' : 'none';
-      if (CONFIG.ShowEggs) {
+      simEgg.style.display = (CONFIG.EggFilter !== "None") ? 'block' : 'none';
+      if (CONFIG.EggFilter !== "None") {
+        if (CONFIG.EggFilter === "HugeOnly") {
+            simEgg.innerText = "Huge Egg [8m]";
+        } else if (CONFIG.EggFilter === "Large+") {
+            simEgg.innerText = "Large Egg [8m]";
+        } else {
+            simEgg.innerText = "Egg [8m]";
+        }
         simEgg.style.color = rgbToHex(CONFIG.EggColor);
         simEgg.style.fontSize = (CONFIG.FontScale * 14) + 'px';
       }
@@ -891,7 +903,7 @@
     }
 
     // Setup input listener connections to refresh config at runtime
-    const inputs = document.querySelectorAll('input[type="range"], input[type="color"]');
+    const inputs = document.querySelectorAll('input[type="range"], input[type="color"], select');
     inputs.forEach(input => {
       input.addEventListener('input', updateConfigFromForm);
     });

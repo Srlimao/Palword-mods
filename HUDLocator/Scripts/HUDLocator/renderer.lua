@@ -1,4 +1,5 @@
 local configMod = require("HUDLocator.config")
+local popup = require("HUDLocator.popup")
 local CONFIG = configMod.CONFIG
 
 local M = {}
@@ -110,7 +111,7 @@ local function DrawPlayerPlate(hud, otherPlayer, playerPos)
 end
 
 -- Main entry point for drawing
-function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, cachedLocalPlayer)
+function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, cachedLocalPlayer, SizeX, SizeY)
     if not CONFIG.Enabled then return end
     
     if not cachedLocalPlayer or not cachedLocalPlayer:IsValid() then return end
@@ -151,7 +152,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, cach
     end
 
     -- 4. Draw Eggs
-    if CONFIG.ShowEggs then
+    if CONFIG.EggFilter ~= "None" then
         for _, pos in ipairs(activeEggs) do
             local dx = pos.X - playerPos.X
             local dy = pos.Y - playerPos.Y
@@ -163,6 +164,8 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, cach
             DrawTextAbove(hud, pos, textStr, CONFIG.EggColor)
         end
     end
+    -- 5. Draw Popups (highest z-index)
+    popup.Draw(hud, SizeX, SizeY)
 end
 
 return M

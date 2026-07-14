@@ -6,6 +6,7 @@ local UEHelpers = require("UEHelpers")
 local configMod = require("HUDLocator.config")
 local tracker = require("HUDLocator.tracker")
 local renderer = require("HUDLocator.renderer")
+local popup = require("HUDLocator.popup")
 
 local CONFIG = configMod.CONFIG
 local DebugPrint = configMod.DebugPrint
@@ -29,7 +30,8 @@ local function RegisterHUDHook()
                 tracker.activeRelics, 
                 tracker.activeChests, 
                 tracker.activeEggs,
-                tracker.cachedLocalPlayer
+                tracker.cachedLocalPlayer,
+                SizeX, SizeY
             )
         end)
     end)
@@ -64,36 +66,54 @@ end
 RegisterKeyBind(Key.F7, {ModifierKey.ALT}, function()
     CONFIG.ShowPlayers = not CONFIG.ShowPlayers
     if CONFIG.ShowPlayers then
-        print("[HUDLocator] Enabled player locator.")
+        popup.Show("Players: Enabled")
     else
-        print("[HUDLocator] Disabled player locator.")
+        popup.Show("Players: Disabled")
         tracker.activePlayers = {}
     end
 end)
 
 -- 2. Toggle Items Finder (Alt + F8)
 RegisterKeyBind(Key.F8, {ModifierKey.ALT}, function()
-    local toggleVal = not (CONFIG.ShowRelics or CONFIG.ShowChests or CONFIG.ShowEggs)
+    local toggleVal = not (CONFIG.ShowRelics or CONFIG.ShowChests or CONFIG.EggFilter ~= "None")
     CONFIG.ShowRelics = toggleVal
     CONFIG.ShowChests = toggleVal
-    CONFIG.ShowEggs = toggleVal
     if toggleVal then
-        print("[HUDLocator] Enabled items locator.")
+        CONFIG.EggFilter = "All"
+        popup.Show("Items: Enabled")
     else
-        print("[HUDLocator] Disabled items locator.")
+        CONFIG.EggFilter = "None"
+        popup.Show("Items: Disabled")
         tracker.activeRelics = {}
         tracker.activeChests = {}
         tracker.activeEggs = {}
     end
 end)
 
--- 3. Toggle Player Nameplate Box style (Alt + F10)
+-- 3. Cycle Egg Filter (Alt + F9)
+RegisterKeyBind(Key.F9, {ModifierKey.ALT}, function()
+    local states = {"All", "Large+", "HugeOnly", "None"}
+    local nextState = "All"
+    for i, state in ipairs(states) do
+        if CONFIG.EggFilter == state then
+            nextState = states[(i % #states) + 1]
+            break
+        end
+    end
+    CONFIG.EggFilter = nextState
+    popup.Show("Egg Filter: " .. nextState)
+    if nextState == "None" then
+        tracker.activeEggs = {}
+    end
+end)
+
+-- 4. Toggle Player Nameplate Box style (Alt + F10)
 RegisterKeyBind(Key.F10, {ModifierKey.ALT}, function()
     CONFIG.DrawBox = not CONFIG.DrawBox
     if CONFIG.DrawBox then
-        print("[HUDLocator] Full box display enabled.")
+        popup.Show("Nameplate: Box")
     else
-        print("[HUDLocator] Simple text display enabled.")
+        popup.Show("Nameplate: Simple")
     end
 end)
 
