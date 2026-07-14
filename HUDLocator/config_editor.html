@@ -474,6 +474,13 @@
           </div>
         </div>
 
+        <div class="form-row">
+          <div class="form-group checkbox-group" onclick="toggleCheckbox('chk-show-eggs')">
+            <input type="checkbox" id="chk-show-eggs" checked>
+            <span class="checkbox-text">Show Eggs</span>
+          </div>
+        </div>
+
         <!-- Scanning Controls -->
         <div class="form-row">
           <div class="form-group">
@@ -586,6 +593,16 @@
             </div>
           </div>
         </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Egg Tag Color</label>
+            <div class="color-picker-wrapper">
+              <input type="color" id="col-egg-color" value="#cc80cc">
+              <input type="text" id="txt-egg-color" readonly>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- VISUAL PREVIEW & EXPORT PANEL -->
@@ -611,6 +628,11 @@
             <div id="sim-chest" class="hud-label item-label">
               Chest [12m]
             </div>
+
+            <!-- Simulated Egg -->
+            <div id="sim-egg" class="hud-label item-label" style="top: 60px; right: 60px;">
+              Egg [8m]
+            </div>
           </div>
           <div class="preview-legend">Simulated overlay on standard 1080p screen space</div>
         </div>
@@ -634,6 +656,7 @@
       ShowPlayers: true,
       ShowRelics: true,
       ShowChests: true,
+      ShowEggs: true,
       DrawBox: false,
       Debug: false,
       FontScale: 1.2,
@@ -652,6 +675,7 @@
       BorderColor: { R: 0.0, G: 0.0, B: 0.0, A: 1.0 },
       RelicColor: { R: 0.1, G: 0.9, B: 0.9, A: 1.0 },
       ChestColor: { R: 0.9, G: 0.7, B: 0.1, A: 1.0 },
+      EggColor: { R: 0.8, G: 0.5, B: 0.8, A: 1.0 },
       ScanIntervalMs: 1500,
       GraceRadiusM: 30
     };
@@ -688,6 +712,7 @@
       document.getElementById('chk-show-players').checked = CONFIG.ShowPlayers;
       document.getElementById('chk-show-relics').checked = CONFIG.ShowRelics;
       document.getElementById('chk-show-chests').checked = CONFIG.ShowChests;
+      document.getElementById('chk-show-eggs').checked = CONFIG.ShowEggs;
       document.getElementById('chk-draw-box').checked = CONFIG.DrawBox;
 
       document.getElementById('rng-scan-interval').value = CONFIG.ScanIntervalMs;
@@ -707,6 +732,7 @@
       document.getElementById('col-dist-color').value = rgbToHex(CONFIG.DistColor);
       document.getElementById('col-relic-color').value = rgbToHex(CONFIG.RelicColor);
       document.getElementById('col-chest-color').value = rgbToHex(CONFIG.ChestColor);
+      document.getElementById('col-egg-color').value = rgbToHex(CONFIG.EggColor);
 
       updateLabels();
       drawPreview();
@@ -718,6 +744,7 @@
       CONFIG.ShowPlayers = document.getElementById('chk-show-players').checked;
       CONFIG.ShowRelics = document.getElementById('chk-show-relics').checked;
       CONFIG.ShowChests = document.getElementById('chk-show-chests').checked;
+      CONFIG.ShowEggs = document.getElementById('chk-show-eggs').checked;
       CONFIG.DrawBox = document.getElementById('chk-draw-box').checked;
 
       CONFIG.ScanIntervalMs = parseInt(document.getElementById('rng-scan-interval').value);
@@ -736,6 +763,7 @@
       CONFIG.DistColor = hexToRgb(document.getElementById('col-dist-color').value);
       CONFIG.RelicColor = hexToRgb(document.getElementById('col-relic-color').value);
       CONFIG.ChestColor = hexToRgb(document.getElementById('col-chest-color').value);
+      CONFIG.EggColor = hexToRgb(document.getElementById('col-egg-color').value);
 
       updateLabels();
       drawPreview();
@@ -760,6 +788,7 @@
       document.getElementById('txt-dist-color').value = rgbToHex(CONFIG.DistColor).toUpperCase();
       document.getElementById('txt-relic-color').value = rgbToHex(CONFIG.RelicColor).toUpperCase();
       document.getElementById('txt-chest-color').value = rgbToHex(CONFIG.ChestColor).toUpperCase();
+      document.getElementById('txt-egg-color').value = rgbToHex(CONFIG.EggColor).toUpperCase();
     }
 
     // Simulated Canvas Drawing
@@ -829,6 +858,14 @@
       if (CONFIG.ShowChests) {
         simChest.style.color = rgbToHex(CONFIG.ChestColor);
         simChest.style.fontSize = (CONFIG.FontScale * 14) + 'px';
+      }
+
+      // 5. Egg visibility and colors
+      const simEgg = document.getElementById('sim-egg');
+      simEgg.style.display = CONFIG.ShowEggs ? 'block' : 'none';
+      if (CONFIG.ShowEggs) {
+        simEgg.style.color = rgbToHex(CONFIG.EggColor);
+        simEgg.style.fontSize = (CONFIG.FontScale * 14) + 'px';
       }
     }
 
