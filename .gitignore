@@ -2,6 +2,7 @@
 CXXHeaderDump/
 Dumps/
 FModel/
+DekModMenuFork/
 
 # Ignore compiled zip archives
 *.zip
