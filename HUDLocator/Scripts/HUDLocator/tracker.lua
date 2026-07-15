@@ -15,27 +15,139 @@ M.cachedLocalPlayer = nil
 local UIUtility = nil
 local MapObjectNameCache = {}
 local RelicNameCache = {}
+local ItemNameCache = {}
+local LoggedTranslations = {}
+
+local function LogOnce(key, msg)
+    if not LoggedTranslations[key] then
+        LoggedTranslations[key] = true
+        print("[HUDLocator] " .. msg)
+    end
+end
 
 local function GetTranslatedMapObjectName(masterDataId)
-    if MapObjectNameCache[masterDataId] then
-        return MapObjectNameCache[masterDataId]
+    local idStr = nil
+    if type(masterDataId) == "string" then
+        idStr = masterDataId
+    elseif type(masterDataId) == "userdata" then
+        pcall(function() idStr = masterDataId:ToString() end)
+    end
+    if not idStr then idStr = tostring(masterDataId) end
+
+    if CONFIG.Language ~= "system" and CONFIG.Language ~= "" then
+        if string.find(idStr, "TreasureBox") then return configMod.GetTranslation("Chest") end
+        if string.find(idStr, "Relic") then return configMod.GetTranslation("Relic") end
+        if string.find(idStr, "PalEgg") then return configMod.GetTranslation("Egg") end
+        return nil
+    end
+
+    if MapObjectNameCache[idStr] then
+        return MapObjectNameCache[idStr]
     end
     
-    if not UIUtility then
-        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalUIUtility") end)
-        if status and util then UIUtility = util end
+    if not MasterDataUtility then
+        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalMasterDataTablesUtility") end)
+        if status and util then MasterDataUtility = util end
     end
     
-    if UIUtility then
-        local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
-        if statusWorld and world then
+    local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
+    if statusWorld and world then
+        if MasterDataUtility then
+            local mapObjectKey = "MAPOBJECT_NAME_" .. idStr
             local status, outText = pcall(function()
-                return UIUtility:GetMapObjectName(world, masterDataId)
+                return MasterDataUtility:GetLocalizedText(world, 13, FName(mapObjectKey))
             end)
+            LogOnce(mapObjectKey, string.format("MapObjectName lookup key=%s, status=%s, outText=%s", mapObjectKey, tostring(status), tostring(outText)))
             if status and outText then
                 local strStatus, str = pcall(function() return outText:ToString() end)
-                if strStatus and str and str ~= "" then
-                    MapObjectNameCache[masterDataId] = str
+                LogOnce(mapObjectKey .. "_str", string.format("MapObjectName stringify key=%s, strStatus=%s, str=%s", mapObjectKey, tostring(strStatus), tostring(str)))
+                if strStatus and str and str ~= "" and str ~= mapObjectKey then
+                    MapObjectNameCache[idStr] = str
+                    return str
+                end
+            end
+        end
+    end
+    
+    return nil
+end
+
+local function GetTranslatedDungeonName(overrideId)
+    if not overrideId or overrideId:ToString() == "None" then
+        return nil
+    end
+    local idStr = overrideId:ToString()
+    local dungeonKey = idStr
+    if not string.match(idStr, "^NAME_") then
+        dungeonKey = "NAME_" .. idStr
+    end
+    
+    if CONFIG.Language ~= "system" and CONFIG.Language ~= "" then
+        return configMod.GetTranslation("Cave")
+    end
+    
+    if not MasterDataUtility then
+        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalMasterDataTablesUtility") end)
+        if status and util then MasterDataUtility = util end
+    end
+    
+    local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
+    if statusWorld and world then
+        if MasterDataUtility then
+            local status, outText = pcall(function()
+                return MasterDataUtility:GetLocalizedText(world, 21, FName(dungeonKey))
+            end)
+            LogOnce(dungeonKey, string.format("DungeonName lookup key=%s, status=%s, outText=%s", dungeonKey, tostring(status), tostring(outText)))
+            if status and outText then
+                local strStatus, str = pcall(function() return outText:ToString() end)
+                LogOnce(dungeonKey .. "_str", string.format("DungeonName stringify key=%s, strStatus=%s, str=%s", dungeonKey, tostring(strStatus), tostring(str)))
+                if strStatus and str and str ~= "" and str ~= dungeonKey then
+                    return str
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local MasterDataUtility = nil
+
+local function GetTranslatedItemName(itemId)
+    local idStr = nil
+    if type(itemId) == "string" then
+        idStr = itemId
+    elseif type(itemId) == "userdata" then
+        pcall(function() idStr = itemId:ToString() end)
+    end
+    if not idStr then idStr = tostring(itemId) end
+
+    if CONFIG.Language ~= "system" and CONFIG.Language ~= "" then
+        if string.find(idStr, "Relic") then return configMod.GetTranslation("Relic") end
+        return nil
+    end
+
+    if ItemNameCache[idStr] then
+        return ItemNameCache[idStr]
+    end
+    
+    if not MasterDataUtility then
+        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalMasterDataTablesUtility") end)
+        if status and util then MasterDataUtility = util end
+    end
+    
+    local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
+    if statusWorld and world then
+        if MasterDataUtility then
+            local itemKey = "ITEM_NAME_" .. idStr
+            local status, outText = pcall(function()
+                return MasterDataUtility:GetLocalizedText(world, 11, FName(itemKey))
+            end)
+            LogOnce(itemKey, string.format("ItemName lookup key=%s, status=%s, outText=%s", itemKey, tostring(status), tostring(outText)))
+            if status and outText then
+                local strStatus, str = pcall(function() return outText:ToString() end)
+                LogOnce(itemKey .. "_str", string.format("ItemName stringify key=%s, strStatus=%s, str=%s", itemKey, tostring(strStatus), tostring(str)))
+                if strStatus and str and str ~= "" and str ~= itemKey then
+                    ItemNameCache[idStr] = str
                     return str
                 end
             end
@@ -67,35 +179,10 @@ local function GetTranslatedRelicName(relicType)
     if num == 0 then
         itemId = "Relic"
     elseif num and num >= 1 and num <= 12 then
-        itemId = string.format("Relic%02d", num)
+        itemId = string.format("Relic_%02d", num)
     end
 
-    if RelicNameCache[itemId] then
-        return RelicNameCache[itemId]
-    end
-    
-    if not UIUtility then
-        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalUIUtility") end)
-        if status and util then UIUtility = util end
-    end
-    
-    if UIUtility then
-        local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
-        if statusWorld and world then
-            local status, outText = pcall(function()
-                return UIUtility:GetItemName(world, FName(itemId))
-            end)
-            if status and outText then
-                local strStatus, str = pcall(function() return outText:ToString() end)
-                if strStatus and str and str ~= "" then
-                    RelicNameCache[itemId] = str
-                    return str
-                end
-            end
-        end
-    end
-    
-    return nil
+    return GetTranslatedItemName(itemId)
 end
 
 local hasLoggedDungeons = false
@@ -288,11 +375,17 @@ function M.scan()
                         local dz = relicPos.Z - playerPos.Z
                         local distSq = dx*dx + dy*dy + dz*dz
                         if distSq <= maxDistSq then
-                            local name = configMod.GetTranslation("Relic", "Relic")
-                            local statusType, relicType = pcall(function() return relic.RelicType end)
-                            if statusType and relicType then
-                                local trans = GetTranslatedRelicName(relicType)
-                                if trans then name = trans end
+                            local name = nil
+                            local statusType, relicType = pcall(function() return relic:GetRelicType() end)
+                            if not statusType or not relicType then
+                                statusType, relicType = pcall(function() return relic.RelicType end)
+                            end
+                            local resolvedType = (statusType and relicType) and relicType or 0
+                            local trans = GetTranslatedRelicName(resolvedType)
+                            if trans then
+                                name = trans
+                            else
+                                name = configMod.GetTranslation("Relic", "Relic")
                             end
                             table.insert(newRelics, { X = relicPos.X, Y = relicPos.Y, Z = relicPos.Z, Name = name })
                         end
@@ -343,10 +436,9 @@ function M.scan()
     if CONFIG.EggFilter ~= "None" then
         local newEggs = {}
         local eggs = FindAllOf("PalMapObjectPalEgg") or {}
-        local dumpedEggProps = false
-        
         for _, egg in ipairs(eggs) do
-            if egg:IsValid() and not IsEggPicked(egg) then
+            local isPicked = IsEggPicked(egg)
+            if egg:IsValid() and not isPicked then
                 pcall(function()
                     local eggPos = egg:K2_GetActorLocation()
                     if eggPos then
@@ -376,18 +468,41 @@ function M.scan()
                             end
 
                             if shouldAdd then
-                                local name = configMod.GetTranslation("Egg", "Egg")
+                                local name = nil
+                                local useSizePrefix = true
                                 local statusModel, model = pcall(function() return egg.MapObjectModel end)
                                 if statusModel and model and model:IsValid() then
-                                    local dataIdStatus, dataId = pcall(function() return model.MapObjectMasterDataId end)
-                                    if dataIdStatus and dataId then
-                                        local trans = GetTranslatedMapObjectName(dataId)
-                                        if trans then name = trans end
+                                    local concrete = model.ConcreteModel
+                                    if concrete and concrete:IsValid() then
+                                        local visualIdStatus, visualId = pcall(function() return concrete:GetVisualStaticItemId() end)
+                                        if not visualIdStatus or not visualId then
+                                            visualIdStatus, visualId = pcall(function() return concrete.VisualStaticItemId end)
+                                        end
+                                        if visualIdStatus and visualId and visualId:ToString() ~= "None" then
+                                            local itemIdStr = visualId:ToString()
+                                            local trans = GetTranslatedItemName(itemIdStr)
+                                            if trans then
+                                                name = trans
+                                                useSizePrefix = false -- Specific name already includes size (e.g. "Colossal Rocky Egg")
+                                            end
+                                        end
+                                    end
+                                    
+                                    if not name then
+                                        local dataIdStatus, dataId = pcall(function() return model.MapObjectMasterDataId end)
+                                        if dataIdStatus and dataId then
+                                            local trans = GetTranslatedMapObjectName(dataId)
+                                            if trans then name = trans end
+                                        end
                                     end
                                 end
                                 
+                                if not name then
+                                    name = configMod.GetTranslation("Egg", "Egg")
+                                end
+                                
                                 local transSize = ""
-                                if sizeStr ~= "" then
+                                if useSizePrefix and sizeStr ~= "" then
                                     transSize = configMod.GetTranslation(sizeStr, sizeStr) .. " "
                                 end
                                 
@@ -427,13 +542,30 @@ function M.scan()
                         end
                         if distSq <= maxDistSq then
                             local level, state = GetDungeonDetails(cave)
+                            local dungeonName = nil
+                            pcall(function()
+                                local stageModel = cave.StageModel
+                                if stageModel and stageModel:IsValid() then
+                                    local instanceModel = stageModel.InstanceModel
+                                    if instanceModel and instanceModel:IsValid() then
+                                        local overrideId = instanceModel.OverrideDungeonNameTextId
+                                        if overrideId then
+                                            local trans = GetTranslatedDungeonName(overrideId)
+                                            if trans then dungeonName = trans end
+                                        end
+                                    end
+                                end
+                            end)
+                            if not dungeonName then
+                                dungeonName = configMod.GetTranslation("Cave", "Cave")
+                            end
                             table.insert(tempCaves[cls], { 
                                 X = cavePos.X, 
                                 Y = cavePos.Y, 
                                 Z = cavePos.Z,
                                 Level = level,
                                 State = state,
-                                Name = configMod.GetTranslation("Cave", "Cave")
+                                Name = dungeonName
                             })
                         end
                     end

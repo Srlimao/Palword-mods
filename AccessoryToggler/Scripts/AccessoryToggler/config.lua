@@ -3,6 +3,7 @@ local M = {}
 -- Default settings
 M.CONFIG = {
     Enabled = true,
+    Language = "system",
     HUDX = nil,
     HUDY = nil,
     HUDScale = 1.5,
@@ -255,6 +256,8 @@ local function GetTranslationsFilePath()
     return "Mods/AccessoryToggler/Scripts/AccessoryToggler/translations.json"
 end
 
+M.AllTranslations = nil
+
 function M.LoadTranslations()
     local transPath = GetTranslationsFilePath()
     local file = io.open(transPath, "r")
@@ -269,47 +272,102 @@ function M.LoadTranslations()
     
     local parsed = json.parse(content)
     if parsed then
-        -- Fetch system language
-        local activeLang = "en"
-        local status, SystemLibrary = pcall(function() return StaticFindObject("/Script/Engine.Default__KismetSystemLibrary") end)
-        if status and SystemLibrary then
-            local langStatus, lang = pcall(function() return SystemLibrary:GetDefaultLanguage() end)
-            if langStatus and type(lang) == "string" and lang ~= "" then
-                activeLang = lang
-            elseif langStatus and type(lang) == "userdata" then
-                local sStatus, s = pcall(function() return lang:ToString() end)
-                if sStatus and s then activeLang = s end
-            end
-        end
-        
-        local langDict = parsed[activeLang]
-        if not langDict then
-            -- Fallback to short language code (e.g. "en-US" -> "en")
-            local shortLang = string.sub(activeLang, 1, 2)
-            langDict = parsed[shortLang]
-        end
-        
-        -- Final fallback to english
-        if not langDict then
-            langDict = parsed["en"]
-        end
-        
-        if langDict then
-            for k, v in pairs(langDict) do
-                M.Translations[k] = v
-            end
-            print("[AccessoryToggler] Translations loaded successfully for language: " .. activeLang)
-        else
-            print("[AccessoryToggler] No suitable language dictionary found in translations.json")
-        end
+        M.AllTranslations = parsed
+        print("[AccessoryToggler] Translations file loaded successfully.")
     else
         print("[AccessoryToggler] Failed to parse translations.")
     end
 end
 
+local LastLangCheck = 0
+local CachedLang = nil
+
+local function ResolveActiveLanguage()
+    if M.CONFIG and M.CONFIG.Language and M.CONFIG.Language ~= "system" and M.CONFIG.Language ~= "" then
+        return M.CONFIG.Language
+    end
+
+    if CachedLang then
+        return CachedLang
+    end
+    
+    local now = os.time()
+    if now - LastLangCheck < 5 then
+        return "en"
+    end
+    LastLangCheck = now
+    
+    local activeLang = "en"
+    local statusIntl, IntlLibrary = pcall(function() return StaticFindObject("/Script/Engine.Default__KismetInternationalizationLibrary") end)
+    local langResolved = false
+    
+    if statusIntl and IntlLibrary then
+        local langStatus, lang = pcall(function() return IntlLibrary:GetCurrentLanguage() end)
+        if langStatus and type(lang) == "string" and lang ~= "" then
+            print("[AccessoryToggler] KismetInternationalizationLibrary string language: " .. tostring(lang))
+            activeLang = lang
+            langResolved = true
+        elseif langStatus and type(lang) == "userdata" then
+            local sStatus, s = pcall(function() return lang:ToString() end)
+            if sStatus and s and s ~= "" then
+                print("[AccessoryToggler] KismetInternationalizationLibrary userdata language: " .. tostring(s))
+                activeLang = s
+                langResolved = true
+            end
+        else
+            print("[AccessoryToggler] KismetInternationalizationLibrary returned invalid language type or empty string: " .. tostring(lang))
+        end
+    else
+        print("[AccessoryToggler] Could not find KismetInternationalizationLibrary")
+    end
+    
+    if not langResolved then
+        local status, SystemLibrary = pcall(function() return StaticFindObject("/Script/Engine.Default__KismetSystemLibrary") end)
+        if status and SystemLibrary then
+            local langStatus, lang = pcall(function() return SystemLibrary:GetDefaultLanguage() end)
+            if langStatus and type(lang) == "string" and lang ~= "" then
+                print("[AccessoryToggler] KismetSystemLibrary string language: " .. tostring(lang))
+                activeLang = lang
+                langResolved = true
+            elseif langStatus and type(lang) == "userdata" then
+                local sStatus, s = pcall(function() return lang:ToString() end)
+                if sStatus and s and s ~= "" then
+                    print("[AccessoryToggler] KismetSystemLibrary userdata language: " .. tostring(s))
+                    activeLang = s
+                    langResolved = true
+                end
+            else
+                print("[AccessoryToggler] KismetSystemLibrary returned invalid language type or empty string: " .. tostring(lang))
+            end
+        else
+            print("[AccessoryToggler] Could not find KismetSystemLibrary")
+        end
+    end
+    
+    if langResolved then
+        CachedLang = activeLang
+        print("[AccessoryToggler] Game language locked to: " .. activeLang)
+    else
+        print("[AccessoryToggler] Failed to resolve any language, defaulting to: " .. activeLang)
+    end
+    
+    return activeLang
+end
+
 function M.GetTranslation(key, default)
-    if M.Translations[key] and M.Translations[key] ~= "" then
-        return M.Translations[key]
+    if M.AllTranslations then
+        local activeLang = ResolveActiveLanguage()
+        local langDict = M.AllTranslations[activeLang]
+        if not langDict then
+            local shortLang = string.sub(activeLang, 1, 2)
+            langDict = M.AllTranslations[shortLang]
+        end
+        if not langDict then
+            langDict = M.AllTranslations["en"]
+        end
+        if langDict and langDict[key] and langDict[key] ~= "" then
+            return langDict[key]
+        end
     end
     return default or key
 end

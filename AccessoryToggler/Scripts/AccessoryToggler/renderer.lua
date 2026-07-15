@@ -143,9 +143,46 @@ function M.Draw(hud, SizeX, SizeY)
             local typeText, buffText = GetAccessoryLabelParts(acc.staticId)
             
             local transType = configMod.GetTranslation("Label_" .. typeText, typeText)
-            local baseBuff = buffText:match("^([%a]+)") or buffText
-            local suffix = buffText:match("([%+%-]%d+)$") or ""
-            local transBuff = configMod.GetTranslation("Label_" .. baseBuff, baseBuff) .. suffix
+            local transBuff = nil
+            
+            if acc.name and acc.name ~= "" then
+                local buffName = acc.name
+                
+                -- Try to strip prefixes
+                local prefix = configMod.GetTranslation("Prefix_" .. typeText, "")
+                if prefix ~= "" then
+                    local escaped = prefix:gsub("[%-%^%$%*%+%?.%(%)%[%]%%]", "%%%1")
+                    buffName = buffName:gsub("^" .. escaped, "")
+                end
+                
+                -- Try to strip suffixes
+                local suffixPattern = configMod.GetTranslation("Suffix_" .. typeText, "")
+                if suffixPattern ~= "" then
+                    for pattern in string.gmatch(suffixPattern, "[^,]+") do
+                        local trimmed = pattern:match("^%s*(.-)%s*$")
+                        local escaped = trimmed:gsub("[%-%^%$%*%+%?.%(%)%[%]%%]", "%%%1")
+                        -- Handle potential +3 suffix by matching it and keeping it
+                        local plusMinus = buffName:match("([%+%-]%d+)$") or ""
+                        if plusMinus ~= "" then
+                            buffName = buffName:gsub("%s*[%+%-]%d+%s*$", "")
+                        end
+                        buffName = buffName:gsub("%s*" .. escaped .. "%s*$", "")
+                        if plusMinus ~= "" then
+                            buffName = buffName .. " " .. plusMinus
+                        end
+                    end
+                end
+                
+                if buffName ~= "" and buffName ~= acc.name then
+                    transBuff = buffName:match("^%s*(.-)%s*$")
+                end
+            end
+            
+            if not transBuff or transBuff == "" then
+                local baseBuff = buffText:match("^([%a]+)") or buffText
+                local suffix = buffText:match("([%+%-]%d+)$") or ""
+                transBuff = configMod.GetTranslation("Label_" .. baseBuff, baseBuff) .. suffix
+            end
             
             -- Draw Type Text (Top Line)
             local typeScale = 0.45 * scale

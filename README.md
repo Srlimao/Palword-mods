@@ -54,6 +54,14 @@ Unreal Engine does not immediately destroy or garbage collect picked-up map item
 *   **DO NOT** index font properties on the HUD object (e.g. `hud.EngineMessageFont`, `hud.RobotoFont`). If the properties do not exist on the current version of the game's AHUD, UE4SS will crash the script instantly. Pass `nil` instead to automatically use the safe, default system font.
 *   **DO** safely check and unwrap `RemoteUnrealParam` wrapper objects when handling HUD hook variables like `SizeX` and `SizeY`. Call `SizeX:get()` if `type(SizeX) == "userdata"` to prevent arithmetic crash errors.
 
+### 6. Dynamic In-Game Localization (UDataTable & FText Lookup)
+Palworld uses localized Unreal DataTables (like `DT_ItemNameText_Common`) to store translations instead of standard UE `.locres` localization files.
+*   **DO NOT** use `UPalUIUtility:GetItemName()`. Although present in headers, it is non-callable from Lua (`UFunction was found but is not callable from Lua`).
+*   **DO** call `UPalMasterDataTablesUtility:GetLocalizedText(world, Category, TextId)` on the CDO `/Script/Pal.Default__PalMasterDataTablesUtility`. It is 100% callable. E.g. `Category = 11` for `ItemName`, `13` for `MapObjectName`.
+*   **DO** prepend correct prefixes to database IDs. For `ItemName` translations in Palworld 1.0+, all keys inside the DataTable are prefixed with `ITEM_NAME_` (e.g., to translate `"Relic"` or `"Relic_01"`, you must query `"ITEM_NAME_Relic"` or `"ITEM_NAME_Relic_01"`).
+*   **DO** remember that UE4SS automatically marshals the returned `TArray<FName>` from `UDataTable:GetRowNames()` into a standard Lua table array of **plain Lua strings**. Do not try to call `:ToString()` or `:Get()` on them, as they are already standard strings.
+*   **DO** use `"Relic"` (for type 0) and `"Relic_01"` through `"Relic_12"` (for types 1-12) to match the internal database name format for Pal Effigies.
+
 ---
 
 ## 📦 Current Deployment Status

@@ -21,7 +21,11 @@
         "Label_HEAT": "HEAT",
         "Label_COLD": "COLD",
         "Label_THERMAL": "THERMAL",
-        "Label_GEAR": "GEAR"
+        "Label_GEAR": "GEAR",
+        "Prefix_RING": "Ring of ",
+        "Suffix_GLASSES": " Glasses",
+        "Suffix_PENDANT": " Pendant",
+        "Suffix_SHIRT": " Underwear, Undershirt"
     },
     "es": {
         "EditModeActive": "MODO EDICIÓN ACTIVO",
@@ -93,7 +97,11 @@
         "Label_HEAT": "耐热",
         "Label_COLD": "耐寒",
         "Label_THERMAL": "保暖",
-        "Label_GEAR": "装备"
+        "Label_GEAR": "装备",
+        "Suffix_RING": "之戒",
+        "Suffix_GLASSES": "眼镜",
+        "Suffix_PENDANT": "吊坠",
+        "Suffix_SHIRT": "内衣"
     },
     "zh-Hant": {
         "EditModeActive": "編輯模式已激活",
@@ -117,7 +125,11 @@
         "Label_HEAT": "耐熱",
         "Label_COLD": "耐寒",
         "Label_THERMAL": "保暖",
-        "Label_GEAR": "裝備"
+        "Label_GEAR": "裝備",
+        "Suffix_RING": "之戒",
+        "Suffix_GLASSES": "眼鏡",
+        "Suffix_PENDANT": "吊墜",
+        "Suffix_SHIRT": "內衣"
     },
     "fr": {
         "EditModeActive": "MODE ÉDITION ACTIF",
@@ -226,7 +238,7 @@
         "Popup_FailedEnable": "Falha ao ativar %s",
         "Popup_NotFound": "%s não encontrado nas bolsas",
         "Label_RING": "ANEL",
-        "Label_MERCY": "MISERICÓRDIA",
+        "Label_MERCY": "CLEMÊNCIA",
         "Label_GLASSES": "ÓCULOS",
         "Label_ABILITY": "HABILIDADE",
         "Label_PENDANT": "PINGENTE",
@@ -237,7 +249,11 @@
         "Label_HEAT": "CALOR",
         "Label_COLD": "FRIO",
         "Label_THERMAL": "TÉRMICA",
-        "Label_GEAR": "EQUIPAMENTO"
+        "Label_GEAR": "EQUIPAMENTO",
+        "Prefix_RING": "Anel de ",
+        "Prefix_GLASSES": "Óculos de ",
+        "Prefix_PENDANT": "Pingente de ",
+        "Prefix_SHIRT": "Camisa "
     },
     "ru": {
         "EditModeActive": "РЕЖИМ РЕДАКТИРОВАНИЯ АКТИВЕН",
