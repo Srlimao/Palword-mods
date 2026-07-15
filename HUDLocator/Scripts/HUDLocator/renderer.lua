@@ -165,7 +165,8 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local dz = pos.Z - playerPos.Z
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
-            local textStr = "Relic [" .. distMeters .. "m]"
+            local name = pos.Name or "Relic"
+            local textStr = name .. " [" .. distMeters .. "m]"
             DrawTextAbove(hud, pos, textStr, CONFIG.RelicColor, CONFIG.RelicFontScale)
         end
     end
@@ -178,7 +179,8 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local dz = pos.Z - playerPos.Z
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
-            local textStr = "Chest [" .. distMeters .. "m]"
+            local name = pos.Name or "Chest"
+            local textStr = name .. " [" .. distMeters .. "m]"
             DrawTextAbove(hud, pos, textStr, CONFIG.ChestColor, CONFIG.ChestFontScale)
         end
     end
@@ -192,7 +194,8 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
             local prefix = pos.SizePrefix or ""
-            local textStr = prefix .. "Egg [" .. distMeters .. "m]"
+            local name = pos.Name or "Egg"
+            local textStr = prefix .. name .. " [" .. distMeters .. "m]"
             DrawTextAbove(hud, pos, textStr, CONFIG.EggColor, CONFIG.EggFontScale)
         end
     end
@@ -205,12 +208,19 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local dz = pos.Z - playerPos.Z
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
+            local name = pos.Name or "Cave"
             
             local textStr
             if pos.Level then
-                textStr = "Cave Lv." .. pos.Level .. " (" .. pos.State .. ") [" .. distMeters .. "m]"
+                local lv = configMod.GetTranslation("Cave_Lv", "Lv.")
+                local stateStr = pos.State
+                if stateStr == "Open" then stateStr = configMod.GetTranslation("Cave_Open", "Open")
+                elseif stateStr == "Cleared" then stateStr = configMod.GetTranslation("Cave_Cleared", "Cleared")
+                end
+                textStr = name .. " " .. lv .. pos.Level .. " (" .. stateStr .. ") [" .. distMeters .. "m]"
             else
-                textStr = "Cave (Closed) [" .. distMeters .. "m]"
+                local closed = configMod.GetTranslation("Cave_Closed", "(Closed)")
+                textStr = name .. " " .. closed .. " [" .. distMeters .. "m]"
             end
             
             -- Draw 3D glowing beacon cylinder

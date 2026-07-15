@@ -12,6 +12,68 @@ M.activeEggs = {}
 M.activeCaves = {}
 M.cachedLocalPlayer = nil
 
+local UIUtility = nil
+local MapObjectNameCache = {}
+local RelicNameCache = {}
+
+local function GetTranslatedMapObjectName(masterDataId)
+    if MapObjectNameCache[masterDataId] then
+        return MapObjectNameCache[masterDataId]
+    end
+    
+    if not UIUtility then
+        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalUIUtility") end)
+        if status and util then UIUtility = util end
+    end
+    
+    if UIUtility then
+        local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
+        if statusWorld and world then
+            local status, outText = pcall(function()
+                return UIUtility:GetMapObjectName(world, masterDataId)
+            end)
+            if status and outText then
+                local strStatus, str = pcall(function() return outText:ToString() end)
+                if strStatus and str and str ~= "" then
+                    MapObjectNameCache[masterDataId] = str
+                    return str
+                end
+            end
+        end
+    end
+    
+    return nil
+end
+
+local function GetTranslatedRelicName(relicType)
+    if RelicNameCache[relicType] then
+        return RelicNameCache[relicType]
+    end
+    
+    if not UIUtility then
+        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalUIUtility") end)
+        if status and util then UIUtility = util end
+    end
+    
+    if UIUtility then
+        local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
+        if statusWorld and world then
+            local status, outText = pcall(function()
+                return UIUtility:GetRelicStatusName(world, relicType)
+            end)
+            if status and outText then
+                local strStatus, str = pcall(function() return outText:ToString() end)
+                if strStatus and str and str ~= "" then
+                    RelicNameCache[relicType] = str
+                    return str
+                end
+            end
+        end
+    end
+    
+    return nil
+end
+
 local hasLoggedDungeons = false
 
 local dungeonClasses = {
@@ -202,7 +264,13 @@ function M.scan()
                         local dz = relicPos.Z - playerPos.Z
                         local distSq = dx*dx + dy*dy + dz*dz
                         if distSq <= maxDistSq then
-                            table.insert(newRelics, { X = relicPos.X, Y = relicPos.Y, Z = relicPos.Z })
+                            local name = configMod.GetTranslation("Relic", "Relic")
+                            local statusType, relicType = pcall(function() return relic.RelicType end)
+                            if statusType and relicType then
+                                local trans = GetTranslatedRelicName(relicType)
+                                if trans then name = trans end
+                            end
+                            table.insert(newRelics, { X = relicPos.X, Y = relicPos.Y, Z = relicPos.Z, Name = name })
                         end
                     end
                 end)
@@ -227,7 +295,16 @@ function M.scan()
                         local dz = chestPos.Z - playerPos.Z
                         local distSq = dx*dx + dy*dy + dz*dz
                         if distSq <= maxDistSq then
-                            table.insert(newChests, { X = chestPos.X, Y = chestPos.Y, Z = chestPos.Z })
+                            local name = configMod.GetTranslation("Chest", "Chest")
+                            local statusModel, model = pcall(function() return chest.MapObjectModel end)
+                            if statusModel and model and model:IsValid() then
+                                local dataIdStatus, dataId = pcall(function() return model.MapObjectMasterDataId end)
+                                if dataIdStatus and dataId then
+                                    local trans = GetTranslatedMapObjectName(dataId)
+                                    if trans then name = trans end
+                                end
+                            end
+                            table.insert(newChests, { X = chestPos.X, Y = chestPos.Y, Z = chestPos.Z, Name = name })
                         end
                     end
                 end)
@@ -255,14 +332,11 @@ function M.scan()
                         local distSq = dx*dx + dy*dy + dz*dz
                         if distSq <= maxDistSq then
                             local sizeStr = ""
-                            local status, scale = pcall(function() return egg.Scale end)
+                            local statusScale, scale = pcall(function() return egg.Scale end)
                             
-                            if status and type(scale) == "number" then
-                                -- if CONFIG.Debug then
-                                --     logger.log("Egg Scale: " .. tostring(scale))
-                                -- end
-                                if scale >= 1.9 then sizeStr = "Huge "
-                                elseif scale >= 1.05 then sizeStr = "Large "
+                            if statusScale and type(scale) == "number" then
+                                if scale >= 1.9 then sizeStr = "Huge"
+                                elseif scale >= 1.05 then sizeStr = "Large"
                                 end
                             else
                                 if CONFIG.Debug then
@@ -271,14 +345,29 @@ function M.scan()
                             end
 
                             local shouldAdd = true
-                            if CONFIG.EggFilter == "HugeOnly" and sizeStr ~= "Huge " then
+                            if CONFIG.EggFilter == "HugeOnly" and sizeStr ~= "Huge" then
                                 shouldAdd = false
                             elseif CONFIG.EggFilter == "Large+" and sizeStr == "" then
                                 shouldAdd = false
                             end
 
                             if shouldAdd then
-                                table.insert(newEggs, { X = eggPos.X, Y = eggPos.Y, Z = eggPos.Z, SizePrefix = sizeStr })
+                                local name = configMod.GetTranslation("Egg", "Egg")
+                                local statusModel, model = pcall(function() return egg.MapObjectModel end)
+                                if statusModel and model and model:IsValid() then
+                                    local dataIdStatus, dataId = pcall(function() return model.MapObjectMasterDataId end)
+                                    if dataIdStatus and dataId then
+                                        local trans = GetTranslatedMapObjectName(dataId)
+                                        if trans then name = trans end
+                                    end
+                                end
+                                
+                                local transSize = ""
+                                if sizeStr ~= "" then
+                                    transSize = configMod.GetTranslation(sizeStr, sizeStr) .. " "
+                                end
+                                
+                                table.insert(newEggs, { X = eggPos.X, Y = eggPos.Y, Z = eggPos.Z, SizePrefix = transSize, Name = name })
                             end
                         end
                     end
@@ -319,7 +408,8 @@ function M.scan()
                                 Y = cavePos.Y, 
                                 Z = cavePos.Z,
                                 Level = level,
-                                State = state
+                                State = state,
+                                Name = configMod.GetTranslation("Cave", "Cave")
                             })
                         end
                     end
