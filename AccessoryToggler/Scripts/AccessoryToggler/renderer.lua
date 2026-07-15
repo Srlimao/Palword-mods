@@ -42,18 +42,105 @@ local function GetAccessoryLabelParts(staticId)
     return "GEAR", staticId:sub(1, 6):upper()
 end
 
+local function DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisabled, textColorEnabled, textColorLabel, cardBg, emptyBorder, emptyBg)
+    if not acc then
+        -- Draw Empty Slot
+        hud:DrawRect(emptyBorder, slotX, y, size, size)
+        hud:DrawRect(emptyBg, slotX + 1.5, y + 1.5, size - 3.0, size - 3.0)
+
+        -- Key number (5, 6, 7, 8)
+        local keyLabel = tostring(uiIdx + 4)
+        hud:DrawText(keyLabel, { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + 5.0 * scale, y + 4.0 * scale, nil, 0.65 * scale, false)
+
+        -- Dash indicator
+        local textW = 0
+        pcall(function() textW = hud:GetTextSize("-", nil, 0.8 * scale) end)
+        if not textW or textW == 0 then textW = 6.0 * scale end
+        hud:DrawText("-", { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + (size / 2.0) - (textW / 2.0), y + (size / 2.0) - (9.0 * scale), nil, 0.8 * scale, false)
+    else
+        -- Choose slot colors based on enabled/disabled state
+        local borderColor = acc.disabled and textColorDisabled or textColorEnabled
+        local textMainColor = acc.disabled and { R = 0.5, G = 0.5, B = 0.5, A = 0.8 } or { R = 1.0, G = 1.0, B = 1.0, A = 1.0 }
+
+        -- Draw Active/Disabled Slot Box
+        hud:DrawRect(borderColor, slotX, y, size, size)
+        hud:DrawRect(cardBg, slotX + 1.5, y + 1.5, size - 3.0, size - 3.0)
+
+        -- Draw Key label (5, 6, 7, 8)
+        local keyLabel = tostring(uiIdx + 4)
+        hud:DrawText(keyLabel, textColorLabel, slotX + 5.0 * scale, y + 4.0 * scale, nil, 0.65 * scale, false)
+
+        -- Split accessory static ID into Category Type and Buff name
+        local typeText, buffText = GetAccessoryLabelParts(acc.staticId)
+        
+        local transType = configMod.GetTranslation("Label_" .. typeText, typeText)
+        local transBuff = nil
+        
+        if acc.name and acc.name ~= "" then
+            local buffName = acc.name
+            
+            -- Try to strip prefixes
+            local prefix = configMod.GetTranslation("Prefix_" .. typeText, "")
+            if prefix ~= "" then
+                local escaped = prefix:gsub("[%-%^%$%*%+%?.%(%)%[%]%%]", "%%%1")
+                buffName = buffName:gsub("^" .. escaped, "")
+            end
+            
+            -- Try to strip suffixes
+            local suffixPattern = configMod.GetTranslation("Suffix_" .. typeText, "")
+            if suffixPattern ~= "" then
+                for pattern in string.gmatch(suffixPattern, "[^,]+") do
+                    local trimmed = pattern:match("^%s*(.-)%s*$")
+                    local escaped = trimmed:gsub("[%-%^%$%*%+%?.%(%)%[%]%%]", "%%%1")
+                    -- Handle potential +3 suffix by matching it and keeping it
+                    local plusMinus = buffName:match("([%+%-]%d+)$") or ""
+                    if plusMinus ~= "" then
+                        buffName = buffName:gsub("%s*[%+%-]%d+%s*$", "")
+                    end
+                    buffName = buffName:gsub("%s*" .. escaped .. "%s*$", "")
+                    if plusMinus ~= "" then
+                        buffName = buffName .. " " .. plusMinus
+                    end
+                end
+            end
+            
+            if buffName ~= "" and buffName ~= acc.name then
+                transBuff = buffName:match("^%s*(.-)%s*$")
+            end
+        end
+        
+        if not transBuff or transBuff == "" then
+            local baseBuff = buffText:match("^([%a]+)") or buffText
+            local suffix = buffText:match("([%+%-]%d+)$") or ""
+            transBuff = configMod.GetTranslation("Label_" .. baseBuff, baseBuff) .. suffix
+        end
+        
+        -- Draw Type Text (Top Line)
+        local typeScale = 0.45 * scale
+        local typeW = 0
+        pcall(function() typeW = hud:GetTextSize(transType, nil, typeScale) end)
+        if not typeW or typeW == 0 then typeW = #transType * 3.8 * scale end
+        local typeX = slotX + (size / 2.0) - (typeW / 2.0)
+        local typeY = y + (size * 0.25) - (4.0 * scale)
+        hud:DrawText(transType, { R = 0.7, G = 0.7, B = 0.7, A = acc.disabled and 0.4 or 0.8 }, typeX, typeY, nil, typeScale, false)
+
+        -- Draw Buff Text (Bottom Line)
+        local buffScale = 0.55 * scale
+        local buffW = 0
+        pcall(function() buffW = hud:GetTextSize(transBuff, nil, buffScale) end)
+        if not buffW or buffW == 0 then buffW = #transBuff * 4.6 * scale end
+        local buffX = slotX + (size / 2.0) - (buffW / 2.0)
+        local buffY = y + (size * 0.6) - (4.0 * scale)
+        hud:DrawText(transBuff, textMainColor, buffX, buffY, nil, buffScale, false)
+
+        -- Draw Status indicator line at the bottom
+        hud:DrawRect(borderColor, slotX + 5.0 * scale, y + size - 6.0 * scale, size - 10.0 * scale, 2.0 * scale)
+    end
+end
+
 function M.Draw(hud, SizeX, SizeY)
     if not configMod.CONFIG.Enabled then return end
 
-
-    -- Only draw the hotbar if player has at least one accessory equipped or tracked
-    local hasAny = false
-    for i = 1, 4 do
-        if toggler.equippedAccessories[i] then
-            hasAny = true
-            break
-        end
-    end
     -- Only draw the hotbar if player has at least one accessory equipped or tracked, or edit mode is active
     local hasAny = false
     for i = 1, 4 do
@@ -108,106 +195,6 @@ function M.Draw(hud, SizeX, SizeY)
     local emptyBg = { R = 0.0, G = 0.0, B = 0.0, A = 0.3 }
     local emptyBorder = { R = 0.25, G = 0.25, B = 0.3, A = 0.4 }
 
-    for uiIdx = 1, 4 do
-        local slotX = x + (uiIdx - 1) * (size + gap)
-        local acc = toggler.equippedAccessories[uiIdx]
-
-        if not acc then
-            -- Draw Empty Slot
-            hud:DrawRect(emptyBorder, slotX, y, size, size)
-            hud:DrawRect(emptyBg, slotX + 1.5, y + 1.5, size - 3.0, size - 3.0)
-
-            -- Key number (5, 6, 7, 8)
-            local keyLabel = tostring(uiIdx + 4)
-            hud:DrawText(keyLabel, { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + 5.0 * scale, y + 4.0 * scale, nil, 0.65 * scale, false)
-
-            -- Dash indicator
-            local textW = 0
-            pcall(function() textW = hud:GetTextSize("-", nil, 0.8 * scale) end)
-            if not textW or textW == 0 then textW = 6.0 * scale end
-            hud:DrawText("-", { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + (size / 2.0) - (textW / 2.0), y + (size / 2.0) - (9.0 * scale), nil, 0.8 * scale, false)
-        else
-            -- Choose slot colors based on enabled/disabled state
-            local borderColor = acc.disabled and textColorDisabled or textColorEnabled
-            local textMainColor = acc.disabled and { R = 0.5, G = 0.5, B = 0.5, A = 0.8 } or { R = 1.0, G = 1.0, B = 1.0, A = 1.0 }
-
-            -- Draw Active/Disabled Slot Box
-            hud:DrawRect(borderColor, slotX, y, size, size)
-            hud:DrawRect(cardBg, slotX + 1.5, y + 1.5, size - 3.0, size - 3.0)
-
-            -- Draw Key label (5, 6, 7, 8)
-            local keyLabel = tostring(uiIdx + 4)
-            hud:DrawText(keyLabel, textColorLabel, slotX + 5.0 * scale, y + 4.0 * scale, nil, 0.65 * scale, false)
-
-            -- Split accessory static ID into Category Type and Buff name
-            local typeText, buffText = GetAccessoryLabelParts(acc.staticId)
-            
-            local transType = configMod.GetTranslation("Label_" .. typeText, typeText)
-            local transBuff = nil
-            
-            if acc.name and acc.name ~= "" then
-                local buffName = acc.name
-                
-                -- Try to strip prefixes
-                local prefix = configMod.GetTranslation("Prefix_" .. typeText, "")
-                if prefix ~= "" then
-                    local escaped = prefix:gsub("[%-%^%$%*%+%?.%(%)%[%]%%]", "%%%1")
-                    buffName = buffName:gsub("^" .. escaped, "")
-                end
-                
-                -- Try to strip suffixes
-                local suffixPattern = configMod.GetTranslation("Suffix_" .. typeText, "")
-                if suffixPattern ~= "" then
-                    for pattern in string.gmatch(suffixPattern, "[^,]+") do
-                        local trimmed = pattern:match("^%s*(.-)%s*$")
-                        local escaped = trimmed:gsub("[%-%^%$%*%+%?.%(%)%[%]%%]", "%%%1")
-                        -- Handle potential +3 suffix by matching it and keeping it
-                        local plusMinus = buffName:match("([%+%-]%d+)$") or ""
-                        if plusMinus ~= "" then
-                            buffName = buffName:gsub("%s*[%+%-]%d+%s*$", "")
-                        end
-                        buffName = buffName:gsub("%s*" .. escaped .. "%s*$", "")
-                        if plusMinus ~= "" then
-                            buffName = buffName .. " " .. plusMinus
-                        end
-                    end
-                end
-                
-                if buffName ~= "" and buffName ~= acc.name then
-                    transBuff = buffName:match("^%s*(.-)%s*$")
-                end
-            end
-            
-            if not transBuff or transBuff == "" then
-                local baseBuff = buffText:match("^([%a]+)") or buffText
-                local suffix = buffText:match("([%+%-]%d+)$") or ""
-                transBuff = configMod.GetTranslation("Label_" .. baseBuff, baseBuff) .. suffix
-            end
-            
-            -- Draw Type Text (Top Line)
-            local typeScale = 0.45 * scale
-            local typeW = 0
-            pcall(function() typeW = hud:GetTextSize(transType, nil, typeScale) end)
-            if not typeW or typeW == 0 then typeW = #transType * 3.8 * scale end
-            local typeX = slotX + (size / 2.0) - (typeW / 2.0)
-            local typeY = y + (size * 0.25) - (4.0 * scale)
-            hud:DrawText(transType, { R = 0.7, G = 0.7, B = 0.7, A = acc.disabled and 0.4 or 0.8 }, typeX, typeY, nil, typeScale, false)
-
-            -- Draw Buff Text (Bottom Line)
-            local buffScale = 0.55 * scale
-            local buffW = 0
-            pcall(function() buffW = hud:GetTextSize(transBuff, nil, buffScale) end)
-            if not buffW or buffW == 0 then buffW = #transBuff * 4.6 * scale end
-            local buffX = slotX + (size / 2.0) - (buffW / 2.0)
-            local buffY = y + (size * 0.6) - (4.0 * scale)
-            hud:DrawText(transBuff, textMainColor, buffX, buffY, nil, buffScale, false)
-
-            -- Draw Status indicator line at the bottom
-            hud:DrawRect(borderColor, slotX + 5.0 * scale, y + size - 6.0 * scale, size - 10.0 * scale, 2.0 * scale)
-        end
-    end
-
-    -- Draw Edit Mode Overlay Banner and Border Box
     if configMod.EditModeActive then
         local borderPadding = 10.0 * scale
         local boxX = x - borderPadding
@@ -220,43 +207,7 @@ function M.Draw(hud, SizeX, SizeY)
         hud:DrawRect(editBorderColor, boxX, boxY, boxW, boxH)
         hud:DrawRect(editBgColor, boxX + 1.5, boxY + 1.5, boxW - 3.0, boxH - 3.0)
         
-        -- Redraw the slots on top of Edit Mode Background
-        for uiIdx = 1, 4 do
-            local slotX = x + (uiIdx - 1) * (size + gap)
-            local acc = toggler.equippedAccessories[uiIdx]
-            if not acc then
-                hud:DrawRect(emptyBorder, slotX, y, size, size)
-                hud:DrawRect(emptyBg, slotX + 1.5, y + 1.5, size - 3.0, size - 3.0)
-                local keyLabel = tostring(uiIdx + 4)
-                hud:DrawText(keyLabel, { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + 5.0 * scale, y + 4.0 * scale, nil, 0.65 * scale, false)
-                hud:DrawText("-", { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + (size / 2.0) - (6.0 * scale / 2.0), y + (size / 2.0) - (9.0 * scale), nil, 0.8 * scale, false)
-            else
-                local borderColor = acc.disabled and textColorDisabled or textColorEnabled
-                local textMainColor = acc.disabled and { R = 0.5, G = 0.5, B = 0.5, A = 0.8 } or { R = 1.0, G = 1.0, B = 1.0, A = 1.0 }
-                hud:DrawRect(borderColor, slotX, y, size, size)
-                hud:DrawRect(cardBg, slotX + 1.5, y + 1.5, size - 3.0, size - 3.0)
-                local keyLabel = tostring(uiIdx + 4)
-                hud:DrawText(keyLabel, textColorLabel, slotX + 5.0 * scale, y + 4.0 * scale, nil, 0.65 * scale, false)
-                local typeText, buffText = GetAccessoryLabelParts(acc.staticId)
-                local transType = configMod.GetTranslation("Label_" .. typeText, typeText)
-                local baseBuff = buffText:match("^([%a]+)") or buffText
-                local suffix = buffText:match("([%+%-]%d+)$") or ""
-                local transBuff = configMod.GetTranslation("Label_" .. baseBuff, baseBuff) .. suffix
-                
-                local typeScale = 0.45 * scale
-                local typeW = 0
-                pcall(function() typeW = hud:GetTextSize(transType, nil, typeScale) end)
-                if not typeW or typeW == 0 then typeW = #transType * 3.8 * scale end
-                hud:DrawText(transType, { R = 0.7, G = 0.7, B = 0.7, A = acc.disabled and 0.4 or 0.8 }, slotX + (size / 2.0) - (typeW / 2.0), y + (size * 0.25) - (4.0 * scale), nil, typeScale, false)
-                local buffScale = 0.55 * scale
-                local buffW = 0
-                pcall(function() buffW = hud:GetTextSize(transBuff, nil, buffScale) end)
-                if not buffW or buffW == 0 then buffW = #transBuff * 4.6 * scale end
-                hud:DrawText(transBuff, textMainColor, slotX + (size / 2.0) - (buffW / 2.0), y + (size * 0.6) - (4.0 * scale), nil, buffScale, false)
-                hud:DrawRect(borderColor, slotX + 5.0 * scale, y + size - 6.0 * scale, size - 10.0 * scale, 2.0 * scale)
-            end
-        end
-
+        -- Text Banner
         local textLine1 = configMod.GetTranslation("EditModeActive", "EDIT MODE ACTIVE")
         local textLine2 = configMod.GetTranslation("EditModeInstructions", "ARROWS: MOVE | +/-: SCALE | ALT+F7: SAVE")
         
@@ -281,6 +232,12 @@ function M.Draw(hud, SizeX, SizeY)
         
         hud:DrawText(textLine1, { R = 0.0, G = 1.0, B = 0.8, A = 1.0 }, bannerX + (maxW / 2.0) - (textW1 / 2.0), bannerY + 5.0 * scale, nil, textScale1, false)
         hud:DrawText(textLine2, { R = 0.9, G = 0.9, B = 0.9, A = 0.9 }, bannerX + (maxW / 2.0) - (textW2 / 2.0), bannerY + bannerH - 17.0 * scale, nil, textScale2, false)
+    end
+
+    for uiIdx = 1, 4 do
+        local slotX = x + (uiIdx - 1) * (size + gap)
+        local acc = toggler.equippedAccessories[uiIdx]
+        DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisabled, textColorEnabled, textColorLabel, cardBg, emptyBorder, emptyBg)
     end
 end
 

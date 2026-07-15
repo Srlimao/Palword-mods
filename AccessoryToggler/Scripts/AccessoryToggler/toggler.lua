@@ -13,59 +13,30 @@ local AccessoryNameCache = {}
 local MasterDataUtility = nil
 
 local function GetTranslatedItemName(staticId)
-    local idStr = nil
-    if type(staticId) == "string" then
-        idStr = staticId
-    elseif type(staticId) == "userdata" then
-        pcall(function() idStr = staticId:ToString() end)
-    end
-    if not idStr then idStr = tostring(staticId) end
+    local idStr = tostring(staticId)
+    if type(staticId) == "userdata" then pcall(function() idStr = staticId:ToString() end) end
 
-    if configMod.CONFIG.Language ~= "system" and configMod.CONFIG.Language ~= "" then
-        return nil
-    end
-
-    if AccessoryNameCache[idStr] then
-        return AccessoryNameCache[idStr]
-    end
+    if configMod.CONFIG.Language ~= "system" and configMod.CONFIG.Language ~= "" then return nil end
+    if AccessoryNameCache[idStr] then return AccessoryNameCache[idStr] end
     
-    if not MasterDataUtility then
-        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalMasterDataTablesUtility") end)
-        if status and util then MasterDataUtility = util end
-    end
+    if not MasterDataUtility then pcall(function() MasterDataUtility = StaticFindObject("/Script/Pal.Default__PalMasterDataTablesUtility") end) end
+    if not UIUtility then pcall(function() UIUtility = StaticFindObject("/Script/Pal.Default__PalUIUtility") end) end
     
-    if not UIUtility then
-        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalUIUtility") end)
-        if status and util then UIUtility = util end
-    end
-    
-    local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
-    if statusWorld and world then
-        -- 1. Try UPalMasterDataTablesUtility:GetLocalizedText (TextCategory = 11 for ItemName)
+    local _, world = pcall(function() return UEHelpers.GetWorld() end)
+    if world then
         if MasterDataUtility then
-            local status, outText = pcall(function()
-                return MasterDataUtility:GetLocalizedText(world, 11, FName("ITEM_NAME_" .. idStr))
-            end)
-            if status and outText then
-                local strStatus, str = pcall(function() return outText:ToString() end)
-                if strStatus and str and str ~= "" then
-                    AccessoryNameCache[idStr] = str
-                    return str
-                end
+            local _, outText = pcall(function() return MasterDataUtility:GetLocalizedText(world, 11, FName("ITEM_NAME_" .. idStr)) end)
+            if outText then
+                local _, str = pcall(function() return outText:ToString() end)
+                if str and str ~= "" then AccessoryNameCache[idStr] = str; return str end
             end
         end
         
-        -- 2. Try UPalUIUtility:GetItemName as fallback
         if UIUtility then
-            local statusName, outText = pcall(function()
-                return UIUtility:GetItemName(world, FName(staticId))
-            end)
-            if statusName and outText then
-                local strStatus, str = pcall(function() return outText:ToString() end)
-                if strStatus and str and str ~= "" then
-                    AccessoryNameCache[staticId] = str
-                    return str
-                end
+            local _, outText = pcall(function() return UIUtility:GetItemName(world, FName(staticId)) end)
+            if outText then
+                local _, str = pcall(function() return outText:ToString() end)
+                if str and str ~= "" then AccessoryNameCache[staticId] = str; return str end
             end
         end
     end
