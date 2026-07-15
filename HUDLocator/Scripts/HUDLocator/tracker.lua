@@ -46,8 +46,32 @@ local function GetTranslatedMapObjectName(masterDataId)
 end
 
 local function GetTranslatedRelicName(relicType)
-    if RelicNameCache[relicType] then
-        return RelicNameCache[relicType]
+    local itemId = "Relic"
+    local num = nil
+    if type(relicType) == "number" then
+        num = relicType
+    elseif type(relicType) == "userdata" then
+        local statusVal, val = pcall(function() return relicType.value end)
+        if statusVal and type(val) == "number" then
+            num = val
+        else
+            local statusVal2, val2 = pcall(function() return relicType:value() end)
+            if statusVal2 and type(val2) == "number" then
+                num = val2
+            else
+                num = tonumber(tostring(relicType))
+            end
+        end
+    end
+    
+    if num == 0 then
+        itemId = "Relic"
+    elseif num and num >= 1 and num <= 12 then
+        itemId = string.format("Relic%02d", num)
+    end
+
+    if RelicNameCache[itemId] then
+        return RelicNameCache[itemId]
     end
     
     if not UIUtility then
@@ -59,12 +83,12 @@ local function GetTranslatedRelicName(relicType)
         local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
         if statusWorld and world then
             local status, outText = pcall(function()
-                return UIUtility:GetRelicStatusName(world, relicType)
+                return UIUtility:GetItemName(world, FName(itemId))
             end)
             if status and outText then
                 local strStatus, str = pcall(function() return outText:ToString() end)
                 if strStatus and str and str ~= "" then
-                    RelicNameCache[relicType] = str
+                    RelicNameCache[itemId] = str
                     return str
                 end
             end

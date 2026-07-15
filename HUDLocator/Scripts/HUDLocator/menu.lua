@@ -11,38 +11,45 @@ local menuItems = {
     {
         name = "Enabled",
         key = "Enabled",
-        type = "boolean"
+        type = "boolean",
+        transKey = "Settings_Enable"
     },
     {
         name = "Show Players",
         key = "ShowPlayers",
-        type = "boolean"
+        type = "boolean",
+        transKey = "Settings_ShowPlayers"
     },
     {
         name = "Show Relics",
         key = "ShowRelics",
-        type = "boolean"
+        type = "boolean",
+        transKey = "Settings_ShowRelics"
     },
     {
         name = "Show Chests",
         key = "ShowChests",
-        type = "boolean"
+        type = "boolean",
+        transKey = "Settings_ShowChests"
     },
     {
         name = "Show Caves",
         key = "ShowCaves",
-        type = "boolean"
+        type = "boolean",
+        transKey = "Settings_ShowCaves"
     },
     {
         name = "Egg Filter",
         key = "EggFilter",
         type = "enum",
-        values = {"All", "Large+", "HugeOnly", "None"}
+        values = {"All", "Large+", "HugeOnly", "None"},
+        transKey = "Settings_EggFilter"
     },
     {
         name = "Box Style",
         key = "DrawBox",
-        type = "boolean"
+        type = "boolean",
+        transKey = "Settings_BoxStyle"
     },
     {
         name = "Max Distance",
@@ -51,7 +58,8 @@ local menuItems = {
         min = 5000,
         max = 100000,
         step = 5000,
-        format = function(v) return math.floor(v / 100) .. "m" end
+        format = function(v) return math.floor(v / 100) .. "m" end,
+        transKey = "Settings_MaxDistance"
     },
     {
         name = "Scan Interval",
@@ -60,16 +68,17 @@ local menuItems = {
         min = 500,
         max = 5000,
         step = 250,
-        format = function(v) return v .. "ms" end
+        format = function(v) return v .. "ms" end,
+        transKey = "Settings_ScanInterval"
     }
 }
 
 function M.Toggle()
     M.isOpen = not M.isOpen
     if M.isOpen then
-        popup.Show("Configuration Menu Opened\nUse ALT + Up/Down/Left/Right", 180)
+        popup.Show(configMod.GetTranslation("Menu_Opened", "Configuration Menu Opened\nUse ALT + Up/Down/Left/Right"), 180)
     else
-        popup.Show("Configuration Menu Closed & Saved", 120)
+        popup.Show(configMod.GetTranslation("Menu_Closed", "Configuration Menu Closed & Saved"), 120)
         pcall(configMod.SaveConfig)
     end
 end
@@ -155,12 +164,12 @@ function M.Draw(hud, SizeX, SizeY)
     hud:DrawRect(borderCol, menuX, menuY, menuW, 3.0)
     
     -- Header text
-    local headerText = "HUD LOCATOR SETTINGS"
+    local headerText = configMod.GetTranslation("Settings_Title", "HUD LOCATOR SETTINGS")
     local scaleHeader = 1.2
     hud:DrawText(headerText, { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }, menuX + 20.0, menuY + 15.0, nil, scaleHeader, false)
     
     -- Subheader keybind tips
-    local tipText = "ALT+Up/Down: Navigate | ALT+Left/Right: Change"
+    local tipText = configMod.GetTranslation("Menu_Tips", "ALT+Up/Down: Navigate | ALT+Left/Right: Change")
     local scaleTips = 0.75
     hud:DrawText(tipText, { R = 0.6, G = 0.6, B = 0.7, A = 1.0 }, menuX + 20.0, menuY + 38.0, nil, scaleTips, false)
     
@@ -186,9 +195,10 @@ function M.Draw(hud, SizeX, SizeY)
         local rawVal = CONFIG[item.key]
         local valStr = ""
         if item.type == "boolean" then
-            valStr = rawVal and "ON" or "OFF"
+            valStr = rawVal and configMod.GetTranslation("Menu_ON", "ON") or configMod.GetTranslation("Menu_OFF", "OFF")
         elseif item.type == "enum" then
-            valStr = tostring(rawVal)
+            local filterKey = "Filter_" .. tostring(rawVal):gsub("%+", "Plus")
+            valStr = configMod.GetTranslation(filterKey, tostring(rawVal))
         elseif item.type == "number" then
             if item.format then
                 valStr = item.format(rawVal)
@@ -206,7 +216,8 @@ function M.Draw(hud, SizeX, SizeY)
         
         -- Name string
         local prefix = isSelected and "> " or "  "
-        local displayStr = prefix .. item.name
+        local displayName = configMod.GetTranslation(item.transKey, item.name)
+        local displayStr = prefix .. displayName
         hud:DrawText(displayStr, nameColor, menuX + 15.0, itemY, nil, scaleRow, false)
         
         -- Value string (aligned right)
@@ -220,7 +231,7 @@ function M.Draw(hud, SizeX, SizeY)
     hud:DrawRect({ R = 0.2, G = 0.2, B = 0.3, A = 0.4 }, menuX + 20.0, menuY + menuH - 45.0, menuW - 40.0, 1.0)
     
     -- Footer status / version
-    local footerText = "ALT+F6 to Close & Save Settings"
+    local footerText = configMod.GetTranslation("Menu_Footer", "ALT+F6 to Close & Save Settings")
     hud:DrawText(footerText, { R = 0.5, G = 0.5, B = 0.6, A = 1.0 }, menuX + 20.0, menuY + menuH - 30.0, nil, 0.75, false)
 end
 
