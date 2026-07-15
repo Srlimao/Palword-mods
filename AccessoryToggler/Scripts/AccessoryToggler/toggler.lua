@@ -7,6 +7,37 @@ local M = {}
 M.disabledAccessorySlots = {} -- UI Index (1..4) -> staticId (string)
 M.equippedAccessories = {}    -- UI Index (1..4) -> { staticId = string, name = string, disabled = boolean }
 
+local UIUtility = nil
+local AccessoryNameCache = {}
+
+local function GetTranslatedItemName(staticId)
+    if AccessoryNameCache[staticId] then
+        return AccessoryNameCache[staticId]
+    end
+    
+    if not UIUtility then
+        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalUIUtility") end)
+        if status and util then UIUtility = util end
+    end
+    
+    if UIUtility then
+        local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
+        if statusWorld and world then
+            local statusName, outText = pcall(function()
+                return UIUtility:GetItemName(world, FName(staticId))
+            end)
+            if statusName and outText then
+                local strStatus, str = pcall(function() return outText:ToString() end)
+                if strStatus and str and str ~= "" then
+                    AccessoryNameCache[staticId] = str
+                    return str
+                end
+            end
+        end
+    end
+    return nil
+end
+
 local ACCESSORY_SLOTS = {
     [1] = 2, -- Accessory1 (enum value 2)
     [2] = 3, -- Accessory2 (enum value 3)
@@ -60,6 +91,9 @@ local function GetArrayElement(arr, idx)
 end
 
 local function GetAccessoryName(staticId)
+    local trans = GetTranslatedItemName(staticId)
+    if trans then return trans end
+
     local mapped = configMod.CONFIG.AccessoryNames[staticId]
     if mapped then return mapped end
     
@@ -226,7 +260,7 @@ end
 function M.ToggleSlot(uiSlotIndex)
     local inventory = GetInventory()
     if not inventory or not inventory:IsValid() then
-        popup.Show("Inventory not ready", 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
+        popup.Show(configMod.GetTranslation("Popup_InventoryNotReady", "Inventory not ready"), 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
         return
     end
 
@@ -241,7 +275,7 @@ function M.ToggleSlot(uiSlotIndex)
     if isEquipped then
         -- Check for free inventory space first (User request!)
         if not HasFreeInventorySlot(inventory) then
-            popup.Show("Inventory Full! Cannot disable accessory.", 180, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
+            popup.Show(configMod.GetTranslation("Popup_InventoryFull", "Inventory Full! Cannot disable accessory."), 180, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
             return
         end
 
@@ -253,9 +287,9 @@ function M.ToggleSlot(uiSlotIndex)
         if removed then
             M.disabledAccessorySlots[uiSlotIndex] = staticId
             SaveDisabledStates()
-            popup.Show(displayName .. " Disabled", 120, { R = 1.0, G = 0.5, B = 0.0, A = 1.0 })
+            popup.Show(string.format(configMod.GetTranslation("Popup_Disabled", "%s Disabled"), displayName), 120, { R = 1.0, G = 0.5, B = 0.0, A = 1.0 })
         else
-            popup.Show("Failed to disable " .. displayName, 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
+            popup.Show(string.format(configMod.GetTranslation("Popup_FailedDisable", "Failed to disable %s"), displayName), 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
         end
     else
         -- Check if we have a disabled item tracked
@@ -268,14 +302,14 @@ function M.ToggleSlot(uiSlotIndex)
                 if equipped then
                     M.disabledAccessorySlots[uiSlotIndex] = nil
                     SaveDisabledStates()
-                    popup.Show(displayName .. " Enabled", 120, { R = 0.0, G = 0.96, B = 0.83, A = 1.0 })
+                    popup.Show(string.format(configMod.GetTranslation("Popup_Enabled", "%s Enabled"), displayName), 120, { R = 0.0, G = 0.96, B = 0.83, A = 1.0 })
                 else
-                    popup.Show("Failed to enable " .. displayName, 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
+                    popup.Show(string.format(configMod.GetTranslation("Popup_FailedEnable", "Failed to enable %s"), displayName), 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
                 end
             else
                 M.disabledAccessorySlots[uiSlotIndex] = nil
                 SaveDisabledStates()
-                popup.Show(displayName .. " not found in bags", 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
+                popup.Show(string.format(configMod.GetTranslation("Popup_NotFound", "%s not found in bags"), displayName), 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
             end
         end
     end

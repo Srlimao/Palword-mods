@@ -142,23 +142,28 @@ function M.Draw(hud, SizeX, SizeY)
             -- Split accessory static ID into Category Type and Buff name
             local typeText, buffText = GetAccessoryLabelParts(acc.staticId)
             
+            local transType = configMod.GetTranslation("Label_" .. typeText, typeText)
+            local baseBuff = buffText:match("^([%a]+)") or buffText
+            local suffix = buffText:match("([%+%-]%d+)$") or ""
+            local transBuff = configMod.GetTranslation("Label_" .. baseBuff, baseBuff) .. suffix
+            
             -- Draw Type Text (Top Line)
             local typeScale = 0.45 * scale
             local typeW = 0
-            pcall(function() typeW = hud:GetTextSize(typeText, nil, typeScale) end)
-            if not typeW or typeW == 0 then typeW = #typeText * 3.8 * scale end
+            pcall(function() typeW = hud:GetTextSize(transType, nil, typeScale) end)
+            if not typeW or typeW == 0 then typeW = #transType * 3.8 * scale end
             local typeX = slotX + (size / 2.0) - (typeW / 2.0)
             local typeY = y + (size * 0.25) - (4.0 * scale)
-            hud:DrawText(typeText, { R = 0.7, G = 0.7, B = 0.7, A = acc.disabled and 0.4 or 0.8 }, typeX, typeY, nil, typeScale, false)
+            hud:DrawText(transType, { R = 0.7, G = 0.7, B = 0.7, A = acc.disabled and 0.4 or 0.8 }, typeX, typeY, nil, typeScale, false)
 
             -- Draw Buff Text (Bottom Line)
             local buffScale = 0.55 * scale
             local buffW = 0
-            pcall(function() buffW = hud:GetTextSize(buffText, nil, buffScale) end)
-            if not buffW or buffW == 0 then buffW = #buffText * 4.6 * scale end
+            pcall(function() buffW = hud:GetTextSize(transBuff, nil, buffScale) end)
+            if not buffW or buffW == 0 then buffW = #transBuff * 4.6 * scale end
             local buffX = slotX + (size / 2.0) - (buffW / 2.0)
             local buffY = y + (size * 0.6) - (4.0 * scale)
-            hud:DrawText(buffText, textMainColor, buffX, buffY, nil, buffScale, false)
+            hud:DrawText(transBuff, textMainColor, buffX, buffY, nil, buffScale, false)
 
             -- Draw Status indicator line at the bottom
             hud:DrawRect(borderColor, slotX + 5.0 * scale, y + size - 6.0 * scale, size - 10.0 * scale, 2.0 * scale)
@@ -196,22 +201,27 @@ function M.Draw(hud, SizeX, SizeY)
                 local keyLabel = tostring(uiIdx + 4)
                 hud:DrawText(keyLabel, textColorLabel, slotX + 5.0 * scale, y + 4.0 * scale, nil, 0.65 * scale, false)
                 local typeText, buffText = GetAccessoryLabelParts(acc.staticId)
+                local transType = configMod.GetTranslation("Label_" .. typeText, typeText)
+                local baseBuff = buffText:match("^([%a]+)") or buffText
+                local suffix = buffText:match("([%+%-]%d+)$") or ""
+                local transBuff = configMod.GetTranslation("Label_" .. baseBuff, baseBuff) .. suffix
+                
                 local typeScale = 0.45 * scale
                 local typeW = 0
-                pcall(function() typeW = hud:GetTextSize(typeText, nil, typeScale) end)
-                if not typeW or typeW == 0 then typeW = #typeText * 3.8 * scale end
-                hud:DrawText(typeText, { R = 0.7, G = 0.7, B = 0.7, A = acc.disabled and 0.4 or 0.8 }, slotX + (size / 2.0) - (typeW / 2.0), y + (size * 0.25) - (4.0 * scale), nil, typeScale, false)
+                pcall(function() typeW = hud:GetTextSize(transType, nil, typeScale) end)
+                if not typeW or typeW == 0 then typeW = #transType * 3.8 * scale end
+                hud:DrawText(transType, { R = 0.7, G = 0.7, B = 0.7, A = acc.disabled and 0.4 or 0.8 }, slotX + (size / 2.0) - (typeW / 2.0), y + (size * 0.25) - (4.0 * scale), nil, typeScale, false)
                 local buffScale = 0.55 * scale
                 local buffW = 0
-                pcall(function() buffW = hud:GetTextSize(buffText, nil, buffScale) end)
-                if not buffW or buffW == 0 then buffW = #buffText * 4.6 * scale end
-                hud:DrawText(buffText, textMainColor, slotX + (size / 2.0) - (buffW / 2.0), y + (size * 0.6) - (4.0 * scale), nil, buffScale, false)
+                pcall(function() buffW = hud:GetTextSize(transBuff, nil, buffScale) end)
+                if not buffW or buffW == 0 then buffW = #transBuff * 4.6 * scale end
+                hud:DrawText(transBuff, textMainColor, slotX + (size / 2.0) - (buffW / 2.0), y + (size * 0.6) - (4.0 * scale), nil, buffScale, false)
                 hud:DrawRect(borderColor, slotX + 5.0 * scale, y + size - 6.0 * scale, size - 10.0 * scale, 2.0 * scale)
             end
         end
 
-        local textLine1 = "EDIT MODE ACTIVE"
-        local textLine2 = "ARROWS: MOVE | +/-: SCALE | ALT+F7: SAVE"
+        local textLine1 = configMod.GetTranslation("EditModeActive", "EDIT MODE ACTIVE")
+        local textLine2 = configMod.GetTranslation("EditModeInstructions", "ARROWS: MOVE | +/-: SCALE | ALT+F7: SAVE")
         
         local textScale1 = 0.6 * scale
         local textScale2 = 0.45 * scale

@@ -241,6 +241,80 @@ function M.SaveConfig()
     end
 end
 
+M.Translations = {}
+
+local function GetTranslationsFilePath()
+    local info = debug.getinfo(1, "S")
+    if info and info.source and info.source:sub(1, 1) == "@" then
+        local src = info.source:sub(2)
+        local modDir = src:match("(.*)[/\\]Scripts[/\\]AccessoryToggler[/\\]config%.lua")
+        if modDir then
+            return modDir .. "/Scripts/AccessoryToggler/translations.json"
+        end
+    end
+    return "Mods/AccessoryToggler/Scripts/AccessoryToggler/translations.json"
+end
+
+function M.LoadTranslations()
+    local transPath = GetTranslationsFilePath()
+    local file = io.open(transPath, "r")
+    
+    if not file then
+        print("[AccessoryToggler] Translations file not found at: " .. transPath)
+        return
+    end
+    
+    local content = file:read("*all")
+    file:close()
+    
+    local parsed = json.parse(content)
+    if parsed then
+        -- Fetch system language
+        local activeLang = "en"
+        local status, SystemLibrary = pcall(function() return StaticFindObject("/Script/Engine.Default__KismetSystemLibrary") end)
+        if status and SystemLibrary then
+            local langStatus, lang = pcall(function() return SystemLibrary:GetDefaultLanguage() end)
+            if langStatus and type(lang) == "string" and lang ~= "" then
+                activeLang = lang
+            elseif langStatus and type(lang) == "userdata" then
+                local sStatus, s = pcall(function() return lang:ToString() end)
+                if sStatus and s then activeLang = s end
+            end
+        end
+        
+        local langDict = parsed[activeLang]
+        if not langDict then
+            -- Fallback to short language code (e.g. "en-US" -> "en")
+            local shortLang = string.sub(activeLang, 1, 2)
+            langDict = parsed[shortLang]
+        end
+        
+        -- Final fallback to english
+        if not langDict then
+            langDict = parsed["en"]
+        end
+        
+        if langDict then
+            for k, v in pairs(langDict) do
+                M.Translations[k] = v
+            end
+            print("[AccessoryToggler] Translations loaded successfully for language: " .. activeLang)
+        else
+            print("[AccessoryToggler] No suitable language dictionary found in translations.json")
+        end
+    else
+        print("[AccessoryToggler] Failed to parse translations.")
+    end
+end
+
+function M.GetTranslation(key, default)
+    if M.Translations[key] and M.Translations[key] ~= "" then
+        return M.Translations[key]
+    end
+    return default or key
+end
+
 pcall(M.LoadConfig)
+pcall(M.LoadTranslations)
 
 return M
