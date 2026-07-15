@@ -2,6 +2,7 @@
 -- Built for Palworld v1.0
 -- Uses UE4SS Lua Scripting API
 
+local UEHelpers = require("UEHelpers")
 local configMod = require("AccessoryToggler.config")
 local toggler = require("AccessoryToggler.toggler")
 local renderer = require("AccessoryToggler.renderer")
@@ -15,18 +16,6 @@ DebugPrint("Initializing Accessory Toggler Mod...")
 
 
 
--- State variables for HUD Edit Mode real-time keyboard inputs
-local keyState = {
-    Up = false,
-    Down = false,
-    Left = false,
-    Right = false,
-    Equals = false,
-    Add = false,
-    Hyphen = false,
-    Subtract = false,
-}
-
 local holdFrames = 0
 
 -- Helper to safely adjust HUD coordinates and scale continuously
@@ -36,18 +25,30 @@ local function HandleEditModeHolding()
         return 
     end
     
+    local pc = UEHelpers:GetPlayerController()
+    if not pc or not pc:IsValid() then return end
+    
     local dx = 0
     local dy = 0
     local dScale = 0
     local isAnyHeld = false
     
-    if keyState.Left then dx = dx - 1; isAnyHeld = true end
-    if keyState.Right then dx = dx + 1; isAnyHeld = true end
-    if keyState.Up then dy = dy - 1; isAnyHeld = true end
-    if keyState.Down then dy = dy + 1; isAnyHeld = true end
+    -- Read real-time key states directly from APlayerController
+    local isLeft = pc:IsInputKeyDown({ KeyName = FName("Left") })
+    local isRight = pc:IsInputKeyDown({ KeyName = FName("Right") })
+    local isUp = pc:IsInputKeyDown({ KeyName = FName("Up") })
+    local isDown = pc:IsInputKeyDown({ KeyName = FName("Down") })
     
-    if keyState.Equals or keyState.Add then dScale = dScale + 1; isAnyHeld = true end
-    if keyState.Hyphen or keyState.Subtract then dScale = dScale - 1; isAnyHeld = true end
+    local isEquals = pc:IsInputKeyDown({ KeyName = FName("Equals") }) or pc:IsInputKeyDown({ KeyName = FName("Add") })
+    local isHyphen = pc:IsInputKeyDown({ KeyName = FName("Hyphen") }) or pc:IsInputKeyDown({ KeyName = FName("Subtract") })
+    
+    if isLeft then dx = dx - 1; isAnyHeld = true end
+    if isRight then dx = dx + 1; isAnyHeld = true end
+    if isUp then dy = dy - 1; isAnyHeld = true end
+    if isDown then dy = dy + 1; isAnyHeld = true end
+    
+    if isEquals then dScale = dScale + 1; isAnyHeld = true end
+    if isHyphen then dScale = dScale - 1; isAnyHeld = true end
     
     if isAnyHeld then
         holdFrames = holdFrames + 1
@@ -56,11 +57,12 @@ local function HandleEditModeHolding()
         return
     end
     
+    -- Smooth ramp-up multiplier for fast holding traversal
     local speedMultiplier = 1.0
-    if holdFrames > 60 then
-        speedMultiplier = 3.5
-    elseif holdFrames > 15 then
-        speedMultiplier = 2.0
+    if holdFrames > 45 then
+        speedMultiplier = 4.0 -- Move very fast after ~0.75 seconds
+    elseif holdFrames > 12 then
+        speedMultiplier = 2.2 -- Speed up after ~0.2 seconds
     end
     
     -- Adjust coordinates and scale
@@ -193,38 +195,12 @@ if keyF7 then
         pcall(function() 
             configMod.ToggleEditMode() 
             if not configMod.EditModeActive then
-                -- Reset all key states when exiting edit mode
-                for k, _ in pairs(keyState) do
-                    keyState[k] = false
-                end
                 holdFrames = 0
             end
         end)
     end)
 else
     configMod.DebugPrint("WARNING: Failed to resolve Key.F7")
-end
-
--- Hook PlayerInput:InputKey to monitor held keys in real-time
-local statusInput = pcall(function()
-    RegisterHook("/Script/Engine.PlayerInput:InputKey", function(self, Key, Event, AmountDepressed, bGamepad)
-        pcall(function()
-            local k = Key:get()
-            local keyName = k.KeyName:ToString()
-            local evt = Event:get()
-            
-            if keyState[keyName] ~= nil then
-                if evt == 0 then -- Pressed
-                    keyState[keyName] = true
-                elseif evt == 1 then -- Released
-                    keyState[keyName] = false
-                end
-            end
-        end)
-    end)
-end)
-if not statusInput then
-    configMod.DebugPrint("WARNING: Failed to register InputKey hook.")
 end
 
 configMod.DebugPrint("Mod Loaded Successfully!")
