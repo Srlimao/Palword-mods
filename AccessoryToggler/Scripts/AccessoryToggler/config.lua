@@ -37,6 +37,14 @@ M.CONFIG = {
         Accessory_WorkSpeed_1 = "Work Pendant",
         Accessory_WorkSpeed_2 = "Work Pendant +1",
         Accessory_WorkSpeed_3 = "Work Pendant +2",
+    },
+    KeyBinds = {
+        ToggleSlot1 = "FIVE",
+        ToggleSlot2 = "SIX",
+        ToggleSlot3 = "SEVEN",
+        ToggleSlot4 = "EIGHT",
+        ToggleEditMode = "F7",
+        ResetCoords = "R"
     }
 }
 

@@ -154,11 +154,16 @@ local function StartPeriodicScan()
     ExecuteWithDelay(CONFIG.ScanIntervalMs, loop)
 end
 
+local function GetKey(keyStr, fallbackKey)
+    if not keyStr then return fallbackKey end
+    return Key[keyStr] or fallbackKey
+end
+
 -- Safely resolve key bindings for different engine versions/mappings
-local key1 = Key.FIVE or Key.NUM_5 or Key.N5 or Key["5"]
-local key2 = Key.SIX or Key.NUM_6 or Key.N6 or Key["6"]
-local key3 = Key.SEVEN or Key.NUM_7 or Key.N7 or Key["7"]
-local key4 = Key.EIGHT or Key.NUM_8 or Key.N8 or Key["8"]
+local key1 = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ToggleSlot1, Key.FIVE or Key.NUM_5 or Key.N5 or Key["5"])
+local key2 = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ToggleSlot2, Key.SIX or Key.NUM_6 or Key.N6 or Key["6"])
+local key3 = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ToggleSlot3, Key.SEVEN or Key.NUM_7 or Key.N7 or Key["7"])
+local key4 = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ToggleSlot4, Key.EIGHT or Key.NUM_8 or Key.N8 or Key["8"])
 
 -- Register ALT + 5..8 key binds
 if key1 then
@@ -199,7 +204,7 @@ StartPeriodicScan()
 -- ----------------------------------------------------
 -- HUD EDIT MODE INTERACTIVE CONFIGURATION KEYBINDS
 -- ----------------------------------------------------
-local keyF7 = Key.F7
+local keyF7 = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ToggleEditMode, Key.F7)
 
 -- Alt+F7 toggles edit mode
 if keyF7 then
@@ -215,7 +220,7 @@ else
     configMod.DebugPrint("WARNING: Failed to resolve Key.F7")
 end
 
-local keyR = Key.R
+local keyR = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ResetCoords, Key.R)
 
 -- Alt+R resets coordinates to default while in edit mode
 if keyR then

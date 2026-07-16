@@ -3,6 +3,10 @@ CXXHeaderDump/
 Dumps/
 FModel/
 DekModMenuFork/
+ModConfigurator/
+Deprecated/
+ProductionRepeat/
+
 
 # Ignore compiled zip archives
 *.zip

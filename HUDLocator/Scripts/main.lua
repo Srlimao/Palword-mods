@@ -75,32 +75,37 @@ local function StartPeriodicScan()
         end
         
         pcall(tracker.scan)
-        ExecuteWithDelay(CONFIG.ScanIntervalMs, loop)
+        ExecuteWithDelay(CONFIG.Global.ScanIntervalMs, loop)
     end
-    ExecuteWithDelay(CONFIG.ScanIntervalMs, loop)
+    ExecuteWithDelay(CONFIG.Global.ScanIntervalMs, loop)
 end
 
 -- Setup hotkeys
 
+local function GetKey(keyStr, fallbackKey)
+    if not keyStr then return fallbackKey end
+    return Key[keyStr] or fallbackKey
+end
+
 -- 5. HUD Config Menu Toggle (Alt + F6)
-RegisterKeyBind(Key.F6, {ModifierKey.ALT}, function()
+RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.ToggleMenu, Key.F6), {ModifierKey.ALT}, function()
     menu.Toggle()
 end)
 
 -- 6. HUD Config Menu Navigation
-RegisterKeyBind(Key.UP_ARROW, {ModifierKey.ALT}, function()
+RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.MenuUp, Key.UP_ARROW), {ModifierKey.ALT}, function()
     if menu.isOpen then menu.Navigate("up") end
 end)
 
-RegisterKeyBind(Key.DOWN_ARROW, {ModifierKey.ALT}, function()
+RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.MenuDown, Key.DOWN_ARROW), {ModifierKey.ALT}, function()
     if menu.isOpen then menu.Navigate("down") end
 end)
 
-RegisterKeyBind(Key.LEFT_ARROW, {ModifierKey.ALT}, function()
+RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.MenuLeft, Key.LEFT_ARROW), {ModifierKey.ALT}, function()
     if menu.isOpen then menu.Navigate("left") end
 end)
 
-RegisterKeyBind(Key.RIGHT_ARROW, {ModifierKey.ALT}, function()
+RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.MenuRight, Key.RIGHT_ARROW), {ModifierKey.ALT}, function()
     if menu.isOpen then menu.Navigate("right") end
 end)
 

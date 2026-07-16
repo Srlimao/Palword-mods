@@ -4,39 +4,65 @@ local M = {}
 
 -- Config settings
 M.CONFIG = {
-    Enabled = true,
-    Language = "system",
-    ShowPlayers = true,
-    ShowRelics = true,
-    ShowChests = true,
-    ShowCaves = true,
-    EggFilter = "All",
-    DrawBox = false,
-    Debug = false,
-    PlayerFontScale = 1.2,
-    PlayerSmallFontScale = 0.9,
-    RelicFontScale = 1.2,
-    ChestFontScale = 1.2,
-    EggFontScale = 1.2,
-    CaveFontScale = 1.2,
-    FontCharW = 8.0,
-    FontLineH = 12.0,
-    TextOffsetZ = 120.0,
-    ItemTextOffsetZ = 80.0,
-    MaxDistance = 15000.0,
-    BoxPadX = 10.0,
-    BoxPadY = 6.0,
-    BoxColor = { R = 0.8, G = 0.8, B = 1.0, A = 1.0 },
-    BorderWidth = 1.5,
-    NameColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
-    DistColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
-    BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
-    RelicColor = { R = 0.1, G = 0.9, B = 0.9, A = 1.0 },
-    ChestColor = { R = 0.9, G = 0.7, B = 0.1, A = 1.0 },
-    EggColor = { R = 0.8, G = 0.5, B = 0.8, A = 1.0 },
-    CaveColor = { R = 0.6, G = 0.2, B = 0.9, A = 1.0 },
-    ScanIntervalMs = 1500,
-    GraceRadiusM = 30
+    Global = {
+        Enabled = true,
+        Language = "system",
+        ScanIntervalMs = 1500,
+        Debug = false,
+        KeyBinds = {
+            ToggleMenu = "F6",
+            MenuUp = "UP_ARROW",
+            MenuDown = "DOWN_ARROW",
+            MenuLeft = "LEFT_ARROW",
+            MenuRight = "RIGHT_ARROW"
+        }
+    },
+    Players = {
+        Enabled = true,
+        MaxDistance = 15000.0,
+        GraceRadiusM = 30,
+        FontScale = 1.2,
+        SmallFontScale = 0.9,
+        TextOffsetZ = 120.0,
+        DrawBox = false,
+        NameColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+        DistColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+        BoxColor = { R = 0.8, G = 0.8, B = 1.0, A = 1.0 },
+        BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+        BorderWidth = 1.5,
+        BoxPadX = 10.0,
+        BoxPadY = 6.0,
+        FontCharW = 8.0,
+        FontLineH = 12.0
+    },
+    Relics = {
+        Enabled = true,
+        MaxDistance = 15000.0,
+        FontScale = 1.2,
+        TextOffsetZ = 80.0,
+        Color = { R = 0.1, G = 0.9, B = 0.9, A = 1.0 }
+    },
+    Chests = {
+        Enabled = true,
+        MaxDistance = 15000.0,
+        FontScale = 1.2,
+        TextOffsetZ = 80.0,
+        Color = { R = 0.9, G = 0.7, B = 0.1, A = 1.0 }
+    },
+    Eggs = {
+        Filter = "All",
+        MaxDistance = 15000.0,
+        FontScale = 1.2,
+        TextOffsetZ = 80.0,
+        Color = { R = 0.8, G = 0.5, B = 0.8, A = 1.0 }
+    },
+    Caves = {
+        Enabled = true,
+        MaxDistance = 15000.0,
+        FontScale = 1.2,
+        TextOffsetZ = 80.0,
+        Color = { R = 0.6, G = 0.2, B = 0.9, A = 1.0 }
+    }
 }
 
 function M.DebugPrint(msg)
@@ -59,38 +85,65 @@ local function GetConfigFilePath()
 end
 
 local defaultJSON = [[{
-  "Enabled": true,
-  "ShowPlayers": true,
-  "ShowRelics": true,
-  "ShowChests": true,
-  "ShowCaves": true,
-  "EggFilter": "All",
-  "DrawBox": false,
-  "Debug": false,
-  "PlayerFontScale": 1.2,
-  "PlayerSmallFontScale": 0.9,
-  "RelicFontScale": 1.2,
-  "ChestFontScale": 1.2,
-  "EggFontScale": 1.2,
-  "CaveFontScale": 1.2,
-  "FontCharW": 8.0,
-  "FontLineH": 12.0,
-  "TextOffsetZ": 120.0,
-  "ItemTextOffsetZ": 80.0,
-  "MaxDistance": 15000.0,
-  "BoxPadX": 10.0,
-  "BoxPadY": 6.0,
-  "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
-  "BorderWidth": 1.5,
-  "NameColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
-  "DistColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
-  "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
-  "RelicColor": { "R": 0.1, "G": 0.9, "B": 0.9, "A": 1.0 },
-  "ChestColor": { "R": 0.9, "G": 0.7, "B": 0.1, "A": 1.0 },
-  "EggColor": { "R": 0.8, "G": 0.5, "B": 0.8, "A": 1.0 },
-  "CaveColor": { "R": 0.6, "G": 0.2, "B": 0.9, "A": 1.0 },
-  "ScanIntervalMs": 1500,
-  "GraceRadiusM": 30
+  "Global": {
+    "Enabled": true,
+    "Language": "system",
+    "ScanIntervalMs": 1500,
+    "Debug": false,
+    "KeyBinds": {
+      "ToggleMenu": "F6",
+      "MenuUp": "UP_ARROW",
+      "MenuDown": "DOWN_ARROW",
+      "MenuLeft": "LEFT_ARROW",
+      "MenuRight": "RIGHT_ARROW"
+    }
+  },
+  "Players": {
+    "Enabled": true,
+    "MaxDistance": 15000.0,
+    "GraceRadiusM": 30,
+    "FontScale": 1.2,
+    "SmallFontScale": 0.9,
+    "TextOffsetZ": 120.0,
+    "DrawBox": false,
+    "NameColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+    "DistColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+    "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+    "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+    "BorderWidth": 1.5,
+    "BoxPadX": 10.0,
+    "BoxPadY": 6.0,
+    "FontCharW": 8.0,
+    "FontLineH": 12.0
+  },
+  "Relics": {
+    "Enabled": true,
+    "MaxDistance": 15000.0,
+    "FontScale": 1.2,
+    "TextOffsetZ": 80.0,
+    "Color": { "R": 0.1, "G": 0.9, "B": 0.9, "A": 1.0 }
+  },
+  "Chests": {
+    "Enabled": true,
+    "MaxDistance": 15000.0,
+    "FontScale": 1.2,
+    "TextOffsetZ": 80.0,
+    "Color": { "R": 0.9, "G": 0.7, "B": 0.1, "A": 1.0 }
+  },
+  "Eggs": {
+    "Filter": "All",
+    "MaxDistance": 15000.0,
+    "FontScale": 1.2,
+    "TextOffsetZ": 80.0,
+    "Color": { "R": 0.8, "G": 0.5, "B": 0.8, "A": 1.0 }
+  },
+  "Caves": {
+    "Enabled": true,
+    "MaxDistance": 15000.0,
+    "FontScale": 1.2,
+    "TextOffsetZ": 80.0,
+    "Color": { "R": 0.6, "G": 0.2, "B": 0.9, "A": 1.0 }
+  }
 }
 ]]
 
@@ -137,14 +190,37 @@ function M.LoadConfig()
     
     local parsed = json.parse(content)
     if parsed then
-        for k, v in pairs(parsed) do
-            -- Handle nested tables (colors) carefully
-            if type(v) == "table" and M.CONFIG[k] and type(M.CONFIG[k]) == "table" then
-                for subK, subV in pairs(v) do
-                    M.CONFIG[k][subK] = subV
+        -- Handle migrations from old flat config to new nested config
+        if parsed.ShowPlayers ~= nil then
+            print("[HUDLocator] Migrating old flat config to nested tracker config...")
+            M.CONFIG.Players.Enabled = parsed.ShowPlayers
+            M.CONFIG.Relics.Enabled = parsed.ShowRelics
+            M.CONFIG.Chests.Enabled = parsed.ShowChests
+            M.CONFIG.Caves.Enabled = parsed.ShowCaves
+            if parsed.EggFilter then M.CONFIG.Eggs.Filter = parsed.EggFilter end
+            if parsed.MaxDistance then
+                M.CONFIG.Players.MaxDistance = parsed.MaxDistance
+                M.CONFIG.Relics.MaxDistance = parsed.MaxDistance
+                M.CONFIG.Chests.MaxDistance = parsed.MaxDistance
+                M.CONFIG.Caves.MaxDistance = parsed.MaxDistance
+                M.CONFIG.Eggs.MaxDistance = parsed.MaxDistance
+            end
+            if parsed.ScanIntervalMs then M.CONFIG.Global.ScanIntervalMs = parsed.ScanIntervalMs end
+            if parsed.GraceRadiusM then M.CONFIG.Players.GraceRadiusM = parsed.GraceRadiusM end
+            if parsed.Enabled ~= nil then M.CONFIG.Global.Enabled = parsed.Enabled end
+        else
+            for k, section in pairs(parsed) do
+                if type(section) == "table" and M.CONFIG[k] then
+                    for subK, subV in pairs(section) do
+                        if type(subV) == "table" and type(M.CONFIG[k][subK]) == "table" then
+                            for cK, cV in pairs(subV) do
+                                M.CONFIG[k][subK][cK] = cV
+                            end
+                        else
+                            M.CONFIG[k][subK] = subV
+                        end
+                    end
                 end
-            else
-                M.CONFIG[k] = v
             end
         end
         print("[HUDLocator] Config loaded successfully!")
@@ -214,8 +290,8 @@ local LastLangCheck = 0
 local CachedLang = nil
 
 local function ResolveActiveLanguage()
-    if M.CONFIG and M.CONFIG.Language and M.CONFIG.Language ~= "system" and M.CONFIG.Language ~= "" then
-        return M.CONFIG.Language
+    if M.CONFIG and M.CONFIG.Global and M.CONFIG.Global.Language and M.CONFIG.Global.Language ~= "system" and M.CONFIG.Global.Language ~= "" then
+        return M.CONFIG.Global.Language
     end
 
     if CachedLang then

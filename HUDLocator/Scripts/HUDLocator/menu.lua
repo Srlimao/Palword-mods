@@ -9,66 +9,81 @@ local selectedIndex = 1
 
 local menuItems = {
     {
-        name = "Enabled",
-        key = "Enabled",
+        name = "Master Enabled",
+        get = function() return CONFIG.Global.Enabled end,
+        set = function(v) CONFIG.Global.Enabled = v end,
         type = "boolean",
         transKey = "Settings_Enable"
     },
     {
         name = "Show Players",
-        key = "ShowPlayers",
+        get = function() return CONFIG.Players.Enabled end,
+        set = function(v) CONFIG.Players.Enabled = v end,
         type = "boolean",
         transKey = "Settings_ShowPlayers"
     },
     {
         name = "Show Relics",
-        key = "ShowRelics",
+        get = function() return CONFIG.Relics.Enabled end,
+        set = function(v) CONFIG.Relics.Enabled = v end,
         type = "boolean",
         transKey = "Settings_ShowRelics"
     },
     {
         name = "Show Chests",
-        key = "ShowChests",
+        get = function() return CONFIG.Chests.Enabled end,
+        set = function(v) CONFIG.Chests.Enabled = v end,
         type = "boolean",
         transKey = "Settings_ShowChests"
     },
     {
         name = "Show Caves",
-        key = "ShowCaves",
+        get = function() return CONFIG.Caves.Enabled end,
+        set = function(v) CONFIG.Caves.Enabled = v end,
         type = "boolean",
         transKey = "Settings_ShowCaves"
     },
     {
         name = "Egg Filter",
-        key = "EggFilter",
+        get = function() return CONFIG.Eggs.Filter end,
+        set = function(v) CONFIG.Eggs.Filter = v end,
         type = "enum",
         values = {"All", "Large+", "HugeOnly", "None"},
         transKey = "Settings_EggFilter"
     },
     {
-        name = "Box Style",
-        key = "DrawBox",
+        name = "Player Box Style",
+        get = function() return CONFIG.Players.DrawBox end,
+        set = function(v) CONFIG.Players.DrawBox = v end,
         type = "boolean",
         transKey = "Settings_BoxStyle"
     },
     {
-        name = "Max Distance",
-        key = "MaxDistance",
+        name = "Max Distance (All)",
+        get = function() return CONFIG.Players.MaxDistance end,
+        set = function(v)
+            CONFIG.Players.MaxDistance = v
+            CONFIG.Relics.MaxDistance = v
+            CONFIG.Chests.MaxDistance = v
+            CONFIG.Eggs.MaxDistance = v
+            CONFIG.Caves.MaxDistance = v
+        end,
         type = "number",
         min = 5000,
         max = 100000,
         step = 5000,
-        format = function(v) return math.floor(v / 100) .. "m" end,
+        format = function(v) return math.floor((v or 15000) / 100) .. "m" end,
         transKey = "Settings_MaxDistance"
     },
     {
         name = "Scan Interval",
-        key = "ScanIntervalMs",
+        get = function() return CONFIG.Global.ScanIntervalMs end,
+        set = function(v) CONFIG.Global.ScanIntervalMs = v end,
         type = "number",
         min = 500,
         max = 5000,
         step = 250,
-        format = function(v) return v .. "ms" end,
+        format = function(v) return (v or 1500) .. "ms" end,
         transKey = "Settings_ScanInterval"
     }
 }
@@ -95,9 +110,9 @@ function M.Navigate(dir)
     elseif dir == "left" or dir == "right" then
         local item = menuItems[selectedIndex]
         if item.type == "boolean" then
-            CONFIG[item.key] = not CONFIG[item.key]
+            item.set(not item.get())
         elseif item.type == "enum" then
-            local current = CONFIG[item.key]
+            local current = item.get()
             local idx = 1
             for i, val in ipairs(item.values) do
                 if val == current then idx = i; break end
@@ -109,9 +124,9 @@ function M.Navigate(dir)
                 idx = idx - 1
                 if idx < 1 then idx = #item.values end
             end
-            CONFIG[item.key] = item.values[idx]
+            item.set(item.values[idx])
         elseif item.type == "number" then
-            local val = CONFIG[item.key] or item.min
+            local val = item.get() or item.min
             if dir == "right" then
                 val = val + item.step
                 if val > item.max then val = item.max end
@@ -119,7 +134,7 @@ function M.Navigate(dir)
                 val = val - item.step
                 if val < item.min then val = item.min end
             end
-            CONFIG[item.key] = val
+            item.set(val)
         end
         
         -- Automatically trigger SaveConfig on changes
@@ -192,7 +207,7 @@ function M.Draw(hud, SizeX, SizeY)
         end
         
         -- Get display value
-        local rawVal = CONFIG[item.key]
+        local rawVal = item.get()
         local valStr = ""
         if item.type == "boolean" then
             valStr = rawVal and configMod.GetTranslation("Menu_ON", "ON") or configMod.GetTranslation("Menu_OFF", "OFF")

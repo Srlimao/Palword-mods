@@ -42,14 +42,32 @@ local function GetAccessoryLabelParts(staticId)
     return "GEAR", staticId:sub(1, 6):upper()
 end
 
+local function GetShortKeyLabel(keyStr, defaultLabel)
+    if not keyStr or keyStr == "" then return defaultLabel end
+    local k = string.upper(tostring(keyStr))
+    local numMap = {ONE="1", TWO="2", THREE="3", FOUR="4", FIVE="5", SIX="6", SEVEN="7", EIGHT="8", NINE="9", ZERO="0"}
+    if numMap[k] then return numMap[k] end
+    if k:sub(1,4) == "NUM_" then return "N" .. k:sub(5) end
+    if k == "LEFT MOUSE BUTTON" then return "LMB" end
+    if k == "RIGHT MOUSE BUTTON" then return "RMB" end
+    if k == "MIDDLE MOUSE BUTTON" then return "MMB" end
+    if k == "THUMB MOUSE BUTTON" then return "MB4" end
+    if k == "THUMB MOUSE BUTTON 2" then return "MB5" end
+    if #k > 4 then return k:sub(1,3) end
+    return k
+end
+
 local function DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisabled, textColorEnabled, textColorLabel, cardBg, emptyBorder, emptyBg)
+    local rawKey = configMod.CONFIG.KeyBinds and configMod.CONFIG.KeyBinds["ToggleSlot" .. uiIdx]
+    local defaultKeyLabel = tostring(uiIdx + 4)
+    local keyLabel = GetShortKeyLabel(rawKey, defaultKeyLabel)
+
     if not acc then
         -- Draw Empty Slot
         hud:DrawRect(emptyBorder, slotX, y, size, size)
         hud:DrawRect(emptyBg, slotX + 1.5, y + 1.5, size - 3.0, size - 3.0)
 
-        -- Key number (5, 6, 7, 8)
-        local keyLabel = tostring(uiIdx + 4)
+        -- Key number
         hud:DrawText(keyLabel, { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + 5.0 * scale, y + 4.0 * scale, nil, 0.65 * scale, false)
 
         -- Dash indicator
@@ -66,8 +84,7 @@ local function DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisable
         hud:DrawRect(borderColor, slotX, y, size, size)
         hud:DrawRect(cardBg, slotX + 1.5, y + 1.5, size - 3.0, size - 3.0)
 
-        -- Draw Key label (5, 6, 7, 8)
-        local keyLabel = tostring(uiIdx + 4)
+        -- Draw Key label
         hud:DrawText(keyLabel, textColorLabel, slotX + 5.0 * scale, y + 4.0 * scale, nil, 0.65 * scale, false)
 
         -- Split accessory static ID into Category Type and Buff name
@@ -209,7 +226,14 @@ function M.Draw(hud, SizeX, SizeY)
         
         -- Text Banner
         local textLine1 = configMod.GetTranslation("EditModeActive", "EDIT MODE ACTIVE")
+        local rawEditKey = configMod.CONFIG.KeyBinds and configMod.CONFIG.KeyBinds.ToggleEditMode
+        local rawResetKey = configMod.CONFIG.KeyBinds and configMod.CONFIG.KeyBinds.ResetCoords
+        local editKeyStr = GetShortKeyLabel(rawEditKey, "F7")
+        local resetKeyStr = GetShortKeyLabel(rawResetKey, "R")
+        
         local textLine2 = configMod.GetTranslation("EditModeInstructions", "ARROWS: MOVE | +/-: SCALE | ALT+R: RESET | ALT+F7: SAVE")
+        textLine2 = textLine2:gsub("ALT%+F7", "ALT+" .. editKeyStr)
+        textLine2 = textLine2:gsub("ALT%+R", "ALT+" .. resetKeyStr)
         
         local textScale1 = 0.6 * scale
         local textScale2 = 0.45 * scale

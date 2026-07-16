@@ -1,0 +1,101 @@
+{
+  "Caves": {
+  "Color": {
+  "A": 1.0,
+  "B": 0.9,
+  "G": 0.2,
+  "R": 0.6
+},
+  "Enabled": true,
+  "FontScale": 1.2,
+  "MaxDistance": 15000.0,
+  "TextOffsetZ": 80.0
+},
+  "Chests": {
+  "Color": {
+  "A": 1.0,
+  "B": 0.1,
+  "G": 0.7,
+  "R": 0.9
+},
+  "Enabled": true,
+  "FontScale": 1.2,
+  "MaxDistance": 15000.0,
+  "TextOffsetZ": 80.0
+},
+  "Eggs": {
+  "Color": {
+  "A": 1.0,
+  "B": 0.8,
+  "G": 0.5,
+  "R": 0.8
+},
+  "Filter": "All",
+  "FontScale": 1.2,
+  "MaxDistance": 15000.0,
+  "TextOffsetZ": 80.0
+},
+  "Global": {
+  "Debug": false,
+  "Enabled": true,
+  "KeyBinds": {
+  "MenuDown": "DOWN_ARROW",
+  "MenuLeft": "LEFT_ARROW",
+  "MenuRight": "RIGHT_ARROW",
+  "MenuUp": "UP_ARROW",
+  "ToggleMenu": "F6"
+},
+  "Language": "system",
+  "ScanIntervalMs": 1500
+},
+  "Players": {
+  "BorderColor": {
+  "A": 1.0,
+  "B": 0.0,
+  "G": 0.0,
+  "R": 0.0
+},
+  "BorderWidth": 1.5,
+  "BoxColor": {
+  "A": 1.0,
+  "B": 1.0,
+  "G": 0.8,
+  "R": 0.8
+},
+  "BoxPadX": 10.0,
+  "BoxPadY": 6.0,
+  "DistColor": {
+  "A": 1.0,
+  "B": 0.0,
+  "G": 0.0,
+  "R": 0.0
+},
+  "DrawBox": true,
+  "Enabled": true,
+  "FontCharW": 8.0,
+  "FontLineH": 12.0,
+  "FontScale": 1.2,
+  "GraceRadiusM": 30,
+  "MaxDistance": 15000.0,
+  "NameColor": {
+  "A": 1.0,
+  "B": 0.0,
+  "G": 0.0,
+  "R": 0.0
+},
+  "SmallFontScale": 0.9,
+  "TextOffsetZ": 120.0
+},
+  "Relics": {
+  "Color": {
+  "A": 1.0,
+  "B": 0.9,
+  "G": 0.9,
+  "R": 0.1
+},
+  "Enabled": true,
+  "FontScale": 1.2,
+  "MaxDistance": 15000.0,
+  "TextOffsetZ": 80.0
+}
+}

@@ -6,8 +6,8 @@ local CONFIG = configMod.CONFIG
 local M = {}
 
 -- Render center-aligned 3D floating text above the item location (relics, chests)
-local function DrawTextAbove(hud, pos, textStr, color, fontScale)
-    local textWorldPos = { X = pos.X, Y = pos.Y, Z = pos.Z + CONFIG.ItemTextOffsetZ }
+local function DrawTextAbove(hud, pos, textStr, color, fontScale, textOffsetZ)
+    local textWorldPos = { X = pos.X, Y = pos.Y, Z = pos.Z + textOffsetZ }
     local textScreen = hud:Project(textWorldPos, false)
     
     if textScreen.Z > 0.0 then
@@ -19,8 +19,11 @@ local function DrawTextAbove(hud, pos, textStr, color, fontScale)
         
         -- Fallback default font character metrics if GetTextSize fails
         if not width or width == 0 then
-            width = #textStr * CONFIG.FontCharW * fontScale
-            height = CONFIG.FontLineH * fontScale
+            -- Fallback to global defaults or Player ones if missing
+            local charW = CONFIG.Players.FontCharW or 8.0
+            local lineH = CONFIG.Players.FontLineH or 12.0
+            width = #textStr * charW * fontScale
+            height = lineH * fontScale
         end
         
         -- Center-align text relative to the projected screen position
@@ -65,57 +68,57 @@ local function DrawPlayerPlate(hud, otherPlayer, playerPos)
     local distMeters = math.floor(dist / 100.0)
     
     -- Skip anyone within the grace radius
-    if distMeters <= CONFIG.GraceRadiusM then return end
+    if distMeters <= CONFIG.Players.GraceRadiusM then return end
     
     local nameStr = otherPlayer.Name
     local distStr = distMeters .. "m"
     
-    local textWorldPos = { X = otherPlayer.Pos.X, Y = otherPlayer.Pos.Y, Z = otherPlayer.Pos.Z + CONFIG.TextOffsetZ }
+    local textWorldPos = { X = otherPlayer.Pos.X, Y = otherPlayer.Pos.Y, Z = otherPlayer.Pos.Z + CONFIG.Players.TextOffsetZ }
     local textScreen = hud:Project(textWorldPos, false)
     
     if textScreen.Z > 0.0 then
         local iconStr = "@ " -- Plain ASCII person indicator
         local labelStr = iconStr .. nameStr
 
-        if CONFIG.DrawBox then
+        if CONFIG.Players.DrawBox then
             -- Estimate dimensions for two-line layout
-            local nameW  = #labelStr * CONFIG.FontCharW * CONFIG.PlayerFontScale
-            local distW  = #distStr  * CONFIG.FontCharW * CONFIG.PlayerSmallFontScale
-            local nameH  = CONFIG.FontLineH * CONFIG.PlayerFontScale
-            local distH  = CONFIG.FontLineH * CONFIG.PlayerSmallFontScale
+            local nameW  = #labelStr * CONFIG.Players.FontCharW * CONFIG.Players.FontScale
+            local distW  = #distStr  * CONFIG.Players.FontCharW * CONFIG.Players.SmallFontScale
+            local nameH  = CONFIG.Players.FontLineH * CONFIG.Players.FontScale
+            local distH  = CONFIG.Players.FontLineH * CONFIG.Players.SmallFontScale
             local lineGap = 4.0
-            local bw     = CONFIG.BorderWidth
+            local bw     = CONFIG.Players.BorderWidth
             
             local contentW = math.max(nameW, distW)
             local contentH = nameH + lineGap + distH
-            local boxW = contentW + CONFIG.BoxPadX * 2
-            local boxH = contentH + CONFIG.BoxPadY * 2
+            local boxW = contentW + CONFIG.Players.BoxPadX * 2
+            local boxH = contentH + CONFIG.Players.BoxPadY * 2
             
             -- Centre box on the projected world point
             local boxX = textScreen.X - boxW * 0.5
             local boxY = textScreen.Y - boxH * 0.5
  
             -- Draw border
-            hud:DrawRect(CONFIG.BorderColor, boxX - bw, boxY - bw, boxW + bw * 2, boxH + bw * 2)
+            hud:DrawRect(CONFIG.Players.BorderColor, boxX - bw, boxY - bw, boxW + bw * 2, boxH + bw * 2)
  
             -- Draw background fill box
-            hud:DrawRect(CONFIG.BoxColor, boxX, boxY, boxW, boxH)
+            hud:DrawRect(CONFIG.Players.BoxColor, boxX, boxY, boxW, boxH)
             
             -- Draw name + icon
             local nameX = textScreen.X - nameW * 0.5
-            local nameY = boxY + CONFIG.BoxPadY
+            local nameY = boxY + CONFIG.Players.BoxPadY
             
             -- Draw distance
             local distX = textScreen.X - distW * 0.5
             local distY = nameY + nameH + lineGap
  
-            hud:DrawText(labelStr, CONFIG.NameColor, nameX, nameY, nil, CONFIG.PlayerFontScale, false)
-            hud:DrawText(distStr, CONFIG.DistColor, distX, distY, nil, CONFIG.PlayerSmallFontScale, false)
+            hud:DrawText(labelStr, CONFIG.Players.NameColor, nameX, nameY, nil, CONFIG.Players.FontScale, false)
+            hud:DrawText(distStr, CONFIG.Players.DistColor, distX, distY, nil, CONFIG.Players.SmallFontScale, false)
         else
             -- Simple single-line format: Name [Distance]
             local simpleStr = nameStr .. " [" .. distStr .. "]"
-            local simpleW = #simpleStr * CONFIG.FontCharW * CONFIG.PlayerFontScale
-            local simpleH = CONFIG.FontLineH * CONFIG.PlayerFontScale
+            local simpleW = #simpleStr * CONFIG.Players.FontCharW * CONFIG.Players.FontScale
+            local simpleH = CONFIG.Players.FontLineH * CONFIG.Players.FontScale
             
             local simpleX = textScreen.X - simpleW * 0.5
             local simpleY = textScreen.Y - simpleH * 0.5
@@ -125,13 +128,13 @@ local function DrawPlayerPlate(hud, otherPlayer, playerPos)
             local off = 1.0
             
             -- Draw soft borders
-            hud:DrawText(simpleStr, borderCol, simpleX - off, simpleY - off, nil, CONFIG.PlayerFontScale, false)
-            hud:DrawText(simpleStr, borderCol, simpleX + off, simpleY - off, nil, CONFIG.PlayerFontScale, false)
-            hud:DrawText(simpleStr, borderCol, simpleX - off, simpleY + off, nil, CONFIG.PlayerFontScale, false)
-            hud:DrawText(simpleStr, borderCol, simpleX + off, simpleY + off, nil, CONFIG.PlayerFontScale, false)
+            hud:DrawText(simpleStr, borderCol, simpleX - off, simpleY - off, nil, CONFIG.Players.FontScale, false)
+            hud:DrawText(simpleStr, borderCol, simpleX + off, simpleY - off, nil, CONFIG.Players.FontScale, false)
+            hud:DrawText(simpleStr, borderCol, simpleX - off, simpleY + off, nil, CONFIG.Players.FontScale, false)
+            hud:DrawText(simpleStr, borderCol, simpleX + off, simpleY + off, nil, CONFIG.Players.FontScale, false)
             
             -- Draw main text
-            hud:DrawText(simpleStr, nameCol, simpleX, simpleY, nil, CONFIG.PlayerFontScale, false)
+            hud:DrawText(simpleStr, nameCol, simpleX, simpleY, nil, CONFIG.Players.FontScale, false)
         end
     end
 end
@@ -144,21 +147,21 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     -- 2. Draw Popups (always allowed)
     popup.Draw(hud, SizeX, SizeY)
 
-    if not CONFIG.Enabled then return end
+    if not CONFIG.Global.Enabled then return end
     
     if not cachedLocalPlayer or not cachedLocalPlayer:IsValid() then return end
     local playerPos = cachedLocalPlayer:K2_GetActorLocation()
     if not playerPos then return end
 
     -- 1. Draw Players
-    if CONFIG.ShowPlayers then
+    if CONFIG.Players.Enabled then
         for _, otherPlayer in ipairs(activePlayers) do
             DrawPlayerPlate(hud, otherPlayer, playerPos)
         end
     end
 
     -- 2. Draw Relics
-    if CONFIG.ShowRelics then
+    if CONFIG.Relics.Enabled then
         for _, pos in ipairs(activeRelics) do
             local dx = pos.X - playerPos.X
             local dy = pos.Y - playerPos.Y
@@ -167,12 +170,12 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local distMeters = math.floor(dist / 100.0)
             local name = pos.Name or "Relic"
             local textStr = name .. " [" .. distMeters .. "m]"
-            DrawTextAbove(hud, pos, textStr, CONFIG.RelicColor, CONFIG.RelicFontScale)
+            DrawTextAbove(hud, pos, textStr, CONFIG.Relics.Color, CONFIG.Relics.FontScale, CONFIG.Relics.TextOffsetZ)
         end
     end
 
     -- 3. Draw Chests
-    if CONFIG.ShowChests then
+    if CONFIG.Chests.Enabled then
         for _, pos in ipairs(activeChests) do
             local dx = pos.X - playerPos.X
             local dy = pos.Y - playerPos.Y
@@ -181,12 +184,12 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local distMeters = math.floor(dist / 100.0)
             local name = pos.Name or "Chest"
             local textStr = name .. " [" .. distMeters .. "m]"
-            DrawTextAbove(hud, pos, textStr, CONFIG.ChestColor, CONFIG.ChestFontScale)
+            DrawTextAbove(hud, pos, textStr, CONFIG.Chests.Color, CONFIG.Chests.FontScale, CONFIG.Chests.TextOffsetZ)
         end
     end
 
     -- 4. Draw Eggs
-    if CONFIG.EggFilter ~= "None" then
+    if CONFIG.Eggs.Filter ~= "None" then
         for _, pos in ipairs(activeEggs) do
             local dx = pos.X - playerPos.X
             local dy = pos.Y - playerPos.Y
@@ -196,12 +199,12 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local prefix = pos.SizePrefix or ""
             local name = pos.Name or "Egg"
             local textStr = prefix .. name .. " [" .. distMeters .. "m]"
-            DrawTextAbove(hud, pos, textStr, CONFIG.EggColor, CONFIG.EggFontScale)
+            DrawTextAbove(hud, pos, textStr, CONFIG.Eggs.Color, CONFIG.Eggs.FontScale, CONFIG.Eggs.TextOffsetZ)
         end
     end
 
     -- 5. Draw Caves
-    if CONFIG.ShowCaves then
+    if CONFIG.Caves.Enabled then
         for _, pos in ipairs(activeCaves) do
             local dx = pos.X - playerPos.X
             local dy = pos.Y - playerPos.Y
@@ -224,9 +227,9 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             end
             
             -- Draw 3D glowing beacon cylinder
-            --DrawCaveBeacon(hud, pos, CONFIG.CaveColor)
+            --DrawCaveBeacon(hud, pos, CONFIG.Caves.Color)
             
-            DrawTextAbove(hud, pos, textStr, CONFIG.CaveColor, CONFIG.CaveFontScale)
+            DrawTextAbove(hud, pos, textStr, CONFIG.Caves.Color, CONFIG.Caves.FontScale, CONFIG.Caves.TextOffsetZ)
         end
     end
 end
