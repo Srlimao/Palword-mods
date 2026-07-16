@@ -1,0 +1,30 @@
+[size=4][b]Description[/b][/size]  
+Accessory Toggler is a client-side mod for Palworld that allows you to instantly equip and unequip your accessories using customizable hotkeys.
+
+[size=4][b]Main features[/b][/size]  
+[list]
+[*][b]Instant Hotkey Toggling:[/b] Quickly toggle your accessory slots 1 through 4 using customizable hotkeys (Default: 5, 6, 7, 8).[/*]
+[*][b]HUD Overlay:[/b] Displays a clean, non-intrusive on-screen UI showing your currently equipped accessories and their active/disabled status.[/*]
+[*][b]HUD Edit Mode:[/b] Press Alt + F7 to enter Edit Mode. Use the Arrow Keys to move the UI around your screen, and + / - to adjust its scale. Press Alt + R to instantly reset it to the default position.[/*]
+[*][b]Auto-State Saving[/b][/*]
+[*][b]Fully Localized:[/b] Automatically uses the game's internal data tables to display accessory names in your chosen language.[/*]
+[/list]
+
+[size=4][b]Configuration Tool[/b][/size]  
+[list]
+[*]Easily customize your hotkeys and settings without touching code! Use the [url=https://pal-mod-configurator.dunhas.com/?tab=accessory][b]Palworld Mod Configurator[/b][/url] web page.[/*]
+[/list]
+
+[size=4][b]Installation instructions[/b][/size]  
+[list=1]
+[*]Download and install [b]UE4SS[/b] (Unreal Engine 4 Scripting System) if you haven't already.[/*]
+[*]Download the Accessory Toggler mod .zip file.[/*]
+[*]Extract the contents of the .zip into your Palworld\Pal\Binaries\Win64\Mods folder.[/*]
+[*]Open the mods.txt file in the Mods folder and ensure AccessoryToggler : 1 is present and enabled.[/*]
+[*]Launch Palworld and enjoy![/*]
+[/list]
+
+[size=4][b]Requirements[/b][/size]  
+[list]
+[*][b]UE4SS (Unreal Engine 4 Scripting System)[/b] is required to run this Lua-based mod. Ensure you are using a version compatible with the current Palworld patch.[/*]
+[/list]
