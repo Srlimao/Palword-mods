@@ -57,6 +57,11 @@ end)
 -- Start periodic background scan loop
 local function StartPeriodicScan()
     local function loop()
+        -- Robust hook retry to bypass NotifyOnNewObject bugs
+        if not isHUDHooked then
+            RegisterHUDHook()
+        end
+        
         pcall(tracker.scan)
         ExecuteWithDelay(CONFIG.ScanIntervalMs, loop)
     end

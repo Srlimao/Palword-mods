@@ -133,6 +133,11 @@ end)
 -- Start periodic background scan loop
 local function StartPeriodicScan()
     local function loop()
+        -- Robust hook retry to bypass NotifyOnNewObject bugs
+        if not isHUDHooked then
+            RegisterHUDHook()
+        end
+        
         local status, err = pcall(toggler.Scan)
         if not status then
             print("[AccessoryToggler] ERROR in Scan loop: " .. tostring(err))
