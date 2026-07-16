@@ -16,12 +16,21 @@ DebugPrint("Initializing Mod...")
 
 -- Hook into HUD Draw frame tick (ReceiveDrawHUD)
 local isHUDHooked = false
+local hasLoggedDraw = false
+local hasLoggedHookFailure = false
 
 local function RegisterHUDHook()
     if isHUDHooked then return end
     
     local status = pcall(function()
         RegisterHook("/Game/Pal/Blueprint/UI/BP_PalHUD_InGame.BP_PalHUD_InGame_C:ReceiveDrawHUD", function(self, SizeX, SizeY)
+            if not hasLoggedDraw then
+                hasLoggedDraw = true
+                local sx, sy = SizeX, SizeY
+                pcall(function() if type(sx) == "userdata" or type(sx) == "table" then sx = sx:get() end end)
+                pcall(function() if type(sy) == "userdata" or type(sy) == "table" then sy = sy:get() end end)
+                DebugPrint("ReceiveDrawHUD hook successfully firing! Screen Size: " .. tostring(sx) .. "x" .. tostring(sy))
+            end
             local hud = self:get()
             if not hud or not hud:IsValid() then return end
             
@@ -40,9 +49,12 @@ local function RegisterHUDHook()
     
     if status then
         isHUDHooked = true
-        DebugPrint("HUD ReceiveDrawHUD hook successfully registered!")
+        DebugPrint("HUD ReceiveDrawHUD hook successfully registered via UE4SS!")
     else
-        DebugPrint("Failed to register ReceiveDrawHUD hook (class might not be loaded yet).")
+        if not hasLoggedHookFailure then
+            DebugPrint("Failed to register ReceiveDrawHUD hook (class might not be loaded yet). Background timer will retry silently...")
+            hasLoggedHookFailure = true
+        end
     end
 end
 
