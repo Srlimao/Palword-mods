@@ -203,4 +203,22 @@ else
     configMod.DebugPrint("WARNING: Failed to resolve Key.F7")
 end
 
+local keyR = Key.R
+
+-- Alt+R resets coordinates to default while in edit mode
+if keyR then
+    RegisterKeyBind(keyR, { ModifierKey.ALT }, function()
+        pcall(function()
+            if configMod.EditModeActive then
+                configMod.CONFIG.HUDX = nil
+                configMod.CONFIG.HUDY = nil
+                configMod.CONFIG.HUDScale = 1.0
+                configMod.DebugPrint("HUD coordinates and scale reset to default via Alt+R!")
+            end
+        end)
+    end)
+else
+    configMod.DebugPrint("WARNING: Failed to resolve Key.R")
+end
+
 configMod.DebugPrint("Mod Loaded Successfully!")

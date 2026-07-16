@@ -218,6 +218,9 @@ function M.LoadConfig()
     -- Self-healing default coordinate migration
     if M.CONFIG.HUDX == 50.0 then M.CONFIG.HUDX = nil end
     if M.CONFIG.HUDY == 400.0 then M.CONFIG.HUDY = nil end
+    
+    -- Auto-save new attributes so the user's config file updates instantly
+    M.SaveConfig()
 end
 
 M.EditModeActive = false
@@ -236,6 +239,7 @@ function M.SaveConfig()
     local configPath = GetConfigFilePath()
     local outFile = io.open(configPath, "w")
     if outFile then
+        M.DebugPrint("Saving Config -> HUDX: " .. tostring(M.CONFIG.HUDX) .. ", HUDY: " .. tostring(M.CONFIG.HUDY) .. ", HUDScale: " .. tostring(M.CONFIG.HUDScale))
         local str = json.stringify(M.CONFIG)
         outFile:write(str)
         outFile:close()

@@ -139,7 +139,7 @@ local function DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisable
 end
 
 function M.Draw(hud, SizeX, SizeY)
-    if not configMod.CONFIG.Enabled then return end
+    if not configMod.CONFIG.Enabled and not configMod.EditModeActive then return end
 
     -- Only draw the hotbar if player has at least one accessory equipped or tracked, or edit mode is active
     local hasAny = false
@@ -209,7 +209,7 @@ function M.Draw(hud, SizeX, SizeY)
         
         -- Text Banner
         local textLine1 = configMod.GetTranslation("EditModeActive", "EDIT MODE ACTIVE")
-        local textLine2 = configMod.GetTranslation("EditModeInstructions", "ARROWS: MOVE | +/-: SCALE | ALT+F7: SAVE")
+        local textLine2 = configMod.GetTranslation("EditModeInstructions", "ARROWS: MOVE | +/-: SCALE | ALT+R: RESET | ALT+F7: SAVE")
         
         local textScale1 = 0.6 * scale
         local textScale2 = 0.45 * scale

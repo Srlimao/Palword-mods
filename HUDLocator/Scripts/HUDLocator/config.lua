@@ -151,6 +151,9 @@ function M.LoadConfig()
     else
         print("[HUDLocator] Failed to parse config, using defaults.")
     end
+    
+    -- Auto-save new attributes so the user's config file updates instantly
+    M.SaveConfig()
 end
 
 function M.SaveConfig()
