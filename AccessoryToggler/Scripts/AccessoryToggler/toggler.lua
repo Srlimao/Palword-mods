@@ -95,6 +95,32 @@ local function GetArrayElement(arr, idx)
     return el
 end
 
+-- Helper to safely get slot static ID
+local function GetSlotStaticId(slot)
+    if not slot or not slot:IsValid() then return nil end
+    local staticId = nil
+    pcall(function()
+        local itemId = slot:GetItemId()
+        if itemId then
+            local sId = itemId.StaticId
+            if sId then
+                staticId = sId:ToString()
+            end
+        end
+    end)
+    return staticId
+end
+
+-- Helper to safely check if slot is empty
+local function IsSlotEmpty(slot)
+    if not slot or not slot:IsValid() then return true end
+    local empty = true
+    pcall(function()
+        empty = slot:IsEmpty()
+    end)
+    return empty
+end
+
 local function GetAccessoryName(staticId)
     local trans = GetTranslatedItemName(staticId)
     if trans then return trans end
@@ -142,24 +168,32 @@ end
 -- Scan the inventory bag to find a slot containing a specific static item ID
 local function FindItemSlotInInventory(inventory, staticId)
     if not inventory or not inventory:IsValid() then return nil end
-    local multiHelper = inventory.InventoryMultiHelper
+    local multiHelper = nil
+    pcall(function() multiHelper = inventory.InventoryMultiHelper end)
     if not multiHelper or not multiHelper:IsValid() then return nil end
-    local containers = multiHelper.Containers
+    local containers = nil
+    pcall(function() containers = multiHelper.Containers end)
     if not containers then return nil end
     
     local numContainers = GetArrayLength(containers)
     for i = 1, numContainers do
         local container = GetArrayElement(containers, i)
         if container and container:IsValid() then
-            local slotArray = container.ItemSlotArray
+            local slotArray = nil
+            pcall(function() slotArray = container.ItemSlotArray end)
             if slotArray then
                 local numSlots = GetArrayLength(slotArray)
                 for j = 1, numSlots do
                     local slot = GetArrayElement(slotArray, j)
-                    if slot and slot:IsValid() and not slot:IsEmpty() then
-                        local slotItemId = slot:GetItemId()
-                        if slotItemId.StaticId:ToString() == staticId then
-                            return slot
+                    if slot and slot:IsValid() and not IsSlotEmpty(slot) then
+                        -- Ensure it is NOT an equipment slot
+                        local isEquip = false
+                        pcall(function() isEquip = inventory:IsEquipSlot(slot) end)
+                        if not isEquip then
+                            local sId = GetSlotStaticId(slot)
+                            if sId == staticId then
+                                return slot
+                            end
                         end
                     end
                 end
@@ -173,7 +207,9 @@ local function GetSlotIconPath(slot)
     return ""
 end
 
+local hasAttemptedInitialUnequip = false
 local hasLoggedEquipScan = false
+
 -- Main scan loop called periodically
 function M.Scan()
     local inventory = GetInventory()
@@ -187,42 +223,61 @@ function M.Scan()
     for uiIdx = 1, 4 do
         local slotType = ACCESSORY_SLOTS[uiIdx]
         local out = {}
-        local success = inventory:TryGetItemSlotFromEquipmentType(slotType, out)
+        local success = false
+        pcall(function()
+            success = inventory:TryGetItemSlotFromEquipmentType(slotType, out)
+        end)
         local slot = out.OutSlot
         
+        local isSlotValid = slot and slot:IsValid()
+        local isEmpty = IsSlotEmpty(slot)
+        local staticId = GetSlotStaticId(slot) or "None"
+
         if shouldLog then
-            local isSlotValid = slot and slot:IsValid()
-            local isEmpty = isSlotValid and slot:IsEmpty()
-            local staticId = (isSlotValid and not isEmpty) and slot:GetItemId().StaticId:ToString() or "None"
             configMod.DebugPrint(string.format("UI Slot %d (EquipType %d): success=%s, valid=%s, empty=%s, item=%s", 
                 uiIdx, slotType, tostring(success), tostring(isSlotValid), tostring(isEmpty), staticId))
         end
 
-        local isEquipped = success and slot and slot:IsValid() and not slot:IsEmpty()
+        local isEquipped = success and isSlotValid and not isEmpty
 
         if isEquipped then
-            local staticId = slot:GetItemId().StaticId:ToString()
             foundCount = foundCount + 1
             
             -- If this accessory is equipped but is marked in config/state as disabled:
             if M.disabledAccessorySlots[uiIdx] == staticId then
-                -- Try to automatically unequip it on start/load
-                if HasFreeInventorySlot(inventory) then
-                    local removed = inventory:TryRemoveEquipment(slot)
-                    if removed then
-                        configMod.DebugPrint("Auto-unequipped accessory in slot " .. uiIdx .. " on scan: " .. staticId)
+                if not hasAttemptedInitialUnequip then
+                    -- Try to automatically unequip it on start/load
+                    if HasFreeInventorySlot(inventory) then
+                        local removed = false
+                        pcall(function()
+                            removed = inventory:TryRemoveEquipment(slot)
+                        end)
+                        if removed then
+                            configMod.DebugPrint("Auto-unequipped accessory in slot " .. uiIdx .. " on scan: " .. staticId)
+                        end
+                    else
+                        -- No inventory space to unequip: clear disabled state so it remains active
+                        M.disabledAccessorySlots[uiIdx] = nil
+                        SaveDisabledStates()
                     end
                 else
-                    -- No inventory space to unequip: clear disabled state so it remains active
+                    -- During active gameplay, if they manually equipped it, we clear the disabled state
+                    configMod.DebugPrint("Accessory slot " .. uiIdx .. " was manually re-equipped: " .. staticId)
                     M.disabledAccessorySlots[uiIdx] = nil
                     SaveDisabledStates()
+                    M.equippedAccessories[uiIdx] = {
+                        staticId = staticId,
+                        name = GetAccessoryName(staticId),
+                        iconPath = "",
+                        disabled = false
+                    }
                 end
             else
                 -- Accessory is active and working
                 M.equippedAccessories[uiIdx] = {
                     staticId = staticId,
                     name = GetAccessoryName(staticId),
-                    iconPath = GetSlotIconPath(slot),
+                    iconPath = "",
                     disabled = false
                 }
             end
@@ -238,11 +293,12 @@ function M.Scan()
                     M.equippedAccessories[uiIdx] = {
                         staticId = savedStaticId,
                         name = GetAccessoryName(savedStaticId),
-                        iconPath = GetSlotIconPath(itemSlot),
+                        iconPath = "",
                         disabled = true
                     }
                 else
                     -- Accessory is no longer in the inventory: clear state
+                    configMod.DebugPrint("Disabled accessory " .. savedStaticId .. " in slot " .. uiIdx .. " is no longer in inventory. Clearing state.")
                     M.disabledAccessorySlots[uiIdx] = nil
                     M.equippedAccessories[uiIdx] = nil
                     SaveDisabledStates()
@@ -252,6 +308,9 @@ function M.Scan()
             end
         end
     end
+
+    -- Mark that we have completed the initial startup unequip check
+    hasAttemptedInitialUnequip = true
 
     if foundCount > 0 and not hasLoggedEquipScan then
         hasLoggedEquipScan = true
@@ -273,9 +332,12 @@ function M.ToggleSlot(uiSlotIndex)
     if not slotType then return end
 
     local out = {}
-    local success = inventory:TryGetItemSlotFromEquipmentType(slotType, out)
+    local success = false
+    pcall(function()
+        success = inventory:TryGetItemSlotFromEquipmentType(slotType, out)
+    end)
     local slot = out.OutSlot
-    local isEquipped = success and slot and slot:IsValid() and not slot:IsEmpty()
+    local isEquipped = success and slot and slot:IsValid() and not IsSlotEmpty(slot)
 
     if isEquipped then
         -- Check for free inventory space first (User request!)
@@ -284,11 +346,15 @@ function M.ToggleSlot(uiSlotIndex)
             return
         end
 
-        local staticId = slot:GetItemId().StaticId:ToString()
+        local staticId = GetSlotStaticId(slot)
+        if not staticId then return end
         local displayName = GetAccessoryName(staticId)
 
         -- Perform unequip
-        local removed = inventory:TryRemoveEquipment(slot)
+        local removed = false
+        pcall(function()
+            removed = inventory:TryRemoveEquipment(slot)
+        end)
         if removed then
             M.disabledAccessorySlots[uiSlotIndex] = staticId
             SaveDisabledStates()
@@ -303,7 +369,10 @@ function M.ToggleSlot(uiSlotIndex)
             local displayName = GetAccessoryName(staticId)
             local bagSlot = FindItemSlotInInventory(inventory, staticId)
             if bagSlot then
-                local equipped = inventory:TryEquipSlot(bagSlot)
+                local equipped = false
+                pcall(function()
+                    equipped = inventory:TryEquipSlot(bagSlot)
+                end)
                 if equipped then
                     M.disabledAccessorySlots[uiSlotIndex] = nil
                     SaveDisabledStates()
