@@ -24,7 +24,7 @@ function M.GetTranslatedMapObjectName(masterDataId)
     end
     if not idStr then idStr = tostring(masterDataId) end
 
-    if configMod.CONFIG.Language ~= "system" and configMod.CONFIG.Language ~= "" then
+    if configMod.CONFIG.Global.Language ~= "system" and configMod.CONFIG.Global.Language ~= "" then
         if string.find(idStr, "TreasureBox") then return configMod.GetTranslation("Chest") end
         if string.find(idStr, "Relic") then return configMod.GetTranslation("Relic") end
         if string.find(idStr, "PalEgg") then return configMod.GetTranslation("Egg") end
@@ -72,7 +72,7 @@ function M.GetTranslatedDungeonName(overrideId)
         dungeonKey = "NAME_" .. idStr
     end
     
-    if configMod.CONFIG.Language ~= "system" and configMod.CONFIG.Language ~= "" then
+    if configMod.CONFIG.Global.Language ~= "system" and configMod.CONFIG.Global.Language ~= "" then
         return configMod.GetTranslation("Cave")
     end
     
@@ -109,7 +109,7 @@ function M.GetTranslatedItemName(itemId)
     end
     if not idStr then idStr = tostring(itemId) end
 
-    if configMod.CONFIG.Language ~= "system" and configMod.CONFIG.Language ~= "" then
+    if configMod.CONFIG.Global.Language ~= "system" and configMod.CONFIG.Global.Language ~= "" then
         if string.find(idStr, "Relic") then return configMod.GetTranslation("Relic") end
         return nil
     end
@@ -212,15 +212,15 @@ function M.IsEggPicked(egg)
         if not egg:IsValid() then return true end
         if egg.bHidden then return true end
         
-        local model = egg.MapObjectModel
-        if not model or not model:IsValid() then return true end
-        
         if type(egg.bPickedInClient) == "boolean" and egg.bPickedInClient then return true end
         
-        local concrete = model.ConcreteModel
-        if concrete and concrete:IsValid() then
-            if type(concrete.bPicked) == "boolean" and concrete.bPicked then return true end
-            if type(concrete.bIsPicked) == "boolean" and concrete.bIsPicked then return true end
+        local model = egg.MapObjectModel
+        if model and model:IsValid() then
+            local concrete = model.ConcreteModel
+            if concrete and concrete:IsValid() then
+                if type(concrete.bPicked) == "boolean" and concrete.bPicked then return true end
+                if type(concrete.bIsPicked) == "boolean" and concrete.bIsPicked then return true end
+            end
         end
         
         return false

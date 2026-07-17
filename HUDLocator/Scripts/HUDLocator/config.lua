@@ -364,14 +364,45 @@ end
 function M.GetTranslation(key, default)
     if M.AllTranslations then
         local activeLang = ResolveActiveLanguage()
+        
+        -- Try direct lookup
         local langDict = M.AllTranslations[activeLang]
+        
+        -- Try case-insensitive / normalized lookup if direct lookup fails
         if not langDict then
-            local shortLang = string.sub(activeLang, 1, 2)
-            langDict = M.AllTranslations[shortLang]
+            local lowerLang = activeLang:lower()
+            local mappedLang = nil
+            if lowerLang == "zh-cn" or lowerLang == "zh-sg" or lowerLang:find("hans") then
+                mappedLang = "zh-Hans"
+            elseif lowerLang == "zh-tw" or lowerLang == "zh-hk" or lowerLang:find("hant") then
+                mappedLang = "zh-Hant"
+            elseif lowerLang == "pt-br" or lowerLang == "pt" then
+                mappedLang = "pt-BR"
+            elseif lowerLang == "es-mx" then
+                mappedLang = "es-MX"
+            end
+            
+            if mappedLang then
+                langDict = M.AllTranslations[mappedLang]
+            end
         end
+        
+        -- Try short language code fallback (e.g. "en-us" -> "en")
+        if not langDict then
+            local shortLang = string.sub(activeLang, 1, 2):lower()
+            for k, v in pairs(M.AllTranslations) do
+                if k:lower() == shortLang then
+                    langDict = v
+                    break
+                end
+            end
+        end
+        
+        -- Ultimate fallback to English
         if not langDict then
             langDict = M.AllTranslations["en"]
         end
+        
         if langDict and langDict[key] and langDict[key] ~= "" then
             return langDict[key]
         end

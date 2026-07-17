@@ -24,6 +24,10 @@ M.dungeonClasses = {
 M.currentClassIndex = 1
 M.tempCaves = {}
 M.hasLoggedDungeons = false
+M.hasLoggedPlayers = false
+M.hasLoggedRelics = false
+M.hasLoggedChests = false
+M.hasLoggedEggs = false
 
 function M.ScanPlayers(localPlayerState)
     local newPlayers = {}
@@ -52,6 +56,10 @@ function M.ScanPlayers(localPlayerState)
                 end)
             end
         end
+    end
+    if not M.hasLoggedPlayers and #newPlayers > 0 then
+        M.hasLoggedPlayers = true
+        logger.log("Player Scan (Initial detection): Found " .. tostring(#newPlayers) .. " other players.")
     end
     return newPlayers
 end
@@ -83,6 +91,10 @@ function M.ScanRelics(playerPos, maxDistSq)
             end)
         end
     end
+    if not M.hasLoggedRelics and #newRelics > 0 then
+        M.hasLoggedRelics = true
+        logger.log("Relic Scan (Initial detection): Found " .. tostring(#newRelics) .. " relics.")
+    end
     return newRelics
 end
 
@@ -110,6 +122,10 @@ function M.ScanChests(playerPos, maxDistSq)
             end)
         end
     end
+    if not M.hasLoggedChests and #newChests > 0 then
+        M.hasLoggedChests = true
+        logger.log("Chest Scan (Initial detection): Found " .. tostring(#newChests) .. " chests.")
+    end
     return newChests
 end
 
@@ -129,10 +145,6 @@ function M.ScanEggs(playerPos, maxDistSq, eggFilter, debug)
                         if statusScale and type(scale) == "number" then
                             if scale >= 1.9 then sizeStr = "Huge"
                             elseif scale >= 1.05 then sizeStr = "Large"
-                            end
-                        else
-                            if debug then
-                                logger.log("Failed to get egg scale. Fallback to normal. Error: " .. tostring(scale))
                             end
                         end
 
@@ -189,6 +201,12 @@ function M.ScanEggs(playerPos, maxDistSq, eggFilter, debug)
             end)
         end
     end
+    
+    if not M.hasLoggedEggs and #newEggs > 0 then
+        M.hasLoggedEggs = true
+        logger.log("Egg Scan (Initial detection): Found " .. tostring(#newEggs) .. " eggs.")
+    end
+    
     return newEggs
 end
 
