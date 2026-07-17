@@ -52,11 +52,11 @@ local menuItems = {
         transKey = "Settings_EggFilter"
     },
     {
-        name = "Player Box Style",
-        get = function() return CONFIG.Players.DrawBox end,
-        set = function(v) CONFIG.Players.DrawBox = v end,
-        type = "boolean",
-        transKey = "Settings_BoxStyle"
+        name = "Advanced Styles",
+        get = function() return "Via Website" end,
+        set = function(v) end,
+        type = "label",
+        transKey = "Settings_AdvancedStyles"
     },
     {
         name = "Max Distance (All)",
@@ -220,6 +220,8 @@ function M.Draw(hud, SizeX, SizeY)
             else
                 valStr = tostring(rawVal)
             end
+        elseif item.type == "label" then
+            valStr = tostring(rawVal)
         end
         
         -- Color definitions
@@ -227,6 +229,8 @@ function M.Draw(hud, SizeX, SizeY)
         local valColor = { R = 1.0, G = 1.0, B = 1.0, A = 1.0 }
         if item.type == "boolean" then
             valColor = rawVal and { R = 0.0, G = 0.96, B = 0.83, A = 1.0 } or { R = 1.0, G = 0.35, B = 0.37, A = 1.0 }
+        elseif item.type == "label" then
+            valColor = { R = 0.5, G = 0.9, B = 0.5, A = 1.0 }
         end
         
         -- Name string

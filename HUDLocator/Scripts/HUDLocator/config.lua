@@ -21,47 +21,97 @@ M.CONFIG = {
         Enabled = true,
         MaxDistance = 15000.0,
         GraceRadiusM = 30,
-        FontScale = 1.2,
-        SmallFontScale = 0.9,
-        TextOffsetZ = 120.0,
-        DrawBox = false,
-        NameColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
-        DistColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
-        BoxColor = { R = 0.8, G = 0.8, B = 1.0, A = 1.0 },
-        BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
-        BorderWidth = 1.5,
-        BoxPadX = 10.0,
-        BoxPadY = 6.0,
-        FontCharW = 8.0,
-        FontLineH = 12.0
+        Style = {
+            DrawBox = false,
+            FontScale = 1.2,
+            SmallFontScale = 0.9,
+            TextOffsetZ = 120.0,
+            NameColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+            DistColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+            BoxColor = { R = 0.8, G = 0.8, B = 1.0, A = 1.0 },
+            BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+            BorderWidth = 1.5,
+            BoxPadX = 10.0,
+            BoxPadY = 6.0,
+            FontCharW = 8.0,
+            FontLineH = 12.0
+        }
     },
     Relics = {
         Enabled = true,
         MaxDistance = 15000.0,
-        FontScale = 1.2,
-        TextOffsetZ = 80.0,
-        Color = { R = 0.1, G = 0.9, B = 0.9, A = 1.0 }
+        Style = {
+            DrawBox = false,
+            FontScale = 1.2,
+            SmallFontScale = 0.9,
+            TextOffsetZ = 80.0,
+            NameColor = { R = 0.1, G = 0.9, B = 0.9, A = 1.0 },
+            DistColor = { R = 0.1, G = 0.9, B = 0.9, A = 1.0 },
+            BoxColor = { R = 0.8, G = 0.8, B = 1.0, A = 1.0 },
+            BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+            BorderWidth = 1.5,
+            BoxPadX = 10.0,
+            BoxPadY = 6.0,
+            FontCharW = 8.0,
+            FontLineH = 12.0
+        }
     },
     Chests = {
         Enabled = true,
         MaxDistance = 15000.0,
-        FontScale = 1.2,
-        TextOffsetZ = 80.0,
-        Color = { R = 0.9, G = 0.7, B = 0.1, A = 1.0 }
+        Style = {
+            DrawBox = false,
+            FontScale = 1.2,
+            SmallFontScale = 0.9,
+            TextOffsetZ = 80.0,
+            NameColor = { R = 0.9, G = 0.7, B = 0.1, A = 1.0 },
+            DistColor = { R = 0.9, G = 0.7, B = 0.1, A = 1.0 },
+            BoxColor = { R = 0.8, G = 0.8, B = 1.0, A = 1.0 },
+            BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+            BorderWidth = 1.5,
+            BoxPadX = 10.0,
+            BoxPadY = 6.0,
+            FontCharW = 8.0,
+            FontLineH = 12.0
+        }
     },
     Eggs = {
         Filter = "All",
         MaxDistance = 15000.0,
-        FontScale = 1.2,
-        TextOffsetZ = 80.0,
-        Color = { R = 0.8, G = 0.5, B = 0.8, A = 1.0 }
+        Style = {
+            DrawBox = false,
+            FontScale = 1.2,
+            SmallFontScale = 0.9,
+            TextOffsetZ = 80.0,
+            NameColor = { R = 0.8, G = 0.5, B = 0.8, A = 1.0 },
+            DistColor = { R = 0.8, G = 0.5, B = 0.8, A = 1.0 },
+            BoxColor = { R = 0.8, G = 0.8, B = 1.0, A = 1.0 },
+            BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+            BorderWidth = 1.5,
+            BoxPadX = 10.0,
+            BoxPadY = 6.0,
+            FontCharW = 8.0,
+            FontLineH = 12.0
+        }
     },
     Caves = {
         Enabled = true,
         MaxDistance = 15000.0,
-        FontScale = 1.2,
-        TextOffsetZ = 80.0,
-        Color = { R = 0.6, G = 0.2, B = 0.9, A = 1.0 }
+        Style = {
+            DrawBox = false,
+            FontScale = 1.2,
+            SmallFontScale = 0.9,
+            TextOffsetZ = 80.0,
+            NameColor = { R = 0.6, G = 0.2, B = 0.9, A = 1.0 },
+            DistColor = { R = 0.6, G = 0.2, B = 0.9, A = 1.0 },
+            BoxColor = { R = 0.8, G = 0.8, B = 1.0, A = 1.0 },
+            BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+            BorderWidth = 1.5,
+            BoxPadX = 10.0,
+            BoxPadY = 6.0,
+            FontCharW = 8.0,
+            FontLineH = 12.0
+        }
     }
 }
 
@@ -102,47 +152,97 @@ local defaultJSON = [[{
     "Enabled": true,
     "MaxDistance": 15000.0,
     "GraceRadiusM": 30,
-    "FontScale": 1.2,
-    "SmallFontScale": 0.9,
-    "TextOffsetZ": 120.0,
-    "DrawBox": false,
-    "NameColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
-    "DistColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
-    "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
-    "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
-    "BorderWidth": 1.5,
-    "BoxPadX": 10.0,
-    "BoxPadY": 6.0,
-    "FontCharW": 8.0,
-    "FontLineH": 12.0
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 120.0,
+      "NameColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "DistColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
   },
   "Relics": {
     "Enabled": true,
     "MaxDistance": 15000.0,
-    "FontScale": 1.2,
-    "TextOffsetZ": 80.0,
-    "Color": { "R": 0.1, "G": 0.9, "B": 0.9, "A": 1.0 }
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 80.0,
+      "NameColor": { "R": 0.1, "G": 0.9, "B": 0.9, "A": 1.0 },
+      "DistColor": { "R": 0.1, "G": 0.9, "B": 0.9, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
   },
   "Chests": {
     "Enabled": true,
     "MaxDistance": 15000.0,
-    "FontScale": 1.2,
-    "TextOffsetZ": 80.0,
-    "Color": { "R": 0.9, "G": 0.7, "B": 0.1, "A": 1.0 }
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 80.0,
+      "NameColor": { "R": 0.9, "G": 0.7, "B": 0.1, "A": 1.0 },
+      "DistColor": { "R": 0.9, "G": 0.7, "B": 0.1, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
   },
   "Eggs": {
     "Filter": "All",
     "MaxDistance": 15000.0,
-    "FontScale": 1.2,
-    "TextOffsetZ": 80.0,
-    "Color": { "R": 0.8, "G": 0.5, "B": 0.8, "A": 1.0 }
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 80.0,
+      "NameColor": { "R": 0.8, "G": 0.5, "B": 0.8, "A": 1.0 },
+      "DistColor": { "R": 0.8, "G": 0.5, "B": 0.8, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
   },
   "Caves": {
     "Enabled": true,
     "MaxDistance": 15000.0,
-    "FontScale": 1.2,
-    "TextOffsetZ": 80.0,
-    "Color": { "R": 0.6, "G": 0.2, "B": 0.9, "A": 1.0 }
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 80.0,
+      "NameColor": { "R": 0.6, "G": 0.2, "B": 0.9, "A": 1.0 },
+      "DistColor": { "R": 0.6, "G": 0.2, "B": 0.9, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
   }
 }
 ]]
@@ -212,9 +312,41 @@ function M.LoadConfig()
             for k, section in pairs(parsed) do
                 if type(section) == "table" and M.CONFIG[k] then
                     for subK, subV in pairs(section) do
-                        if type(subV) == "table" and type(M.CONFIG[k][subK]) == "table" then
+                        if k == "Players" and subK ~= "Style" and M.CONFIG[k].Style and M.CONFIG[k].Style[subK] ~= nil then
+                            -- Migrate old Players flat styling properties to Style
+                            if type(subV) == "table" and type(M.CONFIG[k].Style[subK]) == "table" then
+                                for cK, cV in pairs(subV) do
+                                    M.CONFIG[k].Style[subK][cK] = cV
+                                end
+                            else
+                                M.CONFIG[k].Style[subK] = subV
+                            end
+                        elseif k ~= "Players" and k ~= "Global" and subK == "Color" then
+                            -- Migrate old Color to Style.NameColor and Style.DistColor
+                            if M.CONFIG[k].Style then
+                                for cK, cV in pairs(subV) do
+                                    M.CONFIG[k].Style.NameColor[cK] = cV
+                                    M.CONFIG[k].Style.DistColor[cK] = cV
+                                end
+                            end
+                        elseif k ~= "Players" and k ~= "Global" and subK ~= "Style" and M.CONFIG[k].Style and M.CONFIG[k].Style[subK] ~= nil then
+                            -- Migrate old Relics/Chests/Eggs/Caves flat styling properties to Style
+                            if type(subV) == "table" and type(M.CONFIG[k].Style[subK]) == "table" then
+                                for cK, cV in pairs(subV) do
+                                    M.CONFIG[k].Style[subK][cK] = cV
+                                end
+                            else
+                                M.CONFIG[k].Style[subK] = subV
+                            end
+                        elseif type(subV) == "table" and type(M.CONFIG[k][subK]) == "table" then
                             for cK, cV in pairs(subV) do
-                                M.CONFIG[k][subK][cK] = cV
+                                if type(cV) == "table" and type(M.CONFIG[k][subK][cK]) == "table" then
+                                    for dK, dV in pairs(cV) do
+                                        M.CONFIG[k][subK][cK][dK] = dV
+                                    end
+                                else
+                                    M.CONFIG[k][subK][cK] = cV
+                                end
                             end
                         else
                             M.CONFIG[k][subK] = subV

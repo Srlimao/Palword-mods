@@ -1,101 +1,111 @@
 {
-  "Caves": {
-  "Color": {
-  "A": 1.0,
-  "B": 0.9,
-  "G": 0.2,
-  "R": 0.6
-},
-  "Enabled": true,
-  "FontScale": 1.2,
-  "MaxDistance": 15000.0,
-  "TextOffsetZ": 80.0
-},
-  "Chests": {
-  "Color": {
-  "A": 1.0,
-  "B": 0.1,
-  "G": 0.7,
-  "R": 0.9
-},
-  "Enabled": true,
-  "FontScale": 1.2,
-  "MaxDistance": 15000.0,
-  "TextOffsetZ": 80.0
-},
-  "Eggs": {
-  "Color": {
-  "A": 1.0,
-  "B": 0.8,
-  "G": 0.5,
-  "R": 0.8
-},
-  "Filter": "All",
-  "FontScale": 1.2,
-  "MaxDistance": 15000.0,
-  "TextOffsetZ": 80.0
-},
   "Global": {
-  "Debug": false,
-  "Enabled": true,
-  "KeyBinds": {
-  "MenuDown": "DOWN_ARROW",
-  "MenuLeft": "LEFT_ARROW",
-  "MenuRight": "RIGHT_ARROW",
-  "MenuUp": "UP_ARROW",
-  "ToggleMenu": "F6"
-},
-  "Language": "system",
-  "ScanIntervalMs": 1500
-},
+    "Enabled": true,
+    "Language": "system",
+    "ScanIntervalMs": 1500,
+    "Debug": false,
+    "KeyBinds": {
+      "ToggleMenu": "F6",
+      "MenuUp": "UP_ARROW",
+      "MenuDown": "DOWN_ARROW",
+      "MenuLeft": "LEFT_ARROW",
+      "MenuRight": "RIGHT_ARROW"
+    }
+  },
   "Players": {
-  "BorderColor": {
-  "A": 1.0,
-  "B": 0.0,
-  "G": 0.0,
-  "R": 0.0
-},
-  "BorderWidth": 1.5,
-  "BoxColor": {
-  "A": 1.0,
-  "B": 1.0,
-  "G": 0.8,
-  "R": 0.8
-},
-  "BoxPadX": 10.0,
-  "BoxPadY": 6.0,
-  "DistColor": {
-  "A": 1.0,
-  "B": 0.0,
-  "G": 0.0,
-  "R": 0.0
-},
-  "DrawBox": true,
-  "Enabled": true,
-  "FontCharW": 8.0,
-  "FontLineH": 12.0,
-  "FontScale": 1.2,
-  "GraceRadiusM": 30,
-  "MaxDistance": 15000.0,
-  "NameColor": {
-  "A": 1.0,
-  "B": 0.0,
-  "G": 0.0,
-  "R": 0.0
-},
-  "SmallFontScale": 0.9,
-  "TextOffsetZ": 120.0
-},
+    "Enabled": true,
+    "MaxDistance": 15000.0,
+    "GraceRadiusM": 30,
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 120.0,
+      "NameColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "DistColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
+  },
   "Relics": {
-  "Color": {
-  "A": 1.0,
-  "B": 0.9,
-  "G": 0.9,
-  "R": 0.1
-},
-  "Enabled": true,
-  "FontScale": 1.2,
-  "MaxDistance": 15000.0,
-  "TextOffsetZ": 80.0
-}
+    "Enabled": true,
+    "MaxDistance": 15000.0,
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 80.0,
+      "NameColor": { "R": 0.1, "G": 0.9, "B": 0.9, "A": 1.0 },
+      "DistColor": { "R": 0.1, "G": 0.9, "B": 0.9, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
+  },
+  "Chests": {
+    "Enabled": true,
+    "MaxDistance": 15000.0,
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 80.0,
+      "NameColor": { "R": 0.9, "G": 0.7, "B": 0.1, "A": 1.0 },
+      "DistColor": { "R": 0.9, "G": 0.7, "B": 0.1, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
+  },
+  "Eggs": {
+    "Filter": "All",
+    "MaxDistance": 15000.0,
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 80.0,
+      "NameColor": { "R": 0.8, "G": 0.5, "B": 0.8, "A": 1.0 },
+      "DistColor": { "R": 0.8, "G": 0.5, "B": 0.8, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
+  },
+  "Caves": {
+    "Enabled": true,
+    "MaxDistance": 15000.0,
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 80.0,
+      "NameColor": { "R": 0.6, "G": 0.2, "B": 0.9, "A": 1.0 },
+      "DistColor": { "R": 0.6, "G": 0.2, "B": 0.9, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
+  }
 }
