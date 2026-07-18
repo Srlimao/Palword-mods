@@ -1,5 +1,6 @@
 local configMod = require("AccessoryToggler.config")
 local toggler = require("AccessoryToggler.toggler")
+local utils = require("AccessoryToggler.utils")
 
 local M = {}
 
@@ -68,13 +69,15 @@ local function DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisable
         hud:DrawRect(emptyBg, slotX + 1.5, y + 1.5, size - 3.0, size - 3.0)
 
         -- Key number
-        hud:DrawText(keyLabel, { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + 5.0 * scale, y + 4.0 * scale, nil, 0.65 * scale, false)
+        utils.DrawText(hud, keyLabel, { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + 5.0 * scale, y + 4.0 * scale, 0.65 * scale, false)
 
         -- Dash indicator
-        local textW = 0
-        pcall(function() textW = hud:GetTextSize("-", nil, 0.8 * scale) end)
-        if not textW or textW == 0 then textW = 6.0 * scale end
-        hud:DrawText("-", { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + (size / 2.0) - (textW / 2.0), y + (size / 2.0) - (9.0 * scale), nil, 0.8 * scale, false)
+        local textW = utils.GetTextSize(hud, "-", 0.8 * scale)
+        if not textW or textW == 0 then
+            local font, scaleMult = utils.GetFontAndScale()
+            textW = 6.0 * scale * scaleMult
+        end
+        utils.DrawText(hud, "-", { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + (size / 2.0) - (textW / 2.0), y + (size / 2.0) - (9.0 * scale), 0.8 * scale, false)
     else
         -- Choose slot colors based on enabled/disabled state
         local borderColor = acc.disabled and textColorDisabled or textColorEnabled
@@ -85,7 +88,7 @@ local function DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisable
         hud:DrawRect(cardBg, slotX + 1.5, y + 1.5, size - 3.0, size - 3.0)
 
         -- Draw Key label
-        hud:DrawText(keyLabel, textColorLabel, slotX + 5.0 * scale, y + 4.0 * scale, nil, 0.65 * scale, false)
+        utils.DrawText(hud, keyLabel, textColorLabel, slotX + 5.0 * scale, y + 4.0 * scale, 0.65 * scale, false)
 
         -- Split accessory static ID into Category Type and Buff name
         local typeText, buffText = GetAccessoryLabelParts(acc.staticId)
@@ -134,21 +137,25 @@ local function DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisable
         
         -- Draw Type Text (Top Line)
         local typeScale = 0.45 * scale
-        local typeW = 0
-        pcall(function() typeW = hud:GetTextSize(transType, nil, typeScale) end)
-        if not typeW or typeW == 0 then typeW = #transType * 3.8 * scale end
+        local typeW = utils.GetTextSize(hud, transType, typeScale)
+        if not typeW or typeW == 0 then
+            local font, scaleMult = utils.GetFontAndScale()
+            typeW = utils.GetStringLength(transType) * 8.4 * typeScale * scaleMult
+        end
         local typeX = slotX + (size / 2.0) - (typeW / 2.0)
         local typeY = y + (size * 0.25) - (4.0 * scale)
-        hud:DrawText(transType, { R = 0.7, G = 0.7, B = 0.7, A = acc.disabled and 0.4 or 0.8 }, typeX, typeY, nil, typeScale, false)
+        utils.DrawText(hud, transType, { R = 0.7, G = 0.7, B = 0.7, A = acc.disabled and 0.4 or 0.8 }, typeX, typeY, typeScale, false)
 
         -- Draw Buff Text (Bottom Line)
         local buffScale = 0.55 * scale
-        local buffW = 0
-        pcall(function() buffW = hud:GetTextSize(transBuff, nil, buffScale) end)
-        if not buffW or buffW == 0 then buffW = #transBuff * 4.6 * scale end
+        local buffW = utils.GetTextSize(hud, transBuff, buffScale)
+        if not buffW or buffW == 0 then
+            local font, scaleMult = utils.GetFontAndScale()
+            buffW = utils.GetStringLength(transBuff) * 8.4 * buffScale * scaleMult
+        end
         local buffX = slotX + (size / 2.0) - (buffW / 2.0)
         local buffY = y + (size * 0.6) - (4.0 * scale)
-        hud:DrawText(transBuff, textMainColor, buffX, buffY, nil, buffScale, false)
+        utils.DrawText(hud, transBuff, textMainColor, buffX, buffY, buffScale, false)
 
         -- Draw Status indicator line at the bottom
         hud:DrawRect(borderColor, slotX + 5.0 * scale, y + size - 6.0 * scale, size - 10.0 * scale, 2.0 * scale)
@@ -238,13 +245,17 @@ function M.Draw(hud, SizeX, SizeY)
         local textScale1 = 0.6 * scale
         local textScale2 = 0.45 * scale
         
-        local textW1 = 0
-        pcall(function() textW1 = hud:GetTextSize(textLine1, nil, textScale1) end)
-        if not textW1 or textW1 == 0 then textW1 = #textLine1 * 5.0 * scale end
+        local textW1 = utils.GetTextSize(hud, textLine1, textScale1)
+        if not textW1 or textW1 == 0 then
+            local font, scaleMult = utils.GetFontAndScale()
+            textW1 = utils.GetStringLength(textLine1) * 8.4 * textScale1 * scaleMult
+        end
         
-        local textW2 = 0
-        pcall(function() textW2 = hud:GetTextSize(textLine2, nil, textScale2) end)
-        if not textW2 or textW2 == 0 then textW2 = #textLine2 * 3.8 * scale end
+        local textW2 = utils.GetTextSize(hud, textLine2, textScale2)
+        if not textW2 or textW2 == 0 then
+            local font, scaleMult = utils.GetFontAndScale()
+            textW2 = utils.GetStringLength(textLine2) * 8.4 * textScale2 * scaleMult
+        end
         
         local maxW = math.max(textW1, textW2) + 20.0 * scale
         local bannerH = 42.0 * scale
@@ -254,8 +265,8 @@ function M.Draw(hud, SizeX, SizeY)
         hud:DrawRect(editBorderColor, bannerX, bannerY, maxW, bannerH)
         hud:DrawRect({ R = 0.02, G = 0.05, B = 0.12, A = 0.9 }, bannerX + 1.5, bannerY + 1.5, maxW - 3.0, bannerH - 3.0)
         
-        hud:DrawText(textLine1, { R = 0.0, G = 1.0, B = 0.8, A = 1.0 }, bannerX + (maxW / 2.0) - (textW1 / 2.0), bannerY + 5.0 * scale, nil, textScale1, false)
-        hud:DrawText(textLine2, { R = 0.9, G = 0.9, B = 0.9, A = 0.9 }, bannerX + (maxW / 2.0) - (textW2 / 2.0), bannerY + bannerH - 17.0 * scale, nil, textScale2, false)
+        utils.DrawText(hud, textLine1, { R = 0.0, G = 1.0, B = 0.8, A = 1.0 }, bannerX + (maxW / 2.0) - (textW1 / 2.0), bannerY + 5.0 * scale, textScale1, false)
+        utils.DrawText(hud, textLine2, { R = 0.9, G = 0.9, B = 0.9, A = 0.9 }, bannerX + (maxW / 2.0) - (textW2 / 2.0), bannerY + bannerH - 17.0 * scale, textScale2, false)
     end
 
     for uiIdx = 1, 4 do

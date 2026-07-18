@@ -1,3 +1,5 @@
+local utils = require("AccessoryToggler.utils")
+
 local M = {}
 
 local PopupText = ""
@@ -17,7 +19,6 @@ end
 
 function M.Draw(hud, SizeX, SizeY)
     if PopupTimer > 0 then
-        local scale = 1.8
         local A = 1.0
         
         -- Fade out effect in the last 60 frames
@@ -44,35 +45,22 @@ function M.Draw(hud, SizeX, SizeY)
         local y = screenH / 4.0
 
         -- Try to center text exactly
-        local width = 0
-        pcall(function() width = hud:GetTextSize(PopupText, nil, scale) end)
+        local baseScale = 1.8
+        local width = utils.GetTextSize(hud, PopupText, baseScale)
         if not width or width == 0 then
             -- Fallback estimation
-            width = #PopupText * 10 * scale / 2.0
+            local font, scaleMult = utils.GetFontAndScale()
+            width = utils.GetStringLength(PopupText) * 10 * (baseScale * scaleMult) / 2.0
         end
         
         local drawX = x - (width / 2.0)
 
         -- Draw drop shadow
-        hud:DrawText(
-            PopupText,
-            { R = 0, G = 0, B = 0, A = A },
-            drawX + 2, y + 2,
-            nil,
-            scale,
-            false
-        )
+        utils.DrawText(hud, PopupText, { R = 0, G = 0, B = 0, A = A }, drawX + 2, y + 2, baseScale, false)
         
         -- Draw main text
         local colorWithAlpha = { R = PopupColor.R, G = PopupColor.G, B = PopupColor.B, A = A }
-        hud:DrawText(
-            PopupText,
-            colorWithAlpha,
-            drawX, y,
-            nil,
-            scale,
-            false
-        )
+        utils.DrawText(hud, PopupText, colorWithAlpha, drawX, y, baseScale, false)
 
         PopupTimer = PopupTimer - 1
     end

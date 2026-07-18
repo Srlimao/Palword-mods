@@ -1,6 +1,7 @@
 local UEHelpers = require("UEHelpers")
 local configMod = require("AccessoryToggler.config")
 local popup = require("AccessoryToggler.popup")
+local utils = require("AccessoryToggler.utils")
 
 local M = {}
 
@@ -212,6 +213,7 @@ local hasLoggedEquipScan = false
 
 -- Main scan loop called periodically
 function M.Scan()
+    utils.FindAndCacheFont()
     local inventory = GetInventory()
     if not inventory or not inventory:IsValid() then return end
 
