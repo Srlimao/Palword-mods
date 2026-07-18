@@ -1,4 +1,5 @@
 local M = {}
+M.ConfigLoadedOnce = false
 
 -- Default settings
 M.CONFIG = {
@@ -57,7 +58,6 @@ end
 -- Lightweight JSON parser/stringifier in pure Lua (since UE4SS may not expose json globally)
 local json = {}
 function json.parse(str)
-    str = str:gsub("//[^\n]*", ""):gsub("/%*.-%*/", "")
     local pos = 1
     local function skip_whitespace()
         while pos <= #str do
@@ -244,6 +244,7 @@ function M.LoadConfig()
             MergeConfig(M.CONFIG, parsed)
             print("[AccessoryToggler] Configuration loaded from central path: " .. newConfigPath)
             centralLoaded = true
+            M.ConfigLoadedOnce = true
         end
     end
     
@@ -276,6 +277,14 @@ function M.LoadConfig()
         return
     end
 
+    -- If central config failed to load but was previously loaded/saved successfully this session,
+    -- DO NOT overwrite it with defaults (the file might be temporarily locked or corrupted).
+    if M.ConfigLoadedOnce then
+        print("[AccessoryToggler] WARNING: Failed to read central configuration (file may be locked or invalid). Retaining current in-memory settings.")
+        return
+    end
+
+    print("[AccessoryToggler] Central config not found or invalid. Scanning legacy paths for migration...")
     local oldContent = nil
     local migratedPath = nil
     for _, path in ipairs(paths) do
@@ -284,12 +293,20 @@ function M.LoadConfig()
             local content = f:read("*all")
             f:close()
             local parsed = json.parse(content)
-            if IsValidAccessoryTogglerConfig(parsed) then
-                oldContent = content
-                migratedPath = path
-                print("[AccessoryToggler] Found existing configuration at: " .. path .. " - Migrating to central path...")
-                break
+            if parsed then
+                if IsValidAccessoryTogglerConfig(parsed) then
+                    oldContent = content
+                    migratedPath = path
+                    print("[AccessoryToggler] Found valid legacy configuration at: " .. path .. " - Migrating...")
+                    break
+                else
+                    print("[AccessoryToggler] Found legacy file at: " .. path .. " but it is not a valid AccessoryToggler config (skipping).")
+                end
+            else
+                print("[AccessoryToggler] Found legacy file at: " .. path .. " but failed to parse JSON (malformed).")
             end
+        else
+            print("[AccessoryToggler] Checked legacy path: " .. path .. " (not found).")
         end
     end
 
@@ -313,6 +330,7 @@ function M.LoadConfig()
                 outFile:write(str)
                 outFile:close()
                 print("[AccessoryToggler] Migrated configuration saved successfully to central path.")
+                M.ConfigLoadedOnce = true
                 
                 -- Delete the migrated file
                 if migratedPath then
@@ -353,6 +371,7 @@ function M.LoadConfig()
         outFile:write(json.stringify(M.CONFIG))
         outFile:close()
         print("[AccessoryToggler] Generated default configuration at: " .. newConfigPath)
+        M.ConfigLoadedOnce = true
     else
         print("[AccessoryToggler] ERROR: Failed to write default config at: " .. newConfigPath)
     end
@@ -378,6 +397,7 @@ function M.SaveConfig()
         local str = json.stringify(M.CONFIG)
         outFile:write(str)
         outFile:close()
+        M.ConfigLoadedOnce = true
     end
 end
 
