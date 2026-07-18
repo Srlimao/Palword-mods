@@ -1,67 +1,67 @@
-[h1]HUD Locator (Merged & Modularized Edition)[/h1]
+# HUD Locator
 
-A client-side UI mod for Palworld that adds customizable floating HUD overlays for [b]other players[/b], [b]Lifmunk Effigies (relics)[/b], and [b]Treasure Chests[/b]. 
+A client-side UI mod for Palworld that displays customizable floating 3D HUD overlays for **players**, **Lifmunk Effigies (relics)**, **treasure chests**, **Pal eggs**, and **dungeon entrances**. 
 
-This mod combines and refactors the functionalities of the popular PlayerLocatorHUD and RelicFinder mods into a single, light-weight, performance-tuned package.
+---
 
-[hr][/hr]
+## Key Features
 
-[h2] Key Features[/h2]
-[list]
-[*] [b]Player Distance Tracker[/b]: Locates all players server-wide (even beyond standard network replication distance). Displays floating nameplates with real-time distance indicators.
-[*] [b]Relic Finder[/b]: Highlights nearby Lifmunk Effigies with a cyan glowing HUD overlay.
-[*] [b]Chest Finder[/b]: Shows yellow/gold floating tags for unopened treasure chests.
-[*] [b]In-Game Toggle Binds[/b]: Toggle different trackers or overlay styles on the fly using key binds.
-[*] [b]Visual HTML Configurator[/b]: Includes a built-in configurator utility page. Simply drag-and-drop your [i]config.json[/i] file to modify colors, sliders, ranges, nameplate padding, and fonts with a [b]real-time live HUD preview[/b] before saving!
-[*] [b]Safe Auto-Config[/b]: Settings are auto-generated on first load. The file is never overwritten by future mod updates, keeping your custom colors and values safe.
-[/list]
+- **Player Tracker**: Displays names and real-time distances server-wide (even beyond standard network replication distance). Supports nameplate backgrounds or simple text overlays.
+- **Relic Finder**: Highlights nearby Lifmunk Effigies with cyan tags.
+- **Chest Finder**: Highlights unopened treasure chests with yellow/gold tags.
+- **Pal Egg Finder**: Displays egg size (Huge, Large, etc.) and type (e.g. Scorching Egg). Includes distance filter options (`All`, `Large+`, `HugeOnly`, `None`).
+- **Dungeon Finder**: Highlights fixed dungeon cave entrances with purple tags.
+- **In-Game Settings Menu**: Toggle trackers, adjust egg filters, or set max tracking distance directly in-game using a built-in menu (**Alt + F6**).
+- **Manual Config Reload**: Reload configurations instantly via **Alt + R** from the external settings JSON file.
+- **Visual Web Configurator**: Tweak detailed styles (colors, sliders, padding, fonts) with a live HUD preview using the web editor: [https://pal-mod-configurator.dunhas.com/](https://pal-mod-configurator.dunhas.com/). Can be opened directly from the in-game menu.
+- **Localization**: Supports English, Chinese, Spanish, Japanese, French, German, and 10+ other languages, auto-detected from game language settings.
 
-[hr][/hr]
+---
 
-[h2] In-Game Key Bindings[/h2]
-[list]
-[*] [b]Alt + F7[/b]  : Toggle [b]Player Locator HUD[/b] on/off.
-[*] [b]Alt + F8[/b]  : Toggle [b]Items Finder[/b] (Relics and Chests) on/off.
-[*] [b]Alt + F10[/b] : Toggle [b]Player Nameplate Style[/b] (switches between standard solid borders box style and simple text overlay).
-[/list]
+## In-Game Controls
 
-[hr][/hr]
-[h2] Setting Up Your Custom Configurations[/h2]
-This mod includes a custom visual settings editor [b]config_editor.html[/b] located inside your mod folder.
+- **Alt + F6**: Toggle in-game settings menu.
+- **Alt + Up/Down/Left/Right**: Navigate settings menu and modify values.
+- **Alt + R**: Reload configuration from settings file.
 
-[olist]
-[*] Open the game at least once to auto-generate your [i]config.json[/i] inside the [i]Mods/HUDLocator[/i] folder.
-[*] Double-click [b]config_editor.html[/b] inside the mod folder to open it in your web browser.
-[*] Drag-and-drop your [i]config.json[/i] onto the editor page.
-[*] Modify ranges, colors, padding, and text offsets. Look at the [b]live interactive preview panel[/b] to see exactly how your adjustments will look in-game.
-[*] Click [b]Export config.json[/b] to save the updated settings file and replace the original [i]config.json[/i] in your mod folder.
-[/olist]
+---
 
-[hr][/hr]
-[h2] Requirements[/h2]
-[list]
-[*] [b]UE4SS[/b] (v3.0.0 or higher / compatible with the latest Palworld version)
-[/list]
+## Requirements
 
-[hr][/hr]
+- **UE4SS** (v3.0.0 or higher / compatible with the latest Palworld version)
 
-[h2] Chinese Description[/h2]
+---
 
-在3D空间中利用实时距离追踪器定位玩家、翠叶鼠雕像和未打开的宝箱。
+## Configuration Path
 
-[h3] 主要功能[/h3]
-[list]
-[*] [b]玩家定位器[/b]：在服务器中的其他玩家上方显示漂浮的名牌和实时距离，即使他们处于渲染范围之外。
-[*] [b]翠叶鼠雕像定位[/b]：在未收集的生命菇雕像（翠叶鼠雕像）上方显示漂浮的青色标签：遗物 [距离]。
-[*] [b]宝箱追踪器[/b]：在未打开的宝箱上方显示漂浮的金色标签：宝箱 [距离]。
-[*] [b]实时距离计[/b]：距离计数器会根据你的移动在每一帧动态更新。
-[*] [b]可视化网页配置[/b]：自带网页端配置工具 [i]config_editor.html[/i]。拖入 [i]config.json[/i] 即可直观地修改名牌的颜色、边距、字号等，并提供 [b]实时HUD预览[/b]！
-[*] [b]配置安全[/b]：首次加载时自动生成配置。升级或更新模组时不会覆盖或擦除您的自定义配置。
-[/list]
+- `%USERPROFILE%\Documents\My Games\Palworld\ModConfigs\HUDLocator\config.json`
+*(Generated automatically on first load)*
 
-[h3] 快捷键开关[/h3]
-[list]
-[*] [b]Alt + F7[/b]  ：开启或关闭 [b]玩家定位[/b] 显示。
-[*] [b]Alt + F8[/b]  ：开启或关闭 [b]遗物与宝箱[/b] 显示。
-[*] [b]Alt + F10[/b] ：切换名牌外观（在带背景框和纯文字之间切换）。
-[/list]
+---
+
+## Chinese Description
+
+在 3D 空间中定位玩家、翠叶鼠雕像、宝箱、帕鲁蛋和地下城入口。
+
+### 主要功能
+
+- **玩家追踪**：显示服务器范围内的玩家名牌与实时距离，支持带框背景或纯文本样式。
+- **翠叶鼠雕像定位**：显示青色遗物标签。
+- **宝箱追踪**：显示金色宝箱标签。
+- **帕鲁蛋定位**：显示蛋的类型及尺寸（巨大、大型等），支持过滤设置（全部、大型+、仅限巨大、无）。
+- **地下城追踪**：显示紫色地下城入口标签。
+- **游戏内设置菜单 (Alt + F6)**：无需退出游戏，即可在游戏中开启/关闭追踪器、调整蛋过滤和追踪距离。
+- **配置快速重载 (Alt + R)**：快速重新加载配置文件。
+- **网页可视化配置**：通过菜单可直接访问网页端工具 [https://pal-mod-configurator.dunhas.com/](https://pal-mod-configurator.dunhas.com/) 调整样式并提供实时 HUD 预览。
+- **多语言支持**：根据游戏语言自动切换翻译（支持英文、中文、日文、西班牙文、德文、法文等10多种语言）。
+
+### 快捷键
+
+- **Alt + F6**：开启/关闭内置设置菜单。
+- **Alt + 方向键**：在菜单中选择项目并调整参数。
+- **Alt + R**：从配置文件重新加载配置。
+
+### 配置文件路径
+
+- `%USERPROFILE%\Documents\My Games\Palworld\ModConfigs\HUDLocator\config.json`
+

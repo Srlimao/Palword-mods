@@ -1,14 +1,25 @@
 =========================================
-Palworld HUD Locator Mod (Merged Edition)
+Palworld HUD Locator Mod
 =========================================
-This client-side mod displays floating 3D text overlays above all other players on the server (showing their names and real-time distances, even if outside network replication range) and locates nearby Lifmunk Effigies (relics) and treasure chests.
+A client-side UI mod for Palworld that displays customizable floating 3D text overlays for players, Lifmunk Effigies (relics), treasure chests, Pal eggs, and fixed dungeon entrances.
 
-This mod is modularized and highly optimized to run with ZERO performance impact.
+-----------------------------
+Features
+-----------------------------
+- Player Tracker: Displays names and real-time distances server-wide.
+- Relic Finder: Cyan overlays for Lifmunk Effigies.
+- Chest Finder: Gold/yellow tags for treasure chests.
+- Pal Egg Finder: Displays egg type and size with filtering options (All, Large+, HugeOnly, None).
+- Dungeon Finder: Purple overlays for fixed dungeon entrances.
+- In-Game Menu (Alt + F6): Modify settings and toggle trackers directly in-game.
+- Manual Reload (Alt + R): Reload settings from config file.
+- Visual Web Configurator: Link to configurator page (https://pal-mod-configurator.dunhas.com/) for detailed styles.
+- Localization: Multi-language support auto-detected from game language.
 
 -----------------------------
 Requirements
 -----------------------------
-- UE4SS (updated for Palworld v1.0 or higher)
+- UE4SS (v3.0.0 or higher / compatible with the latest Palworld version)
 
 -----------------------------
 Installation (Manual)
@@ -27,6 +38,13 @@ Installation (Manual)
 -----------------------------
 Shortcuts
 -----------------------------
-- Alt + F7  : Enable or disable Player HUD locator.
-- Alt + F8  : Enable or disable Item Finder (Lifmunk Effigies and Chests).
-- Alt + F10 : Toggle the Player nameplate style (switch between background box and simple text).
+- Alt + F6  : Open/Close in-game settings menu.
+- Alt + Up/Down/Left/Right : Navigate menu and adjust values.
+- Alt + R   : Reload settings from configuration file.
+
+-----------------------------
+Configuration File
+-----------------------------
+%USERPROFILE%\Documents\My Games\Palworld\ModConfigs\HUDLocator\config.json
+(Generated automatically on first game launch)
+

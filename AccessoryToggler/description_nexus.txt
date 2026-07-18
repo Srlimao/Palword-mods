@@ -1,0 +1,90 @@
+[size=5][b]Accessory Toggler[/b][/size]
+
+A client-side UI/Lua mod for Palworld that lets you instantly equip or unequip accessories (like the Ring of Mercy or thermal underwear) using hotkeys, without opening your inventory. Includes a customizable on-screen status HUD.
+
+[hr][/hr]
+
+[size=4][b]Key Features[/b][/size]
+
+[list]
+[*] [b]Quick Hotkey Swapping[/b]: Toggle accessory slots 1 to 4 instantly using hotkeys (Default: [b]5[/b], [b]6[/b], [b]7[/b], and [b]8[/b]).
+[*] [b]Status HUD[/b]: A clean, non-intrusive on-screen overlay displaying equipped accessories and their active status.
+[*] [b]Interactive HUD Edit Mode[/b]: Press [b]Alt + F7[/b] to edit. Use Arrow Keys to move the HUD, [b]+[/b] / [b]-[/b] to scale it, and [b]Alt + R[/b] to reset it.
+[*] [b]Configuration Reload[/b]: Press [b]Alt + R[/b] outside edit mode to reload settings instantly from the configuration file.
+[*] [b]Auto State-Saving[/b]: Remembers your HUD position, scale, and disabled status across game sessions.
+[*] [b]Localization[/b]: Displays accessory names automatically in your game's language.
+[/list]
+
+[hr][/hr]
+
+[size=4][b]In-Game Controls[/b][/size]
+
+[list]
+[*] [b]5, 6, 7, 8[/b]: Toggle Accessory Slots 1, 2, 3, 4.
+[*] [b]Alt + F7[/b]: Toggle HUD Edit Mode.
+[*] [b]Alt + R[/b]: Reset HUD position (in Edit Mode) or Reload configuration (outside Edit Mode).
+[*] [b]Arrow Keys[/b]: Move HUD (in Edit Mode).
+[*] [b]+ / -[/b]: Scale HUD (in Edit Mode).
+[/list]
+
+[hr][/hr]
+
+[size=4][b]Requirements[/b][/size]
+
+[list]
+[*] [b]UE4SS[/b] (v3.0.0 or higher / compatible with the latest Palworld version)
+[/list]
+
+[hr][/hr]
+
+[size=4][b]Installation (Manual)[/b][/size]
+
+[list=1]
+[*] Extract the [b]AccessoryToggler[/b] folder into your game's UE4SS Mods folder:
+[b]...\UE4SS\Mods\[/b]
+[*] Open [b]...\UE4SS\Mods\mods.txt[/b] and add the following line at the bottom:
+[b]AccessoryToggler : 1[/b]
+[*] Save [b]mods.txt[/b] and launch the game.
+[/list]
+
+[hr][/hr]
+
+[size=4][b]Configuration Path[/b][/size]
+
+[list]
+[*] [b]%USERPROFILE%\Documents\My Games\Palworld\ModConfigs\AccessoryToggler\config.json[/b]
+[i](Generated automatically on first load)[/i]
+[/list]
+
+[hr][/hr]
+
+[size=4][b]Chinese Description[/b][/size]
+
+饰品快捷装备切换模组，无需打开背包，即可使用快捷键瞬间装备或卸下饰品（如慈悲戒指、抗寒/抗热内衣）。包含游戏内状态 HUD 悬浮窗。
+
+[size=3][b]主要功能[/b][/size]
+
+[list]
+[*] [b]快捷键切换[/b]：使用快捷键瞬间切换饰品栏 1 到 4（默认快捷键：[b]5[/b]、[b]6[/b]、[b]7[/b]、[b]8[/b]）。
+[*] [b]状态 HUD[/b]：在屏幕上显示当前装备的饰品及其启用/禁用状态。
+[*] [b]HUD 交互式调整模式[/b]：按 [b]Alt + F7[/b] 进入编辑模式，使用方向键移动 HUD，使用 [b]+[/b] / [b]-[/b] 调整大小，按 [b]Alt + R[/b] 恢复默认位置。
+[*] [b]配置重载[/b]：在非编辑模式下按 [b]Alt + R[/b] 从配置文件重载设置。
+[*] [b]自动状态保存[/b]：跨存档或重启自动记忆 HUD 的位置、缩放比例和饰品状态。
+[*] [b]多语言支持[/b]：根据游戏语言自动读取饰品中文名称。
+[/list]
+
+[size=3][b]快捷键[/b][/size]
+
+[list]
+[*] [b]5, 6, 7, 8[/b]：切换饰品栏 1、2、3、4。
+[*] [b]Alt + F7[/b]：开启/关闭 HUD 编辑模式。
+[*] [b]Alt + R[/b]：恢复 HUD 默认位置（编辑模式下）/ 重新加载配置（普通模式下）。
+[*] [b]方向键[/b]：移动 HUD 位置（编辑模式下）。
+[*] [b]+ / -[/b]：缩放 HUD 大小（编辑模式下）。
+[/list]
+
+[size=3][b]配置文件路径[/b][/size]
+
+[list]
+[*] [b]%USERPROFILE%\Documents\My Games\Palworld\ModConfigs\AccessoryToggler\config.json[/b]
+[/list]
