@@ -212,6 +212,7 @@ end
 
 function M.ScanCaves(playerPos, maxDistSq)
     local cls = M.dungeonClasses[M.currentClassIndex]
+    M.tempCaves[cls] = {}
     
     local caves = FindAllOf(cls) or {}
     local successCount = 0
@@ -272,8 +273,9 @@ function M.ScanCaves(playerPos, maxDistSq)
         end
     end
     
-    -- Clear tempCaves for next scan to avoid stale data
-    M.tempCaves = {}
+    if configMod.CONFIG.Global.Debug then
+        print(string.format("[HUDLocator] ScanCaves: Class %s, found %d total actors, inserted %d within max distance. Total merged caves: %d", cls, successCount, #M.tempCaves[cls], #merged))
+    end
 
     if not M.hasLoggedDungeons and successCount > 0 then
         M.hasLoggedDungeons = true
