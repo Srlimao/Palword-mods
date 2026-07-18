@@ -54,6 +54,9 @@ All developers must follow these grouped directives to prevent crashes, frame-ti
 #### GC Spike & Scan Interval Directive
 *   **Directive:** Restrict heavy resource scans (e.g., `FindAllOf("PalPlayerState")`) to intervals of 1.5 - 5 seconds to prevent garbage collection stutters.
 
+#### Palworld Modding Kit
+*   **Directive:** Use Palworld Modding Kit for deeper scan of cpp and header files when needed: `D:\Mods\PalworkdModdingKit\PalworldModdingKit`
+
 ---
 
 ### 2. Stability & Crash Prevention

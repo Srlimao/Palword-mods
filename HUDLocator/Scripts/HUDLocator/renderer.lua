@@ -69,16 +69,19 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
                 hud:DrawText(distStr, style.DistColor, distX, distY, nil, style.SmallFontScale, false)
             end
         else
-            -- Simple text format: Name [Distance]
+            -- Simple text format: Name \n [Distance]
             local nameW = #nameStr * style.FontCharW * style.FontScale
-            local distPartStr = distStr and (" [" .. distStr .. "]") or ""
-            local distPartW = distStr and (#distPartStr * style.FontCharW * style.FontScale) or 0
+            local distPartStr = distStr and ("[" .. distStr .. "]") or ""
+            local distPartW = distStr and (#distPartStr * style.FontCharW * style.SmallFontScale) or 0
             
-            local totalW = nameW + distPartW
-            local simpleH = style.FontLineH * style.FontScale
+            local nameH = style.FontLineH * style.FontScale
+            local distH = distStr and (style.FontLineH * style.SmallFontScale) or 0
+            local lineGap = 4.0
             
-            local startX = textScreen.X - totalW * 0.5
-            local simpleY = textScreen.Y - simpleH * 0.5
+            local contentH = nameH + (distStr and (lineGap + distH) or 0)
+            
+            local startX = textScreen.X - nameW * 0.5
+            local simpleY = textScreen.Y - contentH * 0.5
             local off = 1.0
             
             -- Draw Name Part Outline
@@ -90,14 +93,15 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
             hud:DrawText(nameStr, style.NameColor, startX, simpleY, nil, style.FontScale, false)
             
             if distStr then
-                local distX = startX + nameW
+                local distX = textScreen.X - distPartW * 0.5
+                local distY = simpleY + nameH + lineGap
                 -- Draw Dist Part Outline
-                hud:DrawText(distPartStr, style.BorderColor, distX - off, simpleY - off, nil, style.FontScale, false)
-                hud:DrawText(distPartStr, style.BorderColor, distX + off, simpleY - off, nil, style.FontScale, false)
-                hud:DrawText(distPartStr, style.BorderColor, distX - off, simpleY + off, nil, style.FontScale, false)
-                hud:DrawText(distPartStr, style.BorderColor, distX + off, simpleY + off, nil, style.FontScale, false)
+                hud:DrawText(distPartStr, style.BorderColor, distX - off, distY - off, nil, style.SmallFontScale, false)
+                hud:DrawText(distPartStr, style.BorderColor, distX + off, distY - off, nil, style.SmallFontScale, false)
+                hud:DrawText(distPartStr, style.BorderColor, distX - off, distY + off, nil, style.SmallFontScale, false)
+                hud:DrawText(distPartStr, style.BorderColor, distX + off, distY + off, nil, style.SmallFontScale, false)
                 -- Draw Dist Part Main Text
-                hud:DrawText(distPartStr, style.DistColor, distX, simpleY, nil, style.FontScale, false)
+                hud:DrawText(distPartStr, style.DistColor, distX, distY, nil, style.SmallFontScale, false)
             end
         end
     end
