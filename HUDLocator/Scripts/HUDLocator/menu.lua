@@ -1,5 +1,6 @@
 local configMod = require("HUDLocator.config")
 local popup = require("HUDLocator.popup")
+local utils = require("HUDLocator.utils")
 local CONFIG = configMod.CONFIG
 
 local M = {}
@@ -85,6 +86,14 @@ local menuItems = {
         step = 250,
         format = function(v) return (v or 1500) .. "ms" end,
         transKey = "Settings_ScanInterval"
+    },
+    {
+        name = "Language",
+        get = function() return CONFIG.Global.Language or "system" end,
+        set = function(v) CONFIG.Global.Language = v end,
+        type = "enum",
+        values = {"system", "en", "es", "ja", "zh-Hans", "zh-Hant", "fr", "it", "de", "ko", "pt-BR", "ru", "th", "vi", "id", "tr", "pl", "es-MX"},
+        transKey = "Settings_Language"
     }
 }
 
@@ -160,11 +169,19 @@ function M.Draw(hud, SizeX, SizeY)
     local screenW = (type(sx) == "number" and sx > 0) and sx or 1920.0
     local screenH = (type(sy) == "number" and sy > 0) and sy or 1080.0
     
+    -- Retrieve cached font and scale multiplier
+    local font, scaleMult = utils.GetFontAndScale()
+    
     -- Define menu size & positioning (Left side HUD, modern layout)
-    local menuW = 380.0
-    local menuH = 420.0
+    local menuW = font and 440.0 or 380.0
+    local menuH = font and (430.0 + 80.0 * scaleMult) or 460.0
     local menuX = 50.0
     local menuY = (screenH / 2.0) - (menuH / 2.0)
+    
+    local padL = font and 30.0 or 20.0
+    local padHighlight = font and 20.0 or 10.0
+    local padText = font and 28.0 or 15.0
+    local padVal = font and 35.0 or 25.0
     
     -- Draw modern semi-transparent glass panel
     local cardBg = { R = 0.05, G = 0.07, B = 0.15, A = 0.85 }
@@ -180,21 +197,20 @@ function M.Draw(hud, SizeX, SizeY)
     
     -- Header text
     local headerText = configMod.GetTranslation("Settings_Title", "HUD LOCATOR SETTINGS")
-    local scaleHeader = 1.2
-    hud:DrawText(headerText, { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }, menuX + 20.0, menuY + 15.0, nil, scaleHeader, false)
+    utils.DrawText(hud, headerText, { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }, menuX + padL, menuY + 15.0, 1.2, false)
     
     -- Subheader keybind tips
     local tipText = configMod.GetTranslation("Menu_Tips", "ALT+Up/Down: Navigate | ALT+Left/Right: Change")
-    local scaleTips = 0.75
-    hud:DrawText(tipText, { R = 0.6, G = 0.6, B = 0.7, A = 1.0 }, menuX + 20.0, menuY + 38.0, nil, scaleTips, false)
+    local tipY = font and (menuY + 38.0 + 8.0 * scaleMult) or (menuY + 38.0)
+    utils.DrawText(hud, tipText, { R = 0.6, G = 0.6, B = 0.7, A = 1.0 }, menuX + padL, tipY, 0.75, false)
     
     -- Separator line
-    hud:DrawRect({ R = 0.2, G = 0.2, B = 0.3, A = 0.4 }, menuX + 20.0, menuY + 52.0, menuW - 40.0, 1.0)
+    local sepY = font and (menuY + 52.0 + 12.0 * scaleMult) or (menuY + 52.0)
+    hud:DrawRect({ R = 0.2, G = 0.2, B = 0.3, A = 0.4 }, menuX + padL, sepY, menuW - padL * 2, 1.0)
     
     -- Draw menu items
-    local startY = menuY + 65.0
-    local rowH = 34.0
-    local scaleRow = 1.0
+    local startY = font and (menuY + 60.0 + 12.0 * scaleMult) or (menuY + 65.0)
+    local rowH = font and (28.0 + 8.0 * scaleMult) or 34.0
     
     for i, item in ipairs(menuItems) do
         local isSelected = (i == selectedIndex)
@@ -203,7 +219,7 @@ function M.Draw(hud, SizeX, SizeY)
         -- Selection highlight background row bar
         if isSelected then
             local highlightBg = { R = 0.0, G = 0.95, B = 1.0, A = 0.15 }
-            hud:DrawRect(highlightBg, menuX + 10.0, itemY - 4.0, menuW - 20.0, rowH - 4.0)
+            hud:DrawRect(highlightBg, menuX + padHighlight, itemY - 4.0, menuW - padHighlight * 2, rowH - 4.0)
         end
         
         -- Get display value
@@ -237,21 +253,22 @@ function M.Draw(hud, SizeX, SizeY)
         local prefix = isSelected and "> " or "  "
         local displayName = configMod.GetTranslation(item.transKey, item.name)
         local displayStr = prefix .. displayName
-        hud:DrawText(displayStr, nameColor, menuX + 15.0, itemY, nil, scaleRow, false)
+        utils.DrawText(hud, displayStr, nameColor, menuX + padText, itemY, 1.0, false)
         
         -- Value string (aligned right)
         local valueText = isSelected and "[ " .. valStr .. " ]" or valStr
-        local valueW = #valueText * 7.5 * scaleRow
-        local valueX = menuX + menuW - valueW - 25.0
-        hud:DrawText(valueText, valColor, valueX, itemY, nil, scaleRow, false)
+        local charW = font and (7.0 + 2.0 * scaleMult) or 7.5
+        local valueW = utils.GetStringLength(valueText) * charW * scaleMult
+        local valueX = menuX + menuW - valueW - padVal
+        utils.DrawText(hud, valueText, valColor, valueX, itemY, 1.0, false)
     end
     
     -- Separator line
-    hud:DrawRect({ R = 0.2, G = 0.2, B = 0.3, A = 0.4 }, menuX + 20.0, menuY + menuH - 45.0, menuW - 40.0, 1.0)
+    hud:DrawRect({ R = 0.2, G = 0.2, B = 0.3, A = 0.4 }, menuX + padL, menuY + menuH - 45.0, menuW - padL * 2, 1.0)
     
     -- Footer status / version
     local footerText = configMod.GetTranslation("Menu_Footer", "ALT+F6 to Close & Save Settings")
-    hud:DrawText(footerText, { R = 0.5, G = 0.5, B = 0.6, A = 1.0 }, menuX + 20.0, menuY + menuH - 30.0, nil, 0.75, false)
+    utils.DrawText(hud, footerText, { R = 0.5, G = 0.5, B = 0.6, A = 1.0 }, menuX + padL, menuY + menuH - 30.0, 0.75, false)
 end
 
 return M

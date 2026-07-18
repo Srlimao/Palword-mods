@@ -1,3 +1,5 @@
+local utils = require("HUDLocator.utils")
+
 local M = {}
 
 local PopupText = ""
@@ -11,7 +13,6 @@ end
 
 function M.Draw(hud, SizeX, SizeY)
     if PopupTimer > 0 then
-        local scale = 1.8
         local R, G, B = 0.2, 0.8, 1.0
         local A = 1.0
         
@@ -40,33 +41,20 @@ function M.Draw(hud, SizeX, SizeY)
         local y = screenH / 4.0
 
         -- Try to center text exactly
-        local width = 0
-        pcall(function() width = hud:GetTextSize(PopupText, nil, scale) end)
+        local baseScale = 1.8
+        local width = utils.GetTextSize(hud, PopupText, baseScale)
         if width and width > 0 then
             x = x - (width / 2.0)
         else
             -- Rough fallback
-            x = x - (#PopupText * 10 * scale / 2.0)
+            local font, scaleMult = utils.GetFontAndScale()
+            x = x - (utils.GetStringLength(PopupText) * 10 * (baseScale * scaleMult) / 2.0)
         end
 
         -- Draw drop shadow
-        hud:DrawText(
-            PopupText,
-            {R=0, G=0, B=0, A=A},
-            x+2, y+2,
-            nil,
-            scale,
-            false
-        )
+        utils.DrawText(hud, PopupText, {R=0, G=0, B=0, A=A}, x+2, y+2, baseScale, false)
         -- Draw main text
-        hud:DrawText(
-            PopupText,
-            {R=R, G=G, B=B, A=A},
-            x, y,
-            nil,
-            scale,
-            false
-        )
+        utils.DrawText(hud, PopupText, {R=R, G=G, B=B, A=A}, x, y, baseScale, false)
 
         PopupTimer = PopupTimer - 1
     end

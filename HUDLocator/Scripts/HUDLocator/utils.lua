@@ -1,5 +1,6 @@
 local UEHelpers = require("UEHelpers")
 local configMod = require("HUDLocator.config")
+local logger = require("HUDLocator.logger")
 
 local M = {}
 
@@ -7,6 +8,30 @@ M.MapObjectNameCache = {}
 M.ItemNameCache = {}
 M.LoggedTranslations = {}
 M.MasterDataUtility = nil
+M.CachedFont = nil
+M.FontScaleMultiplier = 0.7
+local lastFontScanTime = 0
+local fontScanInterval = 10.0
+
+function M.GetFontAndScale()
+    local font = M.CachedFont
+    local scaleMult = font and M.FontScaleMultiplier or 1.0
+    return font, scaleMult
+end
+
+function M.DrawText(hud, text, color, x, y, baseScale, scalePosition)
+    local font, scaleMult = M.GetFontAndScale()
+    local finalScale = (baseScale or 1.0) * scaleMult
+    hud:DrawText(text, color, x, y, font, finalScale, scalePosition or false)
+end
+
+function M.GetTextSize(hud, text, baseScale)
+    local font, scaleMult = M.GetFontAndScale()
+    local finalScale = (baseScale or 1.0) * scaleMult
+    local width = 0
+    pcall(function() width = hud:GetTextSize(text, font, finalScale) end)
+    return width
+end
 
 function M.LogOnce(key, msg)
     if not M.LoggedTranslations[key] then
@@ -260,6 +285,56 @@ function M.GetDistanceSq(posA, posB)
     local dy = posA.Y - posB.Y
     local dz = posA.Z - posB.Z
     return dx*dx + dy*dy + dz*dz
+end
+
+function M.FindAndCacheFont()
+    if M.CachedFont and M.CachedFont:IsValid() then
+        return M.CachedFont
+    end
+
+    local currentTime = os.clock()
+    if currentTime - lastFontScanTime < fontScanInterval then
+        return nil
+    end
+    lastFontScanTime = currentTime
+
+    logger.log("Starting background font scan...")
+    local status, fonts = pcall(function() return FindAllOf("Font") end)
+    if status and fonts then
+        logger.log(string.format("Font scan completed. Found %d loaded Font objects.", #fonts))
+        for _, f in ipairs(fonts) do
+            if f:IsValid() then
+                local name = f:GetFullName()
+                logger.log("Loaded Font: " .. name)
+                
+                -- Check if it's a game-specific font asset under /Game/ (case-insensitive)
+                if string.find(name:lower(), "/game/") then
+                    logger.log("Matched and cached game UI font: " .. name)
+                    M.CachedFont = f
+                    
+                    -- Test character length calculation for Thai
+                    local testStr = "ถ้ำ"
+                    local bytes = #testStr
+                    local chars = M.GetStringLength(testStr)
+                    logger.log(string.format("UTF-8 Length Test: string='%s', bytes=%d, chars=%d", testStr, bytes, chars))
+                    
+                    return f
+                end
+            end
+        end
+    else
+        logger.log("Failed to scan Font objects: " .. tostring(fonts))
+    end
+    return nil
+end
+
+function M.GetStringLength(str)
+    if not str then return 0 end
+    local status, len = pcall(function() return utf8.len(str) end)
+    if status and len then
+        return len
+    end
+    return #str
 end
 
 return M

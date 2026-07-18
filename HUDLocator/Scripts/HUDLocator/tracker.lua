@@ -1,6 +1,7 @@
 local UEHelpers = require("UEHelpers")
 local configMod = require("HUDLocator.config")
 local scanners = require("HUDLocator.scanners")
+local utils = require("HUDLocator.utils")
 
 local M = {}
 
@@ -31,6 +32,11 @@ function M.scan()
         M.activeEggs = {}
         M.activeCaves = {}
         return
+    end
+
+    -- Run font scanner in the background
+    if not utils.CachedFont or not utils.CachedFont:IsValid() then
+        utils.FindAndCacheFont()
     end
 
     local localPlayer = UEHelpers.GetPlayer()
