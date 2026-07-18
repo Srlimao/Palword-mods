@@ -19,27 +19,32 @@ function M.GetStringLength(str)
 end
 
 function M.FindAndCacheFont()
-    if M.CachedFont then return M.CachedFont end
-    local now = os.time()
-    if now - lastFontScanTime < fontScanInterval then return nil end
-    lastFontScanTime = now
+    if M.CachedFont and M.CachedFont:IsValid() then
+        return M.CachedFont
+    end
+
+    local currentTime = os.clock()
+    if currentTime - lastFontScanTime < fontScanInterval then
+        return nil
+    end
+    lastFontScanTime = currentTime
     
-    local fontResolved = false
     pcall(function()
         local fonts = FindAllOf("Font")
         if fonts then
             for _, f in ipairs(fonts) do
-                local fname = f:GetName()
-                if fname == "Ft_PalDefaultFont" then
-                    M.CachedFont = f
-                    fontResolved = true
-                    print("[AccessoryToggler] Successfully resolved and cached game font asset: Ft_PalDefaultFont")
-                    break
+                if f:IsValid() then
+                    local name = f:GetFullName()
+                    if string.find(name:lower(), "/game/") then
+                        M.CachedFont = f
+                        print("[AccessoryToggler] Successfully matched and cached game UI font: " .. name)
+                        return f
+                    end
                 end
             end
         end
     end)
-    return M.CachedFont
+    return nil
 end
 
 function M.GetFontAndScale()

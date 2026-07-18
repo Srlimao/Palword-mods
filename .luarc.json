@@ -1,8 +1,41 @@
 {
     "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
+    "runtime.version": "Lua 5.4",
+    "runtime.path": [
+        "?.lua",
+        "?/init.lua",
+        "shared/UEHelpers/?.lua",
+        "HUDLocator/Scripts/?.lua",
+        "AccessoryToggler/Scripts/?.lua",
+        "ProductionRepeat/Scripts/?.lua",
+        "IdleServerShutdown/Scripts/?.lua"
+    ],
     "workspace.maxPreload": 100000,
     "workspace.preloadFileSize": 10000,
     "workspace.library": [
-        "./shared"
+        "./shared/types",
+        "./shared/UEHelpers"
+    ],
+    "diagnostics.globals": [
+        "RegisterHook",
+        "NotifyOnNewObject",
+        "RegisterKeyBind",
+        "ExecuteWithDelay",
+        "Key",
+        "ModifierKey",
+        "FName",
+        "LoadAsset",
+        "FindAllOf",
+        "FindFirstOf",
+        "FindObject",
+        "StaticFindObject",
+        "GetSystemTime",
+        "GetTimeMS",
+        "GetGameName",
+        "GetGameVersion",
+        "GetEngineVersion",
+        "GetUE4SSVersion",
+        "IsUE4SSLoaded",
+        "Print"
     ]
 }

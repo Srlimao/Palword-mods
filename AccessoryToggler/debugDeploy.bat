@@ -5,7 +5,7 @@ set "DEST_PROD=C:\Program Files (x86)\Steam\steamapps\common\Palworld\Mods\Nativ
 set "DEST_DEBUG=C:\Program Files (x86)\Steam\steamapps\common\Palworld\Mods\NativeMods\UE4SS\Mods\AccessoryTogglerDEBUG\Scripts"
 
 :: Copy files
-xcopy "%SOURCE%" "%DEST_PROD%" /E /I /Y
+:: xcopy "%SOURCE%" "%DEST_PROD%" /E /I /Y
 xcopy "%SOURCE%" "%DEST_DEBUG%" /E /I /Y
 
 exit /b 0
