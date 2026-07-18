@@ -44,13 +44,24 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
         local charW = style.FontCharW
         local lineH = style.FontLineH
         if font then
-            charW = charW * 1.6 * scaleMult
+            charW = charW * 1.6
             lineH = lineH * 2.8
         end
 
         if style.DrawBox then
-            local nameW  = utils.GetStringLength(nameStr) * charW * fontScale
-            local distW  = distStr and (utils.GetStringLength(distStr) * charW * smallFontScale) or 0
+            local nameW = utils.GetTextSize(hud, nameStr, style.FontScale)
+            if not nameW or nameW == 0 then
+                nameW = utils.GetStringLength(nameStr) * charW * fontScale
+            end
+            
+            local distW = 0
+            if distStr then
+                distW = utils.GetTextSize(hud, distStr, style.SmallFontScale)
+                if not distW or distW == 0 then
+                    distW = utils.GetStringLength(distStr) * charW * smallFontScale
+                end
+            end
+            
             local nameH  = lineH * fontScale
             local distH  = distStr and (lineH * smallFontScale) or 0
             local lineGap = font and 6.0 or 4.0
@@ -89,9 +100,19 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
             end
         else
             -- Simple text format: Name \n [Distance]
-            local nameW = utils.GetStringLength(nameStr) * charW * fontScale
+            local nameW = utils.GetTextSize(hud, nameStr, style.FontScale)
+            if not nameW or nameW == 0 then
+                nameW = utils.GetStringLength(nameStr) * charW * fontScale
+            end
+            
             local distPartStr = distStr and ("[" .. distStr .. "]") or ""
-            local distPartW = distStr and (utils.GetStringLength(distPartStr) * charW * smallFontScale) or 0
+            local distPartW = 0
+            if distStr then
+                distPartW = utils.GetTextSize(hud, distPartStr, style.SmallFontScale)
+                if not distPartW or distPartW == 0 then
+                    distPartW = utils.GetStringLength(distPartStr) * charW * smallFontScale
+                end
+            end
             
             local nameH = lineH * fontScale
             local distH = distStr and (lineH * smallFontScale) or 0

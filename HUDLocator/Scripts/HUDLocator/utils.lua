@@ -46,11 +46,33 @@ function M.DrawText(hud, text, color, x, y, baseScale, scalePosition)
     hud:DrawText(text, color, x, y, font, finalScale, scalePosition or false)
 end
 
+-- Safely measure text width using Unreal Engine's GetTextSize.
+-- Falls back to 0 on failure. Logs outcomes once via M.LogOnce to avoid frame-rate lag.
 function M.GetTextSize(hud, text, baseScale)
     local font, scaleMult = M.GetFontAndScale()
     local finalScale = (baseScale or 1.0) * scaleMult
     local width = 0
-    pcall(function() width = hud:GetTextSize(text, font, finalScale) end)
+    
+    if font then
+        local success, err = pcall(function()
+            local canvas = hud.Canvas
+            if canvas and canvas:IsValid() then
+                -- UCanvas:K2_TextSize(class UFont* RenderFont, FString RenderText, FVector2D Scale)
+                local size = canvas:K2_TextSize(font, text, { X = finalScale, Y = finalScale })
+                if size then
+                    width = size.X or size.x or 0
+                end
+            end
+        end)
+        
+        if success and width and width > 0 then
+            M.LogOnce("text_size_success", string.format("GetTextSize successfully measuring font sizes via UCanvas. Example: text='%s', scale=%.2f -> width=%.2f (using custom font: %s)", tostring(text), finalScale, width, tostring(font ~= nil)))
+        else
+            local errMsg = err or (not hud.Canvas and "hud.Canvas is nil" or "K2_TextSize returned nil size")
+            M.LogOnce("text_size_fail_" .. tostring(text), string.format("GetTextSize failed or returned 0 for text '%s' (scale=%.2f, custom font: %s). Error: %s. Using fallback character spacing.", tostring(text), finalScale, tostring(font ~= nil), tostring(errMsg)))
+        end
+    end
+    
     return width
 end
 

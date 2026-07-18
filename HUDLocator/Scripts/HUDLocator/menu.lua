@@ -66,6 +66,10 @@ local menuItems = {
             end
             utils.OpenURL(url)
             popup.Show(configMod.GetTranslation("Menu_OpeningURL", "Opening Configurator..."), 120)
+            
+            -- Automatically close the menu so they don't overwrite it when returning from the browser
+            M.isOpen = false
+            pcall(configMod.SaveConfig)
         end,
         transKey = "Settings_AdvancedStyles",
         valKey = "Action_OpenURL"
@@ -111,6 +115,8 @@ local menuItems = {
 function M.Toggle()
     M.isOpen = not M.isOpen
     if M.isOpen then
+        -- Load the latest configuration from disk before opening the menu
+        pcall(configMod.LoadConfig)
         popup.Show(configMod.GetTranslation("Menu_Opened", "Configuration Menu Opened\nUse ALT + Up/Down/Left/Right"),
             180)
     else
@@ -191,8 +197,8 @@ function M.Draw(hud, SizeX, SizeY)
     local font, scaleMult = utils.GetFontAndScale()
 
     -- Define menu size & positioning (Left side HUD, modern layout)
-    local menuW = font and 440.0 or 380.0
-    local menuH = font and (430.0 + 80.0 * scaleMult) or 460.0
+    local menuW = font and 480.0 or 400.0
+    local menuH = font and (450.0 + 60.0 * scaleMult) or 480.0
     local menuX = 50.0
     local menuY = (screenH / 2.0) - (menuH / 2.0)
 
@@ -285,11 +291,11 @@ function M.Draw(hud, SizeX, SizeY)
     end
 
     -- Separator line
-    hud:DrawRect({ R = 0.2, G = 0.2, B = 0.3, A = 0.4 }, menuX + padL, menuY + menuH - 45.0, menuW - padL * 2, 1.0)
+    hud:DrawRect({ R = 0.2, G = 0.2, B = 0.3, A = 0.4 }, menuX + padL, menuY + menuH - 50.0, menuW - padL * 2, 1.0)
 
     -- Footer status / version
     local footerText = configMod.GetTranslation("Menu_Footer", "ALT+F6 to Close & Save Settings")
-    utils.DrawText(hud, footerText, { R = 0.5, G = 0.5, B = 0.6, A = 1.0 }, menuX + padL, menuY + menuH - 30.0, 0.75,
+    utils.DrawText(hud, footerText, { R = 0.5, G = 0.5, B = 0.6, A = 1.0 }, menuX + padL, menuY + menuH - 32.0, 0.75,
         false)
 end
 
