@@ -109,7 +109,24 @@ RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.MenuRig
     if menu.isOpen then menu.Navigate("right") end
 end)
 
+-- Alt+R: Manual Config Reload from file
+RegisterKeyBind(Key.R, {ModifierKey.ALT}, function()
+    if menu.isOpen then return end
+    
+    local status, err = pcall(function()
+        configMod.LoadConfig()
+    end)
+    
+    if status then
+        print("[HUDLocator] Configuration reloaded successfully from central file.")
+        pcall(popup.Show, "HUD Settings Reloaded", 120)
+    else
+        print("[HUDLocator] ERROR: Failed to manually reload configuration: " .. tostring(err))
+    end
+end)
+
 -- Start scanning
 StartPeriodicScan()
 
 print("[HUDLocator] Mod Loaded Successfully!")
+

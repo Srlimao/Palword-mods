@@ -171,6 +171,30 @@ function json.stringify(val)
     end
 end
 
+local function GetModConfigsDir()
+    local userProfile = os.getenv("USERPROFILE")
+    if not userProfile or userProfile == "" then
+        local drive = os.getenv("HOMEDRIVE") or "C:"
+        local path = os.getenv("HOMEPATH") or "/Users/Default"
+        userProfile = drive .. path
+    end
+    
+    local docsPath = userProfile .. "/Documents"
+    
+    -- If OneDrive is active, the documents directory is usually redirected to OneDrive/Documents
+    local oneDrive = os.getenv("OneDrive") or os.getenv("OneDriveConsumer")
+    if oneDrive and oneDrive ~= "" then
+        docsPath = oneDrive .. "/Documents"
+    end
+    
+    local path = docsPath .. "/My Games/Palworld/ModConfigs"
+    return string.gsub(path, "\\", "/")
+end
+
+local function GetNewConfigFilePath()
+    return GetModConfigsDir() .. "/AccessoryToggler/config.json"
+end
+
 local function GetConfigFilePath()
     local info = debug.getinfo(1, "S")
     if info and info.source and info.source:sub(1, 1) == "@" then
@@ -183,52 +207,155 @@ local function GetConfigFilePath()
     return "Mods/AccessoryToggler/config.json"
 end
 
+local function MergeConfig(target, source)
+    if not source then return end
+    for k, v in pairs(source) do
+        if type(v) == "table" and type(target[k]) == "table" then
+            MergeConfig(target[k], v)
+        else
+            target[k] = v
+        end
+    end
+end
+
+local function IsValidAccessoryTogglerConfig(parsed)
+    if not parsed or type(parsed) ~= "table" then return false end
+    if parsed.AccessoryNames or parsed.TextColorEnabled or parsed.TextColorDisabled or parsed.CardBg or parsed.ToggleSlot1 ~= nil then
+        return true
+    end
+    if parsed.KeyBinds and (parsed.KeyBinds.ToggleSlot1 or parsed.KeyBinds.ToggleEditMode) then
+        return true
+    end
+    return false
+end
+
 function M.LoadConfig()
-    local configPath = GetConfigFilePath()
+    local newConfigPath = GetNewConfigFilePath()
+    local oldConfigPath = GetConfigFilePath()
+    
+    -- Try loading from central path first
+    local centralLoaded = false
+    local file = io.open(newConfigPath, "r")
+    if file then
+        local content = file:read("*all")
+        file:close()
+        local parsed = json.parse(content)
+        if parsed then
+            MergeConfig(M.CONFIG, parsed)
+            print("[AccessoryToggler] Configuration loaded from central path: " .. newConfigPath)
+            centralLoaded = true
+        end
+    end
+    
+    -- Central config doesn't exist, check old config files to migrate
     local paths = {
-        configPath,
+        oldConfigPath,
         "Mods/AccessoryToggler/config.json",
         "Mods/ManagedMods/AccessoryToggler/config.json",
         "config.json"
     }
-    
-    local file = nil
-    for _, path in ipairs(paths) do
-        file = io.open(path, "r")
-        if file then break end
-    end
-    
-    if not file then
-        -- Generate default config
-        local outFile = io.open(configPath, "w")
-        if outFile then
-            outFile:write(json.stringify(M.CONFIG))
-            outFile:close()
+
+    if centralLoaded then
+        -- Central config already loaded. Clean up old configuration files if they exist.
+        for _, path in ipairs(paths) do
+            local f = io.open(path, "r")
+            if f then
+                local content = f:read("*all")
+                f:close()
+                local parsed = json.parse(content)
+                if IsValidAccessoryTogglerConfig(parsed) then
+                    local success, err = os.remove(path)
+                    if success then
+                        print("[AccessoryToggler] Cleaned up old configuration file at: " .. path)
+                    else
+                        print("[AccessoryToggler] Failed to remove old configuration file at: " .. path .. " - Error: " .. tostring(err))
+                    end
+                end
+            end
         end
         return
     end
-    
-    local content = file:read("*all")
-    file:close()
-    
-    local parsed = json.parse(content)
-    if parsed then
-        for k, v in pairs(parsed) do
-            if type(v) == "table" and M.CONFIG[k] and type(M.CONFIG[k]) == "table" then
-                for subK, subV in pairs(v) do
-                    M.CONFIG[k][subK] = subV
-                end
-            else
-                M.CONFIG[k] = v
+
+    local oldContent = nil
+    local migratedPath = nil
+    for _, path in ipairs(paths) do
+        local f = io.open(path, "r")
+        if f then
+            local content = f:read("*all")
+            f:close()
+            local parsed = json.parse(content)
+            if IsValidAccessoryTogglerConfig(parsed) then
+                oldContent = content
+                migratedPath = path
+                print("[AccessoryToggler] Found existing configuration at: " .. path .. " - Migrating to central path...")
+                break
             end
         end
     end
-    -- Self-healing default coordinate migration
-    if M.CONFIG.HUDX == 50.0 then M.CONFIG.HUDX = nil end
-    if M.CONFIG.HUDY == 400.0 then M.CONFIG.HUDY = nil end
-    
-    -- Auto-save new attributes so the user's config file updates instantly
-    M.SaveConfig()
+
+    -- Create central directory structure if missing
+    local modConfigDir = GetModConfigsDir() .. "/AccessoryToggler"
+    local outFile = io.open(newConfigPath, "w")
+    if not outFile then
+        -- Silent directory creation fallback
+        pcall(function() os.execute('mkdir "' .. string.gsub(modConfigDir, "/", "\\") .. '" >nul 2>nul') end)
+        outFile = io.open(newConfigPath, "w")
+    end
+
+    if oldContent then
+        local parsed = json.parse(oldContent)
+        if parsed then
+            MergeConfig(M.CONFIG, parsed)
+            
+            -- Save migrated config to central file
+            if outFile then
+                local str = json.stringify(M.CONFIG)
+                outFile:write(str)
+                outFile:close()
+                print("[AccessoryToggler] Migrated configuration saved successfully to central path.")
+                
+                -- Delete the migrated file
+                if migratedPath then
+                    local success, err = os.remove(migratedPath)
+                    if success then
+                        print("[AccessoryToggler] Cleaned up old configuration file at: " .. migratedPath)
+                    else
+                        print("[AccessoryToggler] Failed to remove old configuration file at: " .. migratedPath .. " - Error: " .. tostring(err))
+                    end
+                end
+
+                -- Clean up any other remaining old paths
+                for _, path in ipairs(paths) do
+                    if path ~= migratedPath then
+                        local f = io.open(path, "r")
+                        if f then
+                            local content = f:read("*all")
+                            f:close()
+                            local otherParsed = json.parse(content)
+                            if IsValidAccessoryTogglerConfig(otherParsed) then
+                                local success, err = os.remove(path)
+                                if success then
+                                    print("[AccessoryToggler] Cleaned up old configuration file at: " .. path)
+                                else
+                                    print("[AccessoryToggler] Failed to remove old configuration file at: " .. path .. " - Error: " .. tostring(err))
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            return
+        end
+    end
+
+    -- If no old config, write default config to central path
+    if outFile then
+        outFile:write(json.stringify(M.CONFIG))
+        outFile:close()
+        print("[AccessoryToggler] Generated default configuration at: " .. newConfigPath)
+    else
+        print("[AccessoryToggler] ERROR: Failed to write default config at: " .. newConfigPath)
+    end
 end
 
 M.EditModeActive = false
@@ -244,7 +371,7 @@ function M.ToggleEditMode()
 end
 
 function M.SaveConfig()
-    local configPath = GetConfigFilePath()
+    local configPath = GetNewConfigFilePath()
     local outFile = io.open(configPath, "w")
     if outFile then
         M.DebugPrint("Saving Config -> HUDX: " .. tostring(M.CONFIG.HUDX) .. ", HUDY: " .. tostring(M.CONFIG.HUDY) .. ", HUDScale: " .. tostring(M.CONFIG.HUDScale))

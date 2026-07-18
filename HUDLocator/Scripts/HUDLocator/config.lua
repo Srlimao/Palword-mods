@@ -122,6 +122,30 @@ function M.DebugPrint(msg)
     end
 end
 
+local function GetModConfigsDir()
+    local userProfile = os.getenv("USERPROFILE")
+    if not userProfile or userProfile == "" then
+        local drive = os.getenv("HOMEDRIVE") or "C:"
+        local path = os.getenv("HOMEPATH") or "/Users/Default"
+        userProfile = drive .. path
+    end
+    
+    local docsPath = userProfile .. "/Documents"
+    
+    -- If OneDrive is active, the documents directory is usually redirected to OneDrive/Documents
+    local oneDrive = os.getenv("OneDrive") or os.getenv("OneDriveConsumer")
+    if oneDrive and oneDrive ~= "" then
+        docsPath = oneDrive .. "/Documents"
+    end
+    
+    local path = docsPath .. "/My Games/Palworld/ModConfigs"
+    return string.gsub(path, "\\", "/")
+end
+
+local function GetNewConfigFilePath()
+    return GetModConfigsDir() .. "/HUDLocator/config.json"
+end
+
 local function GetConfigFilePath()
     local info = debug.getinfo(1, "S")
     if info and info.source and info.source:sub(1, 1) == "@" then
@@ -248,10 +272,49 @@ local defaultJSON = [[{
 }
 ]]
 
+local function MergeConfig(target, source)
+    if not source then return end
+    for k, v in pairs(source) do
+        if type(v) == "table" and type(target[k]) == "table" then
+            MergeConfig(target[k], v)
+        else
+            target[k] = v
+        end
+    end
+end
+
+local function IsValidHUDLocatorConfig(parsed)
+    if not parsed or type(parsed) ~= "table" then return false end
+    if parsed.Players or parsed.Relics or parsed.Chests or parsed.Eggs or parsed.Caves or parsed.Global then
+        return true
+    end
+    if parsed.ShowPlayers ~= nil or parsed.ShowRelics ~= nil or parsed.ShowChests ~= nil or parsed.ShowCaves ~= nil then
+        return true
+    end
+    return false
+end
+
 function M.LoadConfig()
-    local configPath = GetConfigFilePath()
+    local newConfigPath = GetNewConfigFilePath()
+    local oldConfigPath = GetConfigFilePath()
+    
+    -- Try loading from central path first
+    local centralLoaded = false
+    local file = io.open(newConfigPath, "r")
+    if file then
+        local content = file:read("*all")
+        file:close()
+        local parsed = json.parse(content)
+        if parsed then
+            MergeConfig(M.CONFIG, parsed)
+            print("[HUDLocator] Configuration loaded from central path: " .. newConfigPath)
+            centralLoaded = true
+        end
+    end
+    
+    -- Central config doesn't exist, check old config files to migrate
     local paths = {
-        configPath,
+        oldConfigPath,
         "Mods/HUDLocator/config.json",
         "Mods/ManagedMods/HUDLocator/config.json",
         "Mods/NativeMods/UE4SS/Mods/HUDLocator/config.json",
@@ -259,114 +322,132 @@ function M.LoadConfig()
         "config.json"
     }
 
-    local file = nil
-    local actualPath = nil
-    for _, path in ipairs(paths) do
-        file = io.open(path, "r")
-        if file then
-            actualPath = path
-            break
-        end
-    end
-
-    if not file then
-        print("[HUDLocator] Config file not found. Generating default at: " .. configPath)
-        local outFile = io.open(configPath, "w")
-        if not outFile then
-            configPath = "hudlocator.config.json"
-            outFile = io.open(configPath, "w")
-        end
-        if outFile then
-            outFile:write(defaultJSON)
-            outFile:close()
-            print("[HUDLocator] Default config generated at " .. configPath)
-        else
-            print("[HUDLocator] Failed to generate default config.")
-        end
-        return
-    end
-
-    local content = file:read("*all")
-    file:close()
-
-    local parsed = json.parse(content)
-    if parsed then
-        -- Handle migrations from old flat config to new nested config
-        if parsed.ShowPlayers ~= nil then
-            print("[HUDLocator] Migrating old flat config to nested tracker config...")
-            M.CONFIG.Players.Enabled = parsed.ShowPlayers
-            M.CONFIG.Relics.Enabled = parsed.ShowRelics
-            M.CONFIG.Chests.Enabled = parsed.ShowChests
-            M.CONFIG.Caves.Enabled = parsed.ShowCaves
-            if parsed.EggFilter then M.CONFIG.Eggs.Filter = parsed.EggFilter end
-            if parsed.MaxDistance then
-                M.CONFIG.Players.MaxDistance = parsed.MaxDistance
-                M.CONFIG.Relics.MaxDistance = parsed.MaxDistance
-                M.CONFIG.Chests.MaxDistance = parsed.MaxDistance
-                M.CONFIG.Caves.MaxDistance = parsed.MaxDistance
-                M.CONFIG.Eggs.MaxDistance = parsed.MaxDistance
-            end
-            if parsed.ScanIntervalMs then M.CONFIG.Global.ScanIntervalMs = parsed.ScanIntervalMs end
-            if parsed.GraceRadiusM then M.CONFIG.Players.GraceRadiusM = parsed.GraceRadiusM end
-            if parsed.Enabled ~= nil then M.CONFIG.Global.Enabled = parsed.Enabled end
-        else
-            for k, section in pairs(parsed) do
-                if type(section) == "table" and M.CONFIG[k] then
-                    for subK, subV in pairs(section) do
-                        if k == "Players" and subK ~= "Style" and M.CONFIG[k].Style and M.CONFIG[k].Style[subK] ~= nil then
-                            -- Migrate old Players flat styling properties to Style
-                            if type(subV) == "table" and type(M.CONFIG[k].Style[subK]) == "table" then
-                                for cK, cV in pairs(subV) do
-                                    M.CONFIG[k].Style[subK][cK] = cV
-                                end
-                            else
-                                M.CONFIG[k].Style[subK] = subV
-                            end
-                        elseif k ~= "Players" and k ~= "Global" and subK == "Color" then
-                            -- Migrate old Color to Style.NameColor and Style.DistColor
-                            if M.CONFIG[k].Style then
-                                for cK, cV in pairs(subV) do
-                                    M.CONFIG[k].Style.NameColor[cK] = cV
-                                    M.CONFIG[k].Style.DistColor[cK] = cV
-                                end
-                            end
-                        elseif k ~= "Players" and k ~= "Global" and subK ~= "Style" and M.CONFIG[k].Style and M.CONFIG[k].Style[subK] ~= nil then
-                            -- Migrate old Relics/Chests/Eggs/Caves flat styling properties to Style
-                            if type(subV) == "table" and type(M.CONFIG[k].Style[subK]) == "table" then
-                                for cK, cV in pairs(subV) do
-                                    M.CONFIG[k].Style[subK][cK] = cV
-                                end
-                            else
-                                M.CONFIG[k].Style[subK] = subV
-                            end
-                        elseif type(subV) == "table" and type(M.CONFIG[k][subK]) == "table" then
-                            for cK, cV in pairs(subV) do
-                                if type(cV) == "table" and type(M.CONFIG[k][subK][cK]) == "table" then
-                                    for dK, dV in pairs(cV) do
-                                        M.CONFIG[k][subK][cK][dK] = dV
-                                    end
-                                else
-                                    M.CONFIG[k][subK][cK] = cV
-                                end
-                            end
-                        else
-                            M.CONFIG[k][subK] = subV
-                        end
+    if centralLoaded then
+        -- Central config already loaded. Clean up old configuration files if they exist.
+        for _, path in ipairs(paths) do
+            local f = io.open(path, "r")
+            if f then
+                local content = f:read("*all")
+                f:close()
+                local parsed = json.parse(content)
+                if IsValidHUDLocatorConfig(parsed) then
+                    local success, err = os.remove(path)
+                    if success then
+                        print("[HUDLocator] Cleaned up old configuration file at: " .. path)
+                    else
+                        print("[HUDLocator] Failed to remove old configuration file at: " .. path .. " - Error: " .. tostring(err))
                     end
                 end
             end
         end
-        print("[HUDLocator] Config loaded successfully!")
-    else
-        print("[HUDLocator] Failed to parse config, using defaults.")
+        return
     end
 
-    -- Auto-save new attributes so the user's config file updates instantly
-    M.SaveConfig()
+    local oldContent = nil
+    local migratedPath = nil
+    for _, path in ipairs(paths) do
+        local f = io.open(path, "r")
+        if f then
+            local content = f:read("*all")
+            f:close()
+            local parsed = json.parse(content)
+            if IsValidHUDLocatorConfig(parsed) then
+                oldContent = content
+                migratedPath = path
+                print("[HUDLocator] Found existing configuration at: " .. path .. " - Migrating to central path...")
+                break
+            end
+        end
+    end
+
+    -- Create central directory structure if missing
+    local modConfigDir = GetModConfigsDir() .. "/HUDLocator"
+    local outFile = io.open(newConfigPath, "w")
+    if not outFile then
+        -- Silent directory creation fallback
+        pcall(function() os.execute('mkdir "' .. string.gsub(modConfigDir, "/", "\\") .. '" >nul 2>nul') end)
+        outFile = io.open(newConfigPath, "w")
+    end
+
+    if oldContent then
+        local parsed = json.parse(oldContent)
+        if parsed then
+            -- Handle migrations from old flat config structure to new nested structure
+            if parsed.ShowPlayers ~= nil then
+                print("[HUDLocator] Migrating old flat config layout to nested layout...")
+                M.CONFIG.Players.Enabled = parsed.ShowPlayers
+                M.CONFIG.Relics.Enabled = parsed.ShowRelics
+                M.CONFIG.Chests.Enabled = parsed.ShowChests
+                M.CONFIG.Caves.Enabled = parsed.ShowCaves
+                if parsed.EggFilter then M.CONFIG.Eggs.Filter = parsed.EggFilter end
+                if parsed.MaxDistance then
+                    M.CONFIG.Players.MaxDistance = parsed.MaxDistance
+                    M.CONFIG.Relics.MaxDistance = parsed.MaxDistance
+                    M.CONFIG.Chests.MaxDistance = parsed.MaxDistance
+                    M.CONFIG.Caves.MaxDistance = parsed.MaxDistance
+                    M.CONFIG.Eggs.MaxDistance = parsed.MaxDistance
+                end
+                if parsed.ScanIntervalMs then M.CONFIG.Global.ScanIntervalMs = parsed.ScanIntervalMs end
+                if parsed.GraceRadiusM then M.CONFIG.Players.GraceRadiusM = parsed.GraceRadiusM end
+                if parsed.Enabled ~= nil then M.CONFIG.Global.Enabled = parsed.Enabled end
+            else
+                -- Nested style merges using MergeConfig
+                MergeConfig(M.CONFIG, parsed)
+            end
+            
+            -- Save migrated config to central file
+            if outFile then
+                local str = json.stringify(M.CONFIG)
+                outFile:write(str)
+                outFile:close()
+                print("[HUDLocator] Migrated configuration saved successfully to central path.")
+                
+                -- Delete the migrated file
+                if migratedPath then
+                    local success, err = os.remove(migratedPath)
+                    if success then
+                        print("[HUDLocator] Cleaned up old configuration file at: " .. migratedPath)
+                    else
+                        print("[HUDLocator] Failed to remove old configuration file at: " .. migratedPath .. " - Error: " .. tostring(err))
+                    end
+                end
+
+                -- Clean up any other remaining old paths
+                for _, path in ipairs(paths) do
+                    if path ~= migratedPath then
+                        local f = io.open(path, "r")
+                        if f then
+                            local content = f:read("*all")
+                            f:close()
+                            local otherParsed = json.parse(content)
+                            if IsValidHUDLocatorConfig(otherParsed) then
+                                local success, err = os.remove(path)
+                                if success then
+                                    print("[HUDLocator] Cleaned up old configuration file at: " .. path)
+                                else
+                                    print("[HUDLocator] Failed to remove old configuration file at: " .. path .. " - Error: " .. tostring(err))
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            return
+        end
+    end
+
+    -- If no old config, write default config to central path
+    if outFile then
+        outFile:write(defaultJSON)
+        outFile:close()
+        print("[HUDLocator] Generated default configuration at: " .. newConfigPath)
+    else
+        print("[HUDLocator] ERROR: Failed to write default config at: " .. newConfigPath)
+    end
 end
 
 function M.SaveConfig()
-    local configPath = GetConfigFilePath()
+    local configPath = GetNewConfigFilePath()
     local outFile = io.open(configPath, "w")
     if outFile then
         local status, str = pcall(function() return json.stringify(M.CONFIG) end)

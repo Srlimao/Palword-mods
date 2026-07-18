@@ -222,7 +222,7 @@ end
 
 local keyR = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ResetCoords, Key.R)
 
--- Alt+R resets coordinates to default while in edit mode
+-- Alt+R resets coordinates to default while in edit mode, or reloads config when not in edit mode
 if keyR then
     RegisterKeyBind(keyR, { ModifierKey.ALT }, function()
         pcall(function()
@@ -231,6 +231,16 @@ if keyR then
                 configMod.CONFIG.HUDY = nil
                 configMod.CONFIG.HUDScale = 1.0
                 configMod.DebugPrint("HUD coordinates and scale reset to default via Alt+R!")
+            else
+                local status, err = pcall(function()
+                    configMod.LoadConfig()
+                end)
+                if status then
+                    print("[AccessoryToggler] Configuration reloaded successfully from central file.")
+                    pcall(popup.Show, "Settings Reloaded", 120)
+                else
+                    print("[AccessoryToggler] ERROR: Failed to reload configuration: " .. tostring(err))
+                end
             end
         end)
     end)
