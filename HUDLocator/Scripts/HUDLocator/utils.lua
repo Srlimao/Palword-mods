@@ -19,6 +19,27 @@ function M.GetFontAndScale()
     return font, scaleMult
 end
 
+function M.OpenURL(url)
+    pcall(function()
+        local status, SystemLibrary = pcall(function() return StaticFindObject("/Script/Engine.Default__KismetSystemLibrary") end)
+        if status and SystemLibrary then
+            SystemLibrary:LaunchURL(url)
+            print("[HUDLocator] Launching URL: " .. tostring(url))
+        else
+            print("[HUDLocator] ERROR: KismetSystemLibrary not found, cannot launch URL.")
+        end
+    end)
+end
+
+function M.UrlEncode(str)
+    if not str then return "" end
+    str = string.gsub(str, "([^%w %-%_%.%~])", function(c)
+        return string.format("%%%02X", string.byte(c))
+    end)
+    str = string.gsub(str, " ", "+")
+    return str
+end
+
 function M.DrawText(hud, text, color, x, y, baseScale, scalePosition)
     local font, scaleMult = M.GetFontAndScale()
     local finalScale = (baseScale or 1.0) * scaleMult

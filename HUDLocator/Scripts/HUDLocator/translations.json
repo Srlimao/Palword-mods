@@ -49,7 +49,10 @@
         "Filter_id": "Indonesian",
         "Filter_tr": "Turkish",
         "Filter_pl": "Polish",
-        "Filter_es-MX": "Spanish (MX)"
+        "Filter_es-MX": "Spanish (MX)",
+        "Settings_AdvancedStyles": "Advanced Styles",
+        "Action_OpenURL": "Alt+Right to Open",
+        "Menu_OpeningURL": "Opening Configurator..."
     },
     "es": {
         "Cave": "Cueva",
@@ -431,7 +434,10 @@
         "Filter_id": "อินโดนีเซีย (Indonesian)",
         "Filter_tr": "ตุรกี (Turkish)",
         "Filter_pl": "โปแลนด์ (Polish)",
-        "Filter_es-MX": "สเปน (MX)"
+        "Filter_es-MX": "สเปน (MX)",
+        "Settings_AdvancedStyles": "การปรับแต่งระดับสูง",
+        "Action_OpenURL": "กด Alt+ขวา เพื่อเปิด",
+        "Menu_OpeningURL": "กำลังเปิดเครื่องมือปรับแต่ง..."
     },
     "vi": {
         "Cave": "Hang động",

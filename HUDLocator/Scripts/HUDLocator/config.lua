@@ -9,6 +9,7 @@ M.CONFIG = {
         Language = "system",
         ScanIntervalMs = 1500,
         Debug = false,
+        ConfiguratorURL = "https://pal-mod-configurator.dunhas.com/",
         KeyBinds = {
             ToggleMenu = "F6",
             MenuUp = "UP_ARROW",
@@ -257,17 +258,17 @@ function M.LoadConfig()
         "hudlocator.config.json",
         "config.json"
     }
-    
+
     local file = nil
     local actualPath = nil
     for _, path in ipairs(paths) do
         file = io.open(path, "r")
-        if file then 
+        if file then
             actualPath = path
-            break 
+            break
         end
     end
-    
+
     if not file then
         print("[HUDLocator] Config file not found. Generating default at: " .. configPath)
         local outFile = io.open(configPath, "w")
@@ -284,10 +285,10 @@ function M.LoadConfig()
         end
         return
     end
-    
+
     local content = file:read("*all")
     file:close()
-    
+
     local parsed = json.parse(content)
     if parsed then
         -- Handle migrations from old flat config to new nested config
@@ -359,7 +360,7 @@ function M.LoadConfig()
     else
         print("[HUDLocator] Failed to parse config, using defaults.")
     end
-    
+
     -- Auto-save new attributes so the user's config file updates instantly
     M.SaveConfig()
 end
@@ -400,15 +401,15 @@ M.AllTranslations = nil
 function M.LoadTranslations()
     local transPath = GetTranslationsFilePath()
     local file = io.open(transPath, "r")
-    
+
     if not file then
         print("[HUDLocator] Translations file not found at: " .. transPath)
         return
     end
-    
+
     local content = file:read("*all")
     file:close()
-    
+
     local parsed = json.parse(content)
     if parsed then
         M.AllTranslations = parsed
@@ -429,17 +430,18 @@ local function ResolveActiveLanguage()
     if CachedLang then
         return CachedLang
     end
-    
+
     local now = os.time()
     if now - LastLangCheck < 5 then
         return "en"
     end
     LastLangCheck = now
-    
+
     local activeLang = "en"
-    local statusIntl, IntlLibrary = pcall(function() return StaticFindObject("/Script/Engine.Default__KismetInternationalizationLibrary") end)
+    local statusIntl, IntlLibrary = pcall(function() return StaticFindObject(
+        "/Script/Engine.Default__KismetInternationalizationLibrary") end)
     local langResolved = false
-    
+
     if statusIntl and IntlLibrary then
         local langStatus, lang = pcall(function() return IntlLibrary:GetCurrentLanguage() end)
         if langStatus and type(lang) == "string" and lang ~= "" then
@@ -454,14 +456,16 @@ local function ResolveActiveLanguage()
                 langResolved = true
             end
         else
-            print("[HUDLocator] KismetInternationalizationLibrary returned invalid language type or empty string: " .. tostring(lang))
+            print("[HUDLocator] KismetInternationalizationLibrary returned invalid language type or empty string: " ..
+            tostring(lang))
         end
     else
         print("[HUDLocator] Could not find KismetInternationalizationLibrary")
     end
-    
+
     if not langResolved then
-        local status, SystemLibrary = pcall(function() return StaticFindObject("/Script/Engine.Default__KismetSystemLibrary") end)
+        local status, SystemLibrary = pcall(function() return StaticFindObject(
+            "/Script/Engine.Default__KismetSystemLibrary") end)
         if status and SystemLibrary then
             local langStatus, lang = pcall(function() return SystemLibrary:GetDefaultLanguage() end)
             if langStatus and type(lang) == "string" and lang ~= "" then
@@ -476,30 +480,31 @@ local function ResolveActiveLanguage()
                     langResolved = true
                 end
             else
-                print("[HUDLocator] KismetSystemLibrary returned invalid language type or empty string: " .. tostring(lang))
+                print("[HUDLocator] KismetSystemLibrary returned invalid language type or empty string: " ..
+                tostring(lang))
             end
         else
             print("[HUDLocator] Could not find KismetSystemLibrary")
         end
     end
-    
+
     if langResolved then
         CachedLang = activeLang
         print("[HUDLocator] Game language locked to: " .. activeLang)
     else
         print("[HUDLocator] Failed to resolve any language, defaulting to: " .. activeLang)
     end
-    
+
     return activeLang
 end
 
 function M.GetTranslation(key, default)
     if M.AllTranslations then
         local activeLang = ResolveActiveLanguage()
-        
+
         -- Try direct lookup
         local langDict = M.AllTranslations[activeLang]
-        
+
         -- Try case-insensitive / normalized lookup if direct lookup fails
         if not langDict then
             local lowerLang = activeLang:lower()
@@ -513,12 +518,12 @@ function M.GetTranslation(key, default)
             elseif lowerLang == "es-mx" then
                 mappedLang = "es-MX"
             end
-            
+
             if mappedLang then
                 langDict = M.AllTranslations[mappedLang]
             end
         end
-        
+
         -- Try short language code fallback (e.g. "en-us" -> "en")
         if not langDict then
             local shortLang = string.sub(activeLang, 1, 2):lower()
@@ -529,12 +534,12 @@ function M.GetTranslation(key, default)
                 end
             end
         end
-        
+
         -- Ultimate fallback to English
         if not langDict then
             langDict = M.AllTranslations["en"]
         end
-        
+
         if langDict and langDict[key] and langDict[key] ~= "" then
             return langDict[key]
         end
