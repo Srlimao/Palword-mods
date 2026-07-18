@@ -212,8 +212,7 @@ end
 
 function M.ScanCaves(playerPos, maxDistSq)
     local cls = M.dungeonClasses[M.currentClassIndex]
-    M.tempCaves[cls] = {}
-
+    
     local caves = FindAllOf(cls) or {}
     local successCount = 0
     local closestDistSq = math.huge
@@ -272,6 +271,9 @@ function M.ScanCaves(playerPos, maxDistSq)
             table.insert(merged, c)
         end
     end
+    
+    -- Clear tempCaves for next scan to avoid stale data
+    M.tempCaves = {}
 
     if not M.hasLoggedDungeons and successCount > 0 then
         M.hasLoggedDungeons = true

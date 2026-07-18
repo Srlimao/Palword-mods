@@ -34,7 +34,16 @@ function M.scan()
     end
 
     local localPlayer = UEHelpers.GetPlayer()
-    if not localPlayer or not localPlayer:IsValid() then return end
+    if not localPlayer or not localPlayer:IsValid() then
+        M.activePlayers = {}
+        M.activeRelics = {}
+        M.activeChests = {}
+        M.activeEggs = {}
+        M.activeCaves = {}
+        M.cachedLocalPlayer = nil
+        scanners.tempCaves = {}
+        return 
+    end
 
     M.cachedLocalPlayer = localPlayer
 
