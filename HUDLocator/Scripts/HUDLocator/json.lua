@@ -2,9 +2,6 @@ local M = {}
 
 -- Lightweight JSON parser in pure Lua (handles nested tables/objects)
 function M.parse(str)
-    -- Strip comments if present
-    str = str:gsub("//[^\n]*", ""):gsub("/%*.-%*/", "")
-    
     local pos = 1
     local function skip_whitespace()
         while pos <= #str do
@@ -133,6 +130,7 @@ function M.parse(str)
     if status then
         return val
     else
+        print("[HUDLocator] json.parse failed: " .. tostring(val))
         return nil
     end
 end

@@ -1,6 +1,9 @@
 local json = require("HUDLocator.json")
 
 local M = {}
+M.ConfigLoadedOnce = false
+
+M.ConfiguratorURL = "https://pal-mod-configurator.dunhas.com/"
 
 -- Config settings
 M.CONFIG = {
@@ -9,7 +12,6 @@ M.CONFIG = {
         Language = "system",
         ScanIntervalMs = 1500,
         Debug = false,
-        ConfiguratorURL = "https://pal-mod-configurator.dunhas.com/",
         KeyBinds = {
             ToggleMenu = "F6",
             MenuUp = "UP_ARROW",
@@ -309,6 +311,7 @@ function M.LoadConfig()
             MergeConfig(M.CONFIG, parsed)
             print("[HUDLocator] Configuration loaded from central path: " .. newConfigPath)
             centralLoaded = true
+            M.ConfigLoadedOnce = true
         end
     end
     
@@ -340,6 +343,13 @@ function M.LoadConfig()
                 end
             end
         end
+        return
+    end
+
+    -- If central config failed to load but was previously loaded/saved successfully this session,
+    -- DO NOT overwrite it with defaults (the file might be temporarily locked or corrupted).
+    if M.ConfigLoadedOnce then
+        print("[HUDLocator] WARNING: Failed to read central configuration (file may be locked or invalid). Retaining current in-memory settings.")
         return
     end
 
@@ -401,6 +411,7 @@ function M.LoadConfig()
                 outFile:write(str)
                 outFile:close()
                 print("[HUDLocator] Migrated configuration saved successfully to central path.")
+                M.ConfigLoadedOnce = true
                 
                 -- Delete the migrated file
                 if migratedPath then
@@ -424,7 +435,7 @@ function M.LoadConfig()
                                 local success, err = os.remove(path)
                                 if success then
                                     print("[HUDLocator] Cleaned up old configuration file at: " .. path)
-                                else
+                                  else
                                     print("[HUDLocator] Failed to remove old configuration file at: " .. path .. " - Error: " .. tostring(err))
                                 end
                             end
@@ -441,6 +452,7 @@ function M.LoadConfig()
         outFile:write(defaultJSON)
         outFile:close()
         print("[HUDLocator] Generated default configuration at: " .. newConfigPath)
+        M.ConfigLoadedOnce = true
     else
         print("[HUDLocator] ERROR: Failed to write default config at: " .. newConfigPath)
     end
@@ -454,6 +466,7 @@ function M.SaveConfig()
         if status and str then
             outFile:write(str)
             print("[HUDLocator] Configuration saved successfully to " .. configPath)
+            M.ConfigLoadedOnce = true
         else
             print("[HUDLocator] Failed to stringify config: " .. tostring(str))
         end
