@@ -1,22 +1,23 @@
 [size=5][b]HUD Locator[/b][/size]
 
-A client-side UI mod for Palworld that displays customizable floating 3D HUD overlays for [b]players[/b], [b]Lifmunk Effigies (relics)[/b], [b]treasure chests[/b], [b]Pal eggs[/b], and [b]dungeon entrances[/b]. 
+A client-side UI mod for Palworld that displays customizable floating 3D HUD overlays for [b]players[/b], [b]Lifmunk Effigies (relics)[/b], [b]treasure chests[/b], [b]Pal eggs[/b], [b]dungeons[/b], and [b]ground loot[/b].
+
+🎨 [b]Visual Web Configurator[/b]: Tweak colors, sliders, padding, and fonts with a live HUD preview at [url=https://pal-mod-configurator.dunhas.com/]https://pal-mod-configurator.dunhas.com/[/url] (can be opened directly from the in-game menu!).
 
 [hr][/hr]
 
 [size=4][b]Key Features[/b][/size]
 
 [list]
-[*] [b]Player Tracker[/b]: Displays names and real-time distances server-wide (even beyond standard network replication distance). Supports nameplate backgrounds or simple text overlays.
-[*] [b]Relic Finder[/b]: Highlights nearby Lifmunk Effigies with cyan tags.
-[*] [b]Chest Finder[/b]: Highlights unopened treasure chests with yellow/gold tags.
-[*] [b]Pal Egg Finder[/b]: Displays egg size (Huge, Large, etc.) and type (e.g. Scorching Egg). Includes distance filter options ([b]All[/b], [b]Large+[/b], [b]HugeOnly[/b], [b]None[/b]).
-[*] [b]Dungeon Finder[/b]: Highlights fixed dungeon cave entrances with purple tags.
-[*] [b]Ground Loot & Pickup Tracker[/b]: Highlights naturally spawned items on the ground (like wild Pal Spheres, Skill Fruits/Cards, gold coins, upgrade stones, arrows) with a light-green label. You can customize which items are shown by editing the [b]"Filters"[/b] list in [b]config.json[/b] (e.g. [b]"Filters": ["Sphere", "Flower"][/b]).
-[*] [b]In-Game Settings Menu[/b]: Toggle trackers, adjust egg filters, or set max tracking distance directly in-game using a built-in menu ([b]Alt + F6[/b]).
-[*] [b]Manual Config Reload[/b]: Reload configurations instantly via [b]Alt + R[/b] from the external settings JSON file.
-[*] [b]Visual Web Configurator[/b]: Tweak detailed styles (colors, sliders, padding, fonts) with a live HUD preview using the web editor: [url=https://pal-mod-configurator.dunhas.com/]https://pal-mod-configurator.dunhas.com/[/url]. Can be opened directly from the in-game menu.
-[*] [b]Localization[/b]: Supports English, Chinese, Spanish, Japanese, French, German, and 10+ other languages, auto-detected from game language settings.
+[*] [b]Player Tracker[/b]: Server-wide names and real-time distances.
+[*] [b]Relic Finder[/b]: Cyan overlays for Lifmunk Effigies.
+[*] [b]Chest Finder[/b]: Yellow/gold overlays for treasure chests.
+[*] [b]Pal Egg Finder[/b]: Displays size/type with filters (All, Large+, HugeOnly, None).
+[*] [b]Dungeon Finder[/b]: Purple overlays for dungeon cave entrances.
+[*] [b]Ground Loot Tracker[/b]: Green overlays for wild spheres, skill fruits, arrows, coins (Filter in [b]config.json[/b]).
+[*] [b]In-Game Menu (Alt + F6)[/b]: Toggle trackers and adjust distances on the fly.
+[*] [b]Manual Reload (Alt + R)[/b]: Reload settings instantly from JSON config.
+[*] [b]Localization[/b]: Automated translations (English, Chinese, Spanish, Japanese, French, German, and 10+ more).
 [/list]
 
 [hr][/hr]
@@ -24,8 +25,8 @@ A client-side UI mod for Palworld that displays customizable floating 3D HUD ove
 [size=4][b]In-Game Controls[/b][/size]
 
 [list]
-[*] [b]Alt + F6[/b]: Toggle in-game settings menu.
-[*] [b]Alt + Up/Down/Left/Right[/b]: Navigate settings menu and modify values.
+[*] [b]Alt + F6[/b]: Toggle settings menu.
+[*] [b]Alt + Up/Down/Left/Right[/b]: Navigate menu and adjust values.
 [*] [b]Alt + R[/b]: Reload configuration from settings file.
 [/list]
 
@@ -50,20 +51,23 @@ A client-side UI mod for Palworld that displays customizable floating 3D HUD ove
 
 [size=4][b]Chinese Description[/b][/size]
 
-在 3D 空间中定位玩家、翠叶鼠雕像、宝箱、帕鲁蛋和地下城入口。
+在 3D 空间中定位玩家、翠叶鼠雕像、宝箱、帕鲁蛋、地下城和地面掉落道具。
+
+🎨 [b]网页可视化配置工具[/b]：提供实时 HUD 预览，支持在线调整颜色、边框、距离与间距！立即访问：[url=https://pal-mod-configurator.dunhas.com/]https://pal-mod-configurator.dunhas.com/[/url]。
+
+[hr][/hr]
 
 [size=3][b]主要功能[/b][/size]
 
 [list]
-[*] [b]玩家追踪[/b]：显示服务器范围内的玩家名牌与实时距离，支持带框背景或纯文本样式。
+[*] [b]玩家追踪[/b]：服务器范围内的玩家名称与实时距离。
 [*] [b]翠叶鼠雕像定位[/b]：显示青色遗物标签。
 [*] [b]宝箱追踪[/b]：显示金色宝箱标签。
-[*] [b]帕鲁蛋定位[/b]：显示蛋的类型及尺寸（巨大、大型等），支持过滤设置（全部、大型+、仅限巨大、无）。
+[*] [b]帕鲁蛋定位[/b]：显示类型与尺寸，支持过滤（全部、大型+、仅限巨大、无）。
 [*] [b]地下城追踪[/b]：显示紫色地下城入口标签。
-[*] [b]地面掉落与拾取物追踪[/b]：显示地面上自然生成的道具（如野生帕鲁球、技能果实/技能卡、金币、属性提升药、箭矢等），配有淡绿色标签。您可以通过编辑 [b]config.json[/b] 里的 [b]"Filters"[/b] 列表自定义要显示的物品（例如 [b]"Filters": ["Sphere", "Flower"][/b]）。
-[*] [b]游戏内设置菜单 (Alt + F6)[/b]：无需退出游戏，即可在游戏中开启/关闭追踪器、调整蛋过滤和追踪距离。
+[*] [b]地面掉落追踪[/b]：显示野生帕鲁球、技能果实、箭矢、金币等（可在 [b]config.json[/b] 中配置过滤器）。
+[*] [b]内置设置菜单 (Alt + F6)[/b]：在游戏中开启/关闭追踪器、调整蛋过滤和距离。
 [*] [b]配置快速重载 (Alt + R)[/b]：快速重新加载配置文件。
-[*] [b]网页可视化配置[/b]：通过菜单可直接访问网页端工具 [url=https://pal-mod-configurator.dunhas.com/]https://pal-mod-configurator.dunhas.com/[/url] 调整样式并提供实时 HUD 预览。
 [*] [b]多语言支持[/b]：根据游戏语言自动切换翻译（支持英文、中文、日文、西班牙文、德文、法文等10多种语言）。
 [/list]
 
