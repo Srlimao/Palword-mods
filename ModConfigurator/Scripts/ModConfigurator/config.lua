@@ -8,8 +8,8 @@ M.CONFIG = {
     UserId = "" -- Persisted globally
 }
 
--- Returns the absolute path of the user's ModConfigs folder
-function M.GetModConfigsDir()
+-- Returns the absolute path of the old documents folder (for migration lookup)
+function M.GetOldDocumentsConfigsDir()
     local userProfile = os.getenv("USERPROFILE")
     if not userProfile or userProfile == "" then
         local drive = os.getenv("HOMEDRIVE") or "C:"
@@ -26,6 +26,25 @@ function M.GetModConfigsDir()
     end
     
     local path = docsPath .. "/My Games/Palworld/ModConfigs"
+    -- Standardize path separator to forward slash for Lua compatibility
+    path = string.gsub(path, "\\", "/")
+    return path
+end
+
+-- Returns the absolute path of the user's ModConfigs folder
+function M.GetModConfigsDir()
+    local localAppData = os.getenv("LOCALAPPDATA")
+    if not localAppData or localAppData == "" then
+        local userProfile = os.getenv("USERPROFILE")
+        if not userProfile or userProfile == "" then
+            local drive = os.getenv("HOMEDRIVE") or "C:"
+            local path = os.getenv("HOMEPATH") or "/Users/Default"
+            userProfile = drive .. path
+        end
+        localAppData = userProfile .. "/AppData/Local"
+    end
+    
+    local path = localAppData .. "/Pal/Saved/Mods"
     -- Standardize path separator to forward slash for Lua compatibility
     path = string.gsub(path, "\\", "/")
     return path
@@ -91,7 +110,7 @@ function M.ResolveUserId()
     -- 2. If live check succeeds, save it to file and return it
     if resolvedId then
         M.CONFIG.UserId = resolvedId
-        local globalConfigPath = M.GetModConfigsDir() .. "/mod_configurator_global.json"
+        local globalConfigPath = M.GetModConfigsDir() .. "/mcm.json"
         local outFile = io.open(globalConfigPath, "w")
         if outFile then
             outFile:write('{\n  "UserId": "' .. resolvedId .. '"\n}')
@@ -105,7 +124,7 @@ function M.ResolveUserId()
         return M.CONFIG.UserId
     end
     
-    local globalConfigPath = M.GetModConfigsDir() .. "/mod_configurator_global.json"
+    local globalConfigPath = M.GetModConfigsDir() .. "/mcm.json"
     local file = io.open(globalConfigPath, "r")
     if file then
         local content = file:read("*all")
@@ -113,6 +132,28 @@ function M.ResolveUserId()
         local id = content:match('"UserId"%s*:%s*"([^"]+)"')
         if id and id ~= "" then
             M.CONFIG.UserId = id
+            return id
+        end
+    end
+    
+    -- 3b. Try migrating from old Documents config
+    local oldGlobalConfigPath = M.GetOldDocumentsConfigsDir() .. "/mod_configurator_global.json"
+    local oFile = io.open(oldGlobalConfigPath, "r")
+    if oFile then
+        local content = oFile:read("*all")
+        oFile:close()
+        local id = content:match('"UserId"%s*:%s*"([^"]+)"')
+        if id and id ~= "" then
+            M.CONFIG.UserId = id
+            -- Save to new location
+            local outFile = io.open(globalConfigPath, "w")
+            if outFile then
+                outFile:write('{\n  "UserId": "' .. id .. '"\n}')
+                outFile:close()
+            end
+            -- Clean up old global config
+            os.remove(oldGlobalConfigPath)
+            print("[ModConfigurator] Migrated User ID from legacy Documents folder to mcm.json")
             return id
         end
     end

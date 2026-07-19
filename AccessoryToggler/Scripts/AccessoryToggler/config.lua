@@ -171,7 +171,7 @@ function json.stringify(val)
     end
 end
 
-local function GetModConfigsDir()
+local function GetOldDocumentsConfigFilePath()
     local userProfile = os.getenv("USERPROFILE")
     if not userProfile or userProfile == "" then
         local drive = os.getenv("HOMEDRIVE") or "C:"
@@ -181,14 +181,31 @@ local function GetModConfigsDir()
     
     local docsPath = userProfile .. "/Documents"
     
-    -- If OneDrive is active, the documents directory is usually redirected to OneDrive/Documents
     local oneDrive = os.getenv("OneDrive") or os.getenv("OneDriveConsumer")
     if oneDrive and oneDrive ~= "" then
         docsPath = oneDrive .. "/Documents"
     end
     
-    local path = docsPath .. "/My Games/Palworld/ModConfigs"
+    local path = docsPath .. "/My Games/Palworld/ModConfigs/AccessoryToggler/config.json"
     return string.gsub(path, "\\", "/")
+end
+
+local function GetModConfigsDir()
+    local localAppData = os.getenv("LOCALAPPDATA")
+    if not localAppData or localAppData == "" then
+        local userProfile = os.getenv("USERPROFILE")
+        if not userProfile or userProfile == "" then
+            local drive = os.getenv("HOMEDRIVE") or "C:"
+            local path = os.getenv("HOMEPATH") or "/Users/Default"
+            userProfile = drive .. path
+        end
+        localAppData = userProfile .. "/AppData/Local"
+    end
+    
+    local path = localAppData .. "/Pal/Saved/Mods"
+    -- Standardize path separator to forward slash for Lua compatibility
+    path = string.gsub(path, "\\", "/")
+    return path
 end
 
 local function GetNewConfigFilePath()
@@ -250,6 +267,7 @@ function M.LoadConfig()
     
     -- Central config doesn't exist, check old config files to migrate
     local paths = {
+        GetOldDocumentsConfigFilePath(),
         oldConfigPath,
         "Mods/AccessoryToggler/config.json",
         "Mods/ManagedMods/AccessoryToggler/config.json",
