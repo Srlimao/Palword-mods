@@ -115,6 +115,26 @@ M.CONFIG = {
             FontCharW = 8.0,
             FontLineH = 12.0
         }
+    },
+    Loot = {
+        Enabled = true,
+        MaxDistance = 15000.0,
+        Filters = {},
+        Style = {
+            DrawBox = false,
+            FontScale = 1.2,
+            SmallFontScale = 0.9,
+            TextOffsetZ = 80.0,
+            NameColor = { R = 0.2, G = 0.9, B = 0.4, A = 1.0 },
+            DistColor = { R = 0.2, G = 0.9, B = 0.4, A = 1.0 },
+            BoxColor = { R = 0.8, G = 1.0, B = 0.8, A = 1.0 },
+            BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+            BorderWidth = 1.5,
+            BoxPadX = 10.0,
+            BoxPadY = 6.0,
+            FontCharW = 8.0,
+            FontLineH = 12.0
+        }
     }
 }
 
@@ -263,6 +283,26 @@ local defaultJSON = [[{
       "NameColor": { "R": 0.6, "G": 0.2, "B": 0.9, "A": 1.0 },
       "DistColor": { "R": 0.6, "G": 0.2, "B": 0.9, "A": 1.0 },
       "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
+  },
+  "Loot": {
+    "Enabled": true,
+    "MaxDistance": 15000.0,
+    "Filters": [],
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 80.0,
+      "NameColor": { "R": 0.2, "G": 0.9, "B": 0.4, "A": 1.0 },
+      "DistColor": { "R": 0.2, "G": 0.9, "B": 0.4, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 1.0, "B": 0.8, "A": 1.0 },
       "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
       "BorderWidth": 1.5,
       "BoxPadX": 10.0,

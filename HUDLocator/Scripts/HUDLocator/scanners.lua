@@ -28,6 +28,7 @@ M.hasLoggedPlayers = false
 M.hasLoggedRelics = false
 M.hasLoggedChests = false
 M.hasLoggedEggs = false
+M.hasLoggedLoot = false
 
 function M.ScanPlayers(localPlayerState)
     local newPlayers = {}
@@ -286,6 +287,118 @@ function M.ScanCaves(playerPos, maxDistSq)
     end
     
     return merged
+end
+
+local function GetItemDetails(actor)
+    local name = nil
+    local itemIdStr = nil
+    
+    local statusModel, model = pcall(function() return actor.MapObjectModel end)
+    if statusModel and model then
+        local isValid = false
+        pcall(function() isValid = model:IsValid() end)
+        if isValid then
+            local concrete = nil
+            pcall(function() concrete = model.ConcreteModel end)
+            if concrete then
+                local isConcreteValid = false
+                pcall(function() isConcreteValid = concrete:IsValid() end)
+                if isConcreteValid then
+                    -- 1. Check if it's a drop item model (has ItemId)
+                    local itemId = nil
+                    pcall(function() itemId = concrete.ItemId end)
+                    if itemId then
+                        local staticId = nil
+                        pcall(function() staticId = itemId.StaticId end)
+                        if staticId then
+                            pcall(function() itemIdStr = staticId:ToString() end)
+                        end
+                    end
+                    
+                    -- 2. Check if it's a level pickup model (has VisualStaticItemId)
+                    if not itemIdStr then
+                        local visualId = nil
+                        local visualIdStatus = pcall(function() visualId = concrete:GetVisualStaticItemId() end)
+                        if not visualIdStatus or not visualId then
+                            pcall(function() visualId = concrete.VisualStaticItemId end)
+                        end
+                        if visualId then
+                            pcall(function() itemIdStr = visualId:ToString() end)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    if itemIdStr and itemIdStr ~= "None" then
+        name = utils.GetTranslatedItemName(itemIdStr)
+        if not name or name == "" then
+            name = itemIdStr -- fallback to internal name
+        end
+    end
+    
+    return name, itemIdStr
+end
+
+function M.ScanLoot(playerPos, maxDistSq, filters)
+    local newLoot = {}
+    local actors = {}
+    local statusVisible, visibleActors = pcall(function() return FindAllOf("BP_MapObject_TreasureBox_VisibleContent_C") end)
+    if statusVisible and visibleActors then
+        for _, actor in ipairs(visibleActors) do
+            table.insert(actors, actor)
+        end
+    end
+    
+    -- De-duplicate actors safely using table lookup
+    local seen = {}
+    local uniqueActors = {}
+    for _, actor in ipairs(actors) do
+        if not seen[actor] then
+            seen[actor] = true
+            table.insert(uniqueActors, actor)
+        end
+    end
+    
+    for _, actor in ipairs(uniqueActors) do
+        if actor:IsValid() then
+            pcall(function()
+                local lootPos = actor:K2_GetActorLocation()
+                if lootPos then
+                    if utils.GetDistanceSq(lootPos, playerPos) <= maxDistSq then
+                        local name, itemIdStr = GetItemDetails(actor)
+                        if name and name ~= "" then
+                            local shouldAdd = true
+                            if filters and #filters > 0 then
+                                shouldAdd = false
+                                local lowerName = name:lower()
+                                local lowerId = itemIdStr:lower()
+                                for _, filter in ipairs(filters) do
+                                    local lowerFilter = filter:lower()
+                                    if string.find(lowerName, lowerFilter, 1, true) or string.find(lowerId, lowerFilter, 1, true) then
+                                        shouldAdd = true
+                                        break
+                                    end
+                                end
+                            end
+                            
+                            if shouldAdd then
+                                table.insert(newLoot, { X = lootPos.X, Y = lootPos.Y, Z = lootPos.Z, Name = name })
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+    
+    if not M.hasLoggedLoot and #newLoot > 0 then
+        M.hasLoggedLoot = true
+        logger.log("Loot Scan (Initial detection): Found " .. tostring(#newLoot) .. " loot items on ground.")
+    end
+    
+    return newLoot
 end
 
 return M

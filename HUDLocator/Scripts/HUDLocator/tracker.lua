@@ -10,6 +10,7 @@ M.activeRelics = {}
 M.activeChests = {}
 M.activeEggs = {}
 M.activeCaves = {}
+M.activeLoot = {}
 M.cachedLocalPlayer = nil
 
 -- Scan players, relics, chests, eggs, caves
@@ -20,6 +21,7 @@ function M.scan()
         M.activeChests = {}
         M.activeEggs = {}
         M.activeCaves = {}
+        M.activeLoot = {}
         return
     end
 
@@ -31,6 +33,7 @@ function M.scan()
         M.activeChests = {}
         M.activeEggs = {}
         M.activeCaves = {}
+        M.activeLoot = {}
         return
     end
 
@@ -46,6 +49,7 @@ function M.scan()
         M.activeChests = {}
         M.activeEggs = {}
         M.activeCaves = {}
+        M.activeLoot = {}
         M.cachedLocalPlayer = nil
         scanners.tempCaves = {}
         return 
@@ -95,6 +99,14 @@ function M.scan()
     else
         M.activeCaves = {}
         scanners.tempCaves = {}
+    end
+
+    -- 6. Scan Loot
+    if configMod.CONFIG.Loot.Enabled then
+        local maxDistSq = configMod.CONFIG.Loot.MaxDistance * configMod.CONFIG.Loot.MaxDistance
+        M.activeLoot = scanners.ScanLoot(playerPos, maxDistSq, configMod.CONFIG.Loot.Filters)
+    else
+        M.activeLoot = {}
     end
 end
 

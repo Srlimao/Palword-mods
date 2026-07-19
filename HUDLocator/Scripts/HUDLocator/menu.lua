@@ -45,6 +45,13 @@ local menuItems = {
         transKey = "Settings_ShowCaves"
     },
     {
+        name = "Show Ground Loot",
+        get = function() return CONFIG.Loot.Enabled end,
+        set = function(v) CONFIG.Loot.Enabled = v end,
+        type = "boolean",
+        transKey = "Settings_ShowLoot"
+    },
+    {
         name = "Egg Filter",
         get = function() return CONFIG.Eggs.Filter end,
         set = function(v) CONFIG.Eggs.Filter = v end,
@@ -83,6 +90,7 @@ local menuItems = {
             CONFIG.Chests.MaxDistance = v
             CONFIG.Eggs.MaxDistance = v
             CONFIG.Caves.MaxDistance = v
+            CONFIG.Loot.MaxDistance = v
         end,
         type = "number",
         min = 5000,

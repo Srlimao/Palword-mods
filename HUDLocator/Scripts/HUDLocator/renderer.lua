@@ -148,7 +148,7 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
 end
 
 -- Main entry point for drawing
-function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, activeCaves, cachedLocalPlayer, SizeX, SizeY)
+function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, activeCaves, activeLoot, cachedLocalPlayer, SizeX, SizeY)
     -- 1. Draw Settings Menu (always allowed, even if mod is disabled)
     menu.Draw(hud, SizeX, SizeY)
     
@@ -250,6 +250,20 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             --DrawCaveBeacon(hud, pos, CONFIG.Caves.Style.NameColor)
             
             DrawTrackerLabel(hud, pos, nameStr, distStr, CONFIG.Caves.Style)
+        end
+    end
+
+    -- 6. Draw Loot
+    if CONFIG.Loot.Enabled then
+        for _, pos in ipairs(activeLoot) do
+            local dx = pos.X - playerPos.X
+            local dy = pos.Y - playerPos.Y
+            local dz = pos.Z - playerPos.Z
+            local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+            local distMeters = math.floor(dist / 100.0)
+            local name = pos.Name or "Loot"
+            local distStr = distMeters .. "m"
+            DrawTrackerLabel(hud, pos, name, distStr, CONFIG.Loot.Style)
         end
     end
 end

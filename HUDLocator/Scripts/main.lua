@@ -41,6 +41,7 @@ local function RegisterHUDHook()
                 tracker.activeChests, 
                 tracker.activeEggs,
                 tracker.activeCaves,
+                tracker.activeLoot,
                 tracker.cachedLocalPlayer,
                 SizeX, SizeY
             )
@@ -122,6 +123,87 @@ RegisterKeyBind(Key.R, {ModifierKey.ALT}, function()
         pcall(popup.Show, "HUD Settings Reloaded", 120)
     else
         print("[HUDLocator] ERROR: Failed to manually reload configuration: " .. tostring(err))
+    end
+end)
+
+-- Alt+I: Dump Item Database
+RegisterKeyBind(Key.I, {ModifierKey.ALT}, function()
+    local status, err = pcall(function()
+        local utils = require("HUDLocator.utils")
+        
+        -- Load Item Data Table Path from PalEditorSetting CDO
+        local path = "/Game/Pal/DataTable/Item/DT_ItemDataTable.DT_ItemDataTable"
+        local statusCDO, cdo = pcall(function() return StaticFindObject("/Script/Pal.Default__PalEditorSetting") end)
+        if statusCDO and cdo and cdo.ItemDataTableAssetPath then
+            pcall(function() path = cdo.ItemDataTableAssetPath.AssetPathName:ToString() end)
+        end
+        
+        print("[HUDLocator] Loading Item Data Table from: " .. tostring(path))
+        local dt = StaticFindObject(path)
+        if not dt then
+            dt = StaticLoadObject(path)
+        end
+        
+        if not dt then
+            error("Could not load Item Data Table at path: " .. tostring(path))
+        end
+        
+        local rows = dt:GetRowNames()
+        if not rows then
+            error("GetRowNames returned nil on the Item Data Table")
+        end
+        
+        local itemList = {}
+        for _, rowName in ipairs(rows) do
+            local itemId = nil
+            if type(rowName) == "string" then
+                itemId = rowName
+            elseif type(rowName) == "userdata" or type(rowName) == "table" then
+                local stringifyStatus, stringifyVal = pcall(function() return rowName:ToString() end)
+                if stringifyStatus and stringifyVal then
+                    itemId = stringifyVal
+                else
+                    itemId = tostring(rowName)
+                end
+            else
+                itemId = tostring(rowName)
+            end
+
+            if itemId and itemId ~= "" and itemId ~= "None" then
+                local transName = utils.GetTranslatedItemName(itemId)
+                if not transName or transName == "" then
+                    transName = itemId
+                end
+                table.insert(itemList, { Id = itemId, Name = transName })
+            end
+        end
+        
+        -- Sort alphabetically by ID
+        table.sort(itemList, function(a, b) return a.Id < b.Id end)
+        
+        -- Write as JSON
+        local lines = {}
+        table.insert(lines, "[")
+        for i, item in ipairs(itemList) do
+            local comma = (i < #itemList) and "," or ""
+            table.insert(lines, string.format("  { \"id\": \"%s\", \"name\": \"%s\" }%s", item.Id, item.Name, comma))
+        end
+        table.insert(lines, "]")
+        
+        local f = io.open("D:\\Mods\\Palword\\HUDLocator\\item_list.json", "w")
+        if f then
+            f:write(table.concat(lines, "\n"))
+            f:close()
+            print("[HUDLocator] Item database successfully dumped to D:\\Mods\\Palword\\HUDLocator\\item_list.json")
+            pcall(popup.Show, "Item Database Dumped!", 120)
+        else
+            error("Failed to open output file for writing.")
+        end
+    end)
+    
+    if not status then
+        print("[HUDLocator] ERROR dumping item database: " .. tostring(err))
+        pcall(popup.Show, "Database Dump Failed", 120)
     end
 end)
 

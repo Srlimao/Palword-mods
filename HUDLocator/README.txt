@@ -48,3 +48,23 @@ Configuration File
 %USERPROFILE%\Documents\My Games\Palworld\ModConfigs\HUDLocator\config.json
 (Generated automatically on first game launch)
 
+
+-----------------------------
+Ground Loot & Pickups Classifications
+-----------------------------
+The game represents ground loot and pickups under different class structures:
+
+1. Natively Spawned Loot / Pickable Objects (BP_MapObject_TreasureBox_VisibleContent_C):
+   - Used for natively spawned Pal Spheres, Skill Fruits (Skill Cards), upgrade stones, arrows, and other items placed on the ground or on trees by the level generator.
+   - Retrieve item ID via:
+     actor.MapObjectModel.ConcreteModel:GetVisualStaticItemId() -- or ConcreteModel.VisualStaticItemId
+
+2. Natively Spawned Environment Pickups (PalMapLevelObject / BP_MapObject_PickupItem_Base_C):
+   - Used for naturally spawned resources like Wood Logs, Small Stones, and Red Berries.
+   - Retrieve item ID via:
+     actor.MapObjectModel.ConcreteModel.VisualStaticItemId
+
+3. Player/Pal Dropped Loot (PalMapObjectCommonDropItem3D / BP_MapObject_CommonDropItem3D_C):
+   - Used for items dropped directly by a player or Pal from their inventory.
+   - Retrieve item ID via:
+     actor.MapObjectModel.ConcreteModel.ItemId.StaticId
