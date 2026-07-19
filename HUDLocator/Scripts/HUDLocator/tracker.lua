@@ -20,11 +20,11 @@ local function ResolvePaths(hud)
     
     print("[HUDLocator] Resolving item icon paths using BP_PalUIFunctionLibrary...")
     local lib = StaticFindObject("/Game/Pal/Blueprint/UI/BP_PalUIFunctionLibrary.Default__BP_PalUIFunctionLibrary_C")
-    if not lib then
+    if not lib or not lib:IsValid() then
         local classObj = FindFirstOf("BP_PalUIFunctionLibrary_C")
         if classObj and classObj:IsValid() then
             local statusCDO, res = pcall(function() return classObj:GetDefaultObject() end)
-            if statusCDO and res then
+            if statusCDO and res and res:IsValid() then
                 lib = res
             end
         end

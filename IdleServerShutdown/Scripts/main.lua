@@ -13,8 +13,13 @@ local function ShutdownServer()
     local world = FindFirstOf("World")
     
     if KismetSystemLibrary and world and world:IsValid() then
-        -- QuitGame(WorldContextObject, SpecificPlayer, QuitPreference (0=Quit), bIgnorePlatformRestrictions)
-        KismetSystemLibrary:QuitGame(world, nil, 0, false)
+        -- Force a save first to prevent data loss
+        print("[IdleServerShutdown] Saving game state...")
+        KismetSystemLibrary:ExecuteConsoleCommand(world, "Save", nil)
+        
+        -- Shutdown the server using Palworld's official command
+        print("[IdleServerShutdown] Initiating shutdown...")
+        KismetSystemLibrary:ExecuteConsoleCommand(world, "Shutdown 1 Server is empty, shutting down...", nil)
     else
         print("[IdleServerShutdown] Error: Could not find KismetSystemLibrary or World. Unable to shutdown.")
     end

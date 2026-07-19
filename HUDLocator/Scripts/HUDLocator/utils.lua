@@ -94,11 +94,11 @@ function M.GetTranslatedMapObjectName(masterDataId)
     if not idStr then idStr = tostring(masterDataId) end
 
     if configMod.CONFIG.Global.Language ~= "system" and configMod.CONFIG.Global.Language ~= "" then
-        if string.find(idStr, "RequiredLongHold") or string.find(idStr, "Search") then return configMod.GetTranslation("Junk") end
-        if string.find(idStr, "TreasureBox") then return configMod.GetTranslation("Chest") end
-        if string.find(idStr, "Relic") then return configMod.GetTranslation("Relic") end
-        if string.find(idStr, "PalEgg") then return configMod.GetTranslation("Egg") end
-        return nil
+        if string.find(idStr, "RequiredLongHold") or string.find(idStr, "Search") then return configMod.GetTranslation("Junk", "Junk") end
+        if string.find(idStr, "TreasureBox") then return configMod.GetTranslation("Chest", "Chest") end
+        if string.find(idStr, "Relic") then return configMod.GetTranslation("Relic", "Relic") end
+        if string.find(idStr, "PalEgg") then return configMod.GetTranslation("Egg", "Egg") end
+        return idStr
     end
 
     if M.MapObjectNameCache[idStr] then
@@ -165,7 +165,7 @@ function M.GetTranslatedDungeonName(overrideId)
     end
     
     if configMod.CONFIG.Global.Language ~= "system" and configMod.CONFIG.Global.Language ~= "" then
-        return configMod.GetTranslation("Cave")
+        return configMod.GetTranslation("Cave", "Cave")
     end
 
     if M.DungeonNameCache[idStr] then
@@ -213,8 +213,8 @@ function M.GetTranslatedItemName(itemId)
     if not idStr then idStr = tostring(itemId) end
 
     if configMod.CONFIG.Global.Language ~= "system" and configMod.CONFIG.Global.Language ~= "" then
-        if string.find(idStr, "Relic") then return configMod.GetTranslation("Relic") end
-        return nil
+        if string.find(idStr, "Relic") then return configMod.GetTranslation("Relic", "Relic") end
+        return idStr
     end
 
     if M.ItemNameCache[idStr] then
