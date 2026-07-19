@@ -1,0 +1,15 @@
+{
+  "Enabled": true,
+  "DebugMode": true,
+  "ScanIntervalMs": 2000,
+  "WeaponTypes": {
+    "Handgun": true,
+    "SniperRifle": true,
+    "Shotgun": true,
+    "RocketLauncher": true,
+    "BowGun": true,
+    "LaserRifle": true,
+    "MissileLauncher": true,
+    "GrenadeLauncher": true
+  }
+}
