@@ -314,10 +314,20 @@ local defaultJSON = [[{
 }
 ]]
 
+local function IsArray(t)
+    if type(t) ~= "table" then return false end
+    local i = 1
+    for _ in pairs(t) do
+        if t[i] == nil then return false end
+        i = i + 1
+    end
+    return true
+end
+
 local function MergeConfig(target, source)
     if not source then return end
     for k, v in pairs(source) do
-        if type(v) == "table" and type(target[k]) == "table" then
+        if type(v) == "table" and type(target[k]) == "table" and not IsArray(v) then
             MergeConfig(target[k], v)
         else
             target[k] = v

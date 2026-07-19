@@ -351,6 +351,13 @@ function M.ScanLoot(playerPos, maxDistSq, filters)
         end
     end
     
+    local statusLevel, levelActors = pcall(function() return FindAllOf("PalMapLevelObject") end)
+    if statusLevel and levelActors then
+        for _, actor in ipairs(levelActors) do
+            table.insert(actors, actor)
+        end
+    end
+    
     -- De-duplicate actors safely using table lookup
     local seen = {}
     local uniqueActors = {}
