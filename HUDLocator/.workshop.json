@@ -1,5 +1,5 @@
 {
   "publishedfileid": "3764265846",
-  "changenote": "- Start of a major new version, now using the game internal font, better compatibility for all languages, improved quality and visuals\r\n - yours settings might be a little off now with the new font\r\n - added link to the mod configuration page inside the mod menu",
-  "last_published_version": "2.0.0"
+  "changenote": "- Ground Loot - turned off as default",
+  "last_published_version": "2.2.1"
 }

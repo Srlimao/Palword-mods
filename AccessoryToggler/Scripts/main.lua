@@ -89,6 +89,8 @@ local isHUDHooked = false
 local hasLoggedDraw = false
 local hasLoggedHookFailure = false
 
+local lastScanTime = 0
+
 local function RegisterHUDHook()
     if isHUDHooked then return end
     
@@ -114,6 +116,16 @@ local function RegisterHUDHook()
             if not drawStatus then
                 print("[AccessoryToggler] ERROR in ReceiveDrawHUD draw: " .. tostring(drawErr))
             end
+
+            -- Periodically run the accessory scan on the draw tick (prevents reload crashes)
+            local now = os.clock()
+            if now - lastScanTime >= ((CONFIG.ScanIntervalMs or 1500) / 1000.0) then
+                lastScanTime = now
+                local scanStatus, scanErr = pcall(toggler.Scan)
+                if not scanStatus then
+                    print("[AccessoryToggler] ERROR in Scan tick: " .. tostring(scanErr))
+                end
+            end
         end)
     end)
     
@@ -137,22 +149,7 @@ NotifyOnNewObject("/Game/Pal/Blueprint/UI/BP_PalHUD_InGame.BP_PalHUD_InGame_C", 
     RegisterHUDHook()
 end)
 
--- Start periodic background scan loop
-local function StartPeriodicScan()
-    local function loop()
-        -- Robust hook retry to bypass NotifyOnNewObject bugs
-        if not isHUDHooked then
-            RegisterHUDHook()
-        end
-        
-        local status, err = pcall(toggler.Scan)
-        if not status then
-            print("[AccessoryToggler] ERROR in Scan loop: " .. tostring(err))
-        end
-        ExecuteWithDelay(CONFIG.ScanIntervalMs, loop)
-    end
-    ExecuteWithDelay(CONFIG.ScanIntervalMs, loop)
-end
+-- Periodic scan loop is now handled directly inside ReceiveDrawHUD tick
 
 local function GetKey(keyStr, fallbackKey)
     if not keyStr then return fallbackKey end
@@ -198,8 +195,7 @@ else
     print("[AccessoryToggler] WARNING: Failed to resolve Key.EIGHT")
 end
 
--- Start scanning
-StartPeriodicScan()
+-- Start scanning (now driven by HUD draw ticks)
 
 -- ----------------------------------------------------
 -- HUD EDIT MODE INTERACTIVE CONFIGURATION KEYBINDS

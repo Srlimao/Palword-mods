@@ -109,15 +109,58 @@ function M.ScanChests(playerPos, maxDistSq)
                 if chestPos then
                     if utils.GetDistanceSq(chestPos, playerPos) <= maxDistSq then
                         local name = configMod.GetTranslation("Chest", "Chest")
+                        local isJunk = false
+                        local gradeVal = nil
                         local statusModel, model = pcall(function() return chest.MapObjectModel end)
                         if statusModel and model and model:IsValid() then
                             local dataIdStatus, dataId = pcall(function() return model.MapObjectMasterDataId end)
                             if dataIdStatus and dataId then
-                                local trans = utils.GetTranslatedMapObjectName(dataId)
-                                if trans then name = trans end
+                                local idStr = dataId:ToString()
+                                if idStr == "TreasureBox" then
+                                    local concrete = model.ConcreteModel
+                                    if concrete and concrete:IsValid() then
+                                        local statusGrade, grade = pcall(function() return concrete:GetTreasureGradeType() end)
+                                        if not statusGrade or not grade then
+                                            statusGrade, grade = pcall(function() return concrete.TreasureGradeType end)
+                                        end
+                                        if statusGrade and type(grade) == "number" then
+                                            gradeVal = grade + 1
+                                            idStr = "TreasureBox_Grade" .. tostring(gradeVal)
+                                        end
+                                    end
+                                end
+
+                                if string.find(idStr, "RequiredLongHold") or string.find(idStr, "Search") then
+                                    isJunk = true
+                                end
+                                local trans = utils.GetTranslatedMapObjectName(idStr)
+                                if trans then
+                                    if isJunk then
+                                        trans = string.gsub(trans, "%s*%b()", "")
+                                    end
+                                    name = trans
+                                end
+
+                                -- Append Grade name/suffix if standard chest and gradeVal is parsed
+                                if not isJunk and gradeVal then
+                                    local gradeKey = "Grade_" .. tostring(gradeVal)
+                                    local gradeLabel = configMod.GetTranslation(gradeKey, "G" .. tostring(gradeVal))
+                                    name = name .. " (" .. gradeLabel .. ")"
+                                end
                             end
                         end
-                        table.insert(newChests, { X = chestPos.X, Y = chestPos.Y, Z = chestPos.Z, Name = name })
+
+                        local filter = configMod.CONFIG.Chests.Filter or "Both"
+                        local shouldAdd = true
+                        if filter == "Chests" and isJunk then
+                            shouldAdd = false
+                        elseif filter == "Junk" and not isJunk then
+                            shouldAdd = false
+                        end
+
+                        if shouldAdd then
+                            table.insert(newChests, { X = chestPos.X, Y = chestPos.Y, Z = chestPos.Z, Name = name })
+                        end
                     end
                 end
             end)

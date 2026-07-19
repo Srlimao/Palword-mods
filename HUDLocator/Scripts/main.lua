@@ -75,7 +75,10 @@ local function StartPeriodicScan()
             RegisterHUDHook()
         end
         
-        pcall(tracker.scan)
+        local status, err = pcall(tracker.scan)
+        if not status then
+            print("[HUDLocator] ERROR in Scan loop: " .. tostring(err))
+        end
         ExecuteWithDelay(CONFIG.Global.ScanIntervalMs, loop)
     end
     ExecuteWithDelay(CONFIG.Global.ScanIntervalMs, loop)
@@ -126,83 +129,61 @@ RegisterKeyBind(Key.R, {ModifierKey.ALT}, function()
     end
 end)
 
--- Alt+I: Dump Item Database
+-- Alt+I: Dump Map Object Database and Translations
 RegisterKeyBind(Key.I, {ModifierKey.ALT}, function()
     local status, err = pcall(function()
-        local utils = require("HUDLocator.utils")
+        local world = UEHelpers.GetWorld()
+        local util = StaticFindObject("/Script/Pal.Default__PalMasterDataTablesUtility")
         
-        -- Load Item Data Table Path from PalEditorSetting CDO
-        local path = "/Game/Pal/DataTable/Item/DT_ItemDataTable.DT_ItemDataTable"
-        local statusCDO, cdo = pcall(function() return StaticFindObject("/Script/Pal.Default__PalEditorSetting") end)
-        if statusCDO and cdo and cdo.ItemDataTableAssetPath then
-            pcall(function() path = cdo.ItemDataTableAssetPath.AssetPathName:ToString() end)
+        local dt = nil
+        local statusDT, res = pcall(function() return util:GetMapObjectDataTable(world) end)
+        if statusDT and res and res:IsValid() then
+            dt = res
+            print("[HUDLocator] Successfully retrieved Map Object Data Table via MasterDataTablesUtility CDO.")
+        else
+            -- Fallback
+            local path = "/Game/Pal/DataTable/MapObject/DT_MapObjectDataTable.DT_MapObjectDataTable"
+            print("[HUDLocator] Falling back to loading Map Object Data Table from path: " .. tostring(path))
+            dt = StaticFindObject(path)
+            if not dt then
+                dt = StaticLoadObject(path)
+            end
         end
         
-        print("[HUDLocator] Loading Item Data Table from: " .. tostring(path))
-        local dt = StaticFindObject(path)
-        if not dt then
-            dt = StaticLoadObject(path)
-        end
-        
-        if not dt then
-            error("Could not load Item Data Table at path: " .. tostring(path))
+        if not dt or not dt:IsValid() then
+            error("Could not retrieve or load Map Object Data Table.")
         end
         
         local rows = dt:GetRowNames()
         if not rows then
-            error("GetRowNames returned nil on the Item Data Table")
+            error("GetRowNames returned nil on the Map Object Data Table")
         end
         
-        local itemList = {}
+        print("[HUDLocator] Dumping all Treasure/Box map objects and translations:")
         for _, rowName in ipairs(rows) do
-            local itemId = nil
+            local rowStr = nil
             if type(rowName) == "string" then
-                itemId = rowName
-            elseif type(rowName) == "userdata" or type(rowName) == "table" then
-                local stringifyStatus, stringifyVal = pcall(function() return rowName:ToString() end)
-                if stringifyStatus and stringifyVal then
-                    itemId = stringifyVal
-                else
-                    itemId = tostring(rowName)
-                end
+                rowStr = rowName
             else
-                itemId = tostring(rowName)
+                pcall(function() rowStr = rowName:ToString() end)
             end
+            if not rowStr then rowStr = tostring(rowName) end
 
-            if itemId and itemId ~= "" and itemId ~= "None" then
-                local transName = utils.GetTranslatedItemName(itemId)
-                if not transName or transName == "" then
-                    transName = itemId
+            if string.find(rowStr, "Treasure") or string.find(rowStr, "Box") then
+                local key = "MAPOBJECT_NAME_" .. rowStr
+                local tStatus, outText = pcall(function() return util:GetLocalizedText(world, 13, FName(key)) end)
+                local trans = "ERROR"
+                if tStatus and outText then
+                    pcall(function() trans = outText:ToString() end)
                 end
-                table.insert(itemList, { Id = itemId, Name = transName })
+                print(string.format("[HUDLocator DEBUG] Row: %s | Key: %s | Translation: %s", rowStr, key, trans))
             end
         end
-        
-        -- Sort alphabetically by ID
-        table.sort(itemList, function(a, b) return a.Id < b.Id end)
-        
-        -- Write as JSON
-        local lines = {}
-        table.insert(lines, "[")
-        for i, item in ipairs(itemList) do
-            local comma = (i < #itemList) and "," or ""
-            table.insert(lines, string.format("  { \"id\": \"%s\", \"name\": \"%s\" }%s", item.Id, item.Name, comma))
-        end
-        table.insert(lines, "]")
-        
-        local f = io.open("D:\\Mods\\Palword\\HUDLocator\\item_list.json", "w")
-        if f then
-            f:write(table.concat(lines, "\n"))
-            f:close()
-            print("[HUDLocator] Item database successfully dumped to D:\\Mods\\Palword\\HUDLocator\\item_list.json")
-            pcall(popup.Show, "Item Database Dumped!", 120)
-        else
-            error("Failed to open output file for writing.")
-        end
+        pcall(popup.Show, "Map Object DB Dumped to Console!", 120)
     end)
     
     if not status then
-        print("[HUDLocator] ERROR dumping item database: " .. tostring(err))
+        print("[HUDLocator] ERROR dumping map object database: " .. tostring(err))
         pcall(popup.Show, "Database Dump Failed", 120)
     end
 end)

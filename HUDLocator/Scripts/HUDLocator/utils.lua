@@ -93,6 +93,7 @@ function M.GetTranslatedMapObjectName(masterDataId)
     if not idStr then idStr = tostring(masterDataId) end
 
     if configMod.CONFIG.Global.Language ~= "system" and configMod.CONFIG.Global.Language ~= "" then
+        if string.find(idStr, "RequiredLongHold") or string.find(idStr, "Search") then return configMod.GetTranslation("Junk") end
         if string.find(idStr, "TreasureBox") then return configMod.GetTranslation("Chest") end
         if string.find(idStr, "Relic") then return configMod.GetTranslation("Relic") end
         if string.find(idStr, "PalEgg") then return configMod.GetTranslation("Egg") end

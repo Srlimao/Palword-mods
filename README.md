@@ -38,6 +38,13 @@ Consolidated into **HUDLocator**:
 *   🚫 **PlayerLocator:** Integrated into HUDLocator players tracker.
 *   *Note:* Backups of these old projects are located in the [Deprecated](Deprecated) folder.
 
+## 🚀 Deployment & Testing
+
+For local testing and development, always use the automated `debugDeploy.bat` script located within each mod's directory to copy files to your game's debug folder (e.g. `HUDLocatorDEBUG` or `AccessoryTogglerDEBUG`), rather than manually copying files to the production mod folders.
+
+- **HUDLocator:** Run [HUDLocator/debugDeploy.bat](file:///d:/Mods/Palword/HUDLocator/debugDeploy.bat) to deploy to `HUDLocatorDEBUG`.
+- **AccessoryToggler:** Run [AccessoryToggler/debugDeploy.bat](file:///d:/Mods/Palword/AccessoryToggler/debugDeploy.bat) to deploy to `AccessoryTogglerDEBUG`.
+
 ---
 
 ## ⚠️ Development Guidelines

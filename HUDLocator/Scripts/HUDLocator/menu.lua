@@ -38,6 +38,14 @@ local menuItems = {
         transKey = "Settings_ShowChests"
     },
     {
+        name = "Chest Filter",
+        get = function() return CONFIG.Chests.Filter or "Both" end,
+        set = function(v) CONFIG.Chests.Filter = v end,
+        type = "enum",
+        values = { "Both", "Chests", "Junk" },
+        transKey = "Settings_ChestFilter"
+    },
+    {
         name = "Show Caves",
         get = function() return CONFIG.Caves.Enabled end,
         set = function(v) CONFIG.Caves.Enabled = v end,

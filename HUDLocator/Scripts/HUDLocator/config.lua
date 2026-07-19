@@ -61,6 +61,7 @@ M.CONFIG = {
     },
     Chests = {
         Enabled = true,
+        Filter = "Both",
         MaxDistance = 15000.0,
         Style = {
             DrawBox = false,
@@ -253,6 +254,7 @@ local defaultJSON = [[{
   },
   "Chests": {
     "Enabled": true,
+    "Filter": "Both",
     "MaxDistance": 15000.0,
     "Style": {
       "DrawBox": false,
@@ -713,4 +715,5 @@ end
 pcall(M.LoadConfig)
 pcall(M.LoadTranslations)
 
+M.ResolveActiveLanguage = ResolveActiveLanguage
 return M
