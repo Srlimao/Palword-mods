@@ -136,6 +136,25 @@ M.CONFIG = {
             FontCharW = 8.0,
             FontLineH = 12.0
         }
+    },
+    Notes = {
+        Enabled = true,
+        MaxDistance = 15000.0,
+        Style = {
+            DrawBox = false,
+            FontScale = 1.2,
+            SmallFontScale = 0.9,
+            TextOffsetZ = 80.0,
+            NameColor = { R = 1.0, G = 0.4, B = 0.4, A = 1.0 },
+            DistColor = { R = 1.0, G = 0.4, B = 0.4, A = 1.0 },
+            BoxColor = { R = 1.0, G = 0.8, B = 0.8, A = 1.0 },
+            BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+            BorderWidth = 1.5,
+            BoxPadX = 10.0,
+            BoxPadY = 6.0,
+            FontCharW = 8.0,
+            FontLineH = 12.0
+        }
     }
 }
 
@@ -329,6 +348,25 @@ local defaultJSON = [[{
       "FontCharW": 8.0,
       "FontLineH": 12.0
     }
+  },
+  "Notes": {
+    "Enabled": true,
+    "MaxDistance": 15000.0,
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 80.0,
+      "NameColor": { "R": 1.0, "G": 0.4, "B": 0.4, "A": 1.0 },
+      "DistColor": { "R": 1.0, "G": 0.4, "B": 0.4, "A": 1.0 },
+      "BoxColor": { "R": 1.0, "G": 0.8, "B": 0.8, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
   }
 }
 ]]
@@ -356,7 +394,7 @@ end
 
 local function IsValidHUDLocatorConfig(parsed)
     if not parsed or type(parsed) ~= "table" then return false end
-    if parsed.Players or parsed.Relics or parsed.Chests or parsed.Eggs or parsed.Caves or parsed.Global then
+    if parsed.Players or parsed.Relics or parsed.Chests or parsed.Eggs or parsed.Caves or parsed.Notes or parsed.Global then
         return true
     end
     if parsed.ShowPlayers ~= nil or parsed.ShowRelics ~= nil or parsed.ShowChests ~= nil or parsed.ShowCaves ~= nil then

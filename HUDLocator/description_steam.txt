@@ -14,6 +14,7 @@ A client-side UI mod for Palworld that displays customizable floating 3D HUD ove
 [*] [b]Chest Finder[/b]: Yellow/gold overlays for treasure chests.
 [*] [b]Pal Egg Finder[/b]: Displays size/type with filters (All, Large+, HugeOnly, None).
 [*] [b]Dungeon Finder[/b]: Purple overlays for dungeon cave entrances.
+[*] [b]Journal / Note Tracker[/b]: Coral/salmon overlays for uncollected lore journals/memos.
 [*] [b]Ground Loot Tracker[/b]: Green overlays for wild spheres, skill fruits, arrows, coins (Filter in [b]config.json[/b]).
 [*] [b]In-Game Menu (Alt + F6)[/b]: Toggle trackers and adjust distances on the fly.
 [*] [b]Manual Reload (Alt + R)[/b]: Reload settings instantly from JSON config.

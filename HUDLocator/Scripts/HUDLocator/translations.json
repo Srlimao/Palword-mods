@@ -64,7 +64,9 @@
         "Filter_es-MX": "Spanish (MX)",
         "Settings_AdvancedStyles": "Advanced Styles",
         "Action_OpenURL": "Alt+Right to Open",
-        "Menu_OpeningURL": "Opening Configurator..."
+        "Menu_OpeningURL": "Opening Configurator...",
+        "Settings_ShowNotes": "Show Journals",
+        "Note": "Journal"
     },
     "es": {
         "Cave": "Cueva",
@@ -102,7 +104,9 @@
         "Filter_None": "Ninguno",
         "Filter_Both": "Ambos",
         "Filter_Chests": "Cofres",
-        "Filter_Junk": "Chatarra"
+        "Filter_Junk": "Chatarra",
+        "Settings_ShowNotes": "Mostrar Diarios",
+        "Note": "Diario"
     },
     "ja": {
         "Cave": "洞窟",
@@ -140,7 +144,9 @@
         "Filter_None": "なし",
         "Filter_Both": "両方",
         "Filter_Chests": "宝箱のみ",
-        "Filter_Junk": "ジャンクのみ"
+        "Filter_Junk": "ジャンクのみ",
+        "Settings_ShowNotes": "手記を表示",
+        "Note": "手記"
     },
     "zh-Hans": {
         "Cave": "洞穴",
@@ -178,7 +184,9 @@
         "Filter_None": "无",
         "Filter_Both": "全部",
         "Filter_Chests": "仅宝箱",
-        "Filter_Junk": "仅杂物"
+        "Filter_Junk": "仅杂物",
+        "Settings_ShowNotes": "显示日志",
+        "Note": "日志"
     },
     "zh-Hant": {
         "Cave": "洞穴",
@@ -216,7 +224,9 @@
         "Filter_None": "無",
         "Filter_Both": "全部",
         "Filter_Chests": "僅寶箱",
-        "Filter_Junk": "僅雜物"
+        "Filter_Junk": "僅雜物",
+        "Settings_ShowNotes": "顯示日誌",
+        "Note": "日誌"
     },
     "fr": {
         "Cave": "Grotte",
@@ -249,7 +259,9 @@
         "Filter_All": "Tous",
         "Filter_LargePlus": "Grand+",
         "Filter_HugeOnly": "Uniq. Énorme",
-        "Filter_None": "Aucun"
+        "Filter_None": "Aucun",
+        "Settings_ShowNotes": "Afficher les journaux",
+        "Note": "Journal"
     },
     "it": {
         "Cave": "Grotta",
@@ -282,7 +294,9 @@
         "Filter_All": "Tutti",
         "Filter_LargePlus": "Grande+",
         "Filter_HugeOnly": "Solo Enorme",
-        "Filter_None": "Nessuno"
+        "Filter_None": "Nessuno",
+        "Settings_ShowNotes": "Mostra diari",
+        "Note": "Diario"
     },
     "de": {
         "Cave": "Höhle",
@@ -315,7 +329,9 @@
         "Filter_All": "Alle",
         "Filter_LargePlus": "Groß+",
         "Filter_HugeOnly": "Nur Riesig",
-        "Filter_None": "Keine"
+        "Filter_None": "Keine",
+        "Settings_ShowNotes": "Tagebücher anzeigen",
+        "Note": "Tagebuch"
     },
     "ko": {
         "Cave": "동굴",
@@ -348,7 +364,9 @@
         "Filter_All": "모두",
         "Filter_LargePlus": "큰+",
         "Filter_HugeOnly": "거대한 것만",
-        "Filter_None": "없음"
+        "Filter_None": "없음",
+        "Settings_ShowNotes": "저널 표시",
+        "Note": "저널"
     },
     "pt-BR": {
         "Cave": "Caverna",
@@ -392,7 +410,9 @@
         "Filter_None": "Nenhum",
         "Filter_Both": "Ambos",
         "Filter_Chests": "Baús",
-        "Filter_Junk": "Sucata"
+        "Filter_Junk": "Sucata",
+        "Settings_ShowNotes": "Mostrar Diários",
+        "Note": "Diário"
     },
     "ru": {
         "Cave": "Пещера",
@@ -425,7 +445,9 @@
         "Filter_All": "Все",
         "Filter_LargePlus": "Большие+",
         "Filter_HugeOnly": "Только огромные",
-        "Filter_None": "Нет"
+        "Filter_None": "Нет",
+        "Settings_ShowNotes": "Показать дневники",
+        "Note": "Дневник"
     },
     "th": {
         "Cave": "ถ้ำ",
@@ -480,7 +502,9 @@
         "Filter_es-MX": "สเปน (MX)",
         "Settings_AdvancedStyles": "การปรับแต่งระดับสูง",
         "Action_OpenURL": "กด Alt+ขวา เพื่อเปิด",
-        "Menu_OpeningURL": "กำลังเปิดเครื่องมือปรับแต่ง..."
+        "Menu_OpeningURL": "กำลังเปิดเครื่องมือปรับแต่ง...",
+        "Settings_ShowNotes": "แสดงบันทึก",
+        "Note": "บันทึก"
     },
     "vi": {
         "Cave": "Hang động",
@@ -513,7 +537,9 @@
         "Filter_All": "Tất cả",
         "Filter_LargePlus": "Lớn+",
         "Filter_HugeOnly": "Chỉ Khổng lồ",
-        "Filter_None": "Không"
+        "Filter_None": "Không",
+        "Settings_ShowNotes": "Hiển thị nhật ký",
+        "Note": "Nhật ký"
     },
     "id": {
         "Cave": "Gua",
@@ -546,7 +572,9 @@
         "Filter_All": "Semua",
         "Filter_LargePlus": "Besar+",
         "Filter_HugeOnly": "Hanya Sangat Besar",
-        "Filter_None": "Tidak Ada"
+        "Filter_None": "Tidak Ada",
+        "Settings_ShowNotes": "Tampilkan Jurnal",
+        "Note": "Jurnal"
     },
     "tr": {
         "Cave": "Mağara",
@@ -579,7 +607,9 @@
         "Filter_All": "Tümü",
         "Filter_LargePlus": "Büyük+",
         "Filter_HugeOnly": "Yalnızca Devasa",
-        "Filter_None": "Hiçbiri"
+        "Filter_None": "Hiçbiri",
+        "Settings_ShowNotes": "Günlükleri Göster",
+        "Note": "Günlük"
     },
     "pl": {
         "Cave": "Jaskinia",
@@ -612,7 +642,9 @@
         "Filter_All": "Wszystkie",
         "Filter_LargePlus": "Duże+",
         "Filter_HugeOnly": "Tylko Ogromne",
-        "Filter_None": "Brak"
+        "Filter_None": "Brak",
+        "Settings_ShowNotes": "Pokaż dzienniki",
+        "Note": "Dziennik"
     },
     "es-MX": {
         "Cave": "Cueva",
@@ -645,6 +677,8 @@
         "Filter_All": "Todos",
         "Filter_LargePlus": "Grande+",
         "Filter_HugeOnly": "Solo enorme",
-        "Filter_None": "Ninguno"
+        "Filter_None": "Ninguno",
+        "Settings_ShowNotes": "Mostrar Diarios",
+        "Note": "Diario"
     }
 }

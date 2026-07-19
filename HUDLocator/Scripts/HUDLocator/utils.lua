@@ -7,6 +7,7 @@ local M = {}
 M.MapObjectNameCache = {}
 M.ItemNameCache = {}
 M.DungeonNameCache = {}
+M.NoteNameCache = {}
 M.LoggedTranslations = {}
 M.MasterDataUtility = nil
 M.CachedFont = nil
@@ -335,6 +336,51 @@ function M.IsEggPicked(egg)
     end)
     
     if status then return picked else return false end
+end
+
+function M.IsNotePicked(note)
+    local status, picked = pcall(function()
+        if note:IsValid() then
+            return note.bPickedInClient
+        end
+        return true
+    end)
+    if status then
+        return picked
+    else
+        return true
+    end
+end
+
+function M.GetTranslatedNoteName(noteKey)
+    local idStr = nil
+    if type(noteKey) == "string" then
+        idStr = noteKey
+    elseif type(noteKey) == "userdata" then
+        pcall(function() idStr = noteKey:ToString() end)
+    end
+    if not idStr or idStr == "" or idStr == "None" then return nil end
+    
+    if M.NoteNameCache[idStr] then
+        return M.NoteNameCache[idStr]
+    end
+    
+    local friendly = idStr
+    local num = string.match(idStr, "CastawayJournal_(%d+)")
+    if num then
+        friendly = configMod.GetTranslation("Note", "Journal") .. " (" .. configMod.GetTranslation("Castaway", "Castaway") .. " " .. tonumber(num) .. ")"
+    else
+        local suffix = string.match(idStr, "_(%d+)")
+        if suffix then
+            local prefix = string.match(idStr, "^([%w_]+)_%d+$") or "Journal"
+            friendly = configMod.GetTranslation("Note", "Journal") .. " (" .. prefix .. " " .. tonumber(suffix) .. ")"
+        else
+            friendly = configMod.GetTranslation("Note", "Journal") .. " (" .. idStr .. ")"
+        end
+    end
+    
+    M.NoteNameCache[idStr] = friendly
+    return friendly
 end
 
 function M.GetDungeonDetails(cave)

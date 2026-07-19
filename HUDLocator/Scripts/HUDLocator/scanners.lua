@@ -29,6 +29,7 @@ M.hasLoggedRelics = false
 M.hasLoggedChests = false
 M.hasLoggedEggs = false
 M.hasLoggedLoot = false
+M.hasLoggedNotes = false
 
 function M.ScanPlayers(localPlayerState)
     local newPlayers = {}
@@ -449,6 +450,41 @@ function M.ScanLoot(playerPos, maxDistSq, filters)
     end
     
     return newLoot
+end
+
+function M.ScanNotes(playerPos, maxDistSq)
+    local newNotes = {}
+    local notes = FindAllOf("PalLevelObjectNote") or {}
+    for _, note in ipairs(notes) do
+        if note:IsValid() and not utils.IsNotePicked(note) then
+            pcall(function()
+                local notePos = note:K2_GetActorLocation()
+                if notePos then
+                    if utils.GetDistanceSq(notePos, playerPos) <= maxDistSq then
+                        local name = nil
+                        local statusName, noteKey = pcall(function() return note.NoteRowName.Key end)
+                        if statusName and noteKey then
+                            local trans = utils.GetTranslatedNoteName(noteKey)
+                            if trans then
+                                name = trans
+                            else
+                                name = configMod.GetTranslation("Note", "Journal")
+                            end
+                        else
+                            name = configMod.GetTranslation("Note", "Journal")
+                        end
+                        table.insert(newNotes, { X = notePos.X, Y = notePos.Y, Z = notePos.Z, Name = name })
+                    end
+                end
+            end)
+        end
+    end
+    
+    if not M.hasLoggedNotes and #newNotes > 0 then
+        M.hasLoggedNotes = true
+        logger.log("Note Scan (Initial detection): Found " .. tostring(#newNotes) .. " journals.")
+    end
+    return newNotes
 end
 
 return M

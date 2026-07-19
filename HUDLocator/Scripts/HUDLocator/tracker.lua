@@ -11,6 +11,7 @@ M.activeChests = {}
 M.activeEggs = {}
 M.activeCaves = {}
 M.activeLoot = {}
+M.activeNotes = {}
 M.cachedLocalPlayer = nil
 
 local hasRunResolve = false
@@ -70,6 +71,7 @@ function M.scan()
         M.activeEggs = {}
         M.activeCaves = {}
         M.activeLoot = {}
+        M.activeNotes = {}
         return
     end
 
@@ -82,6 +84,7 @@ function M.scan()
         M.activeEggs = {}
         M.activeCaves = {}
         M.activeLoot = {}
+        M.activeNotes = {}
         return
     end
 
@@ -104,6 +107,7 @@ function M.scan()
         M.activeEggs = {}
         M.activeCaves = {}
         M.activeLoot = {}
+        M.activeNotes = {}
         M.cachedLocalPlayer = nil
         scanners.tempCaves = {}
         return 
@@ -161,6 +165,14 @@ function M.scan()
         M.activeLoot = scanners.ScanLoot(playerPos, maxDistSq, configMod.CONFIG.Loot.Filters)
     else
         M.activeLoot = {}
+    end
+
+    -- 7. Scan Notes
+    if configMod.CONFIG.Notes.Enabled then
+        local maxDistSq = configMod.CONFIG.Notes.MaxDistance * configMod.CONFIG.Notes.MaxDistance
+        M.activeNotes = scanners.ScanNotes(playerPos, maxDistSq)
+    else
+        M.activeNotes = {}
     end
 end
 

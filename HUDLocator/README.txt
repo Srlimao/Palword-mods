@@ -11,6 +11,7 @@ Features
 - Chest Finder: Gold/yellow tags for treasure chests.
 - Pal Egg Finder: Displays egg type and size with filtering options (All, Large+, HugeOnly, None).
 - Dungeon Finder: Purple overlays for fixed dungeon entrances.
+- Journal / Note Finder: Coral/salmon tags for uncollected lore memos/journals.
 - In-Game Menu (Alt + F6): Modify settings and toggle trackers directly in-game.
 - Manual Reload (Alt + R): Reload settings from config file.
 - Visual Web Configurator: Link to configurator page (https://pal-mod-configurator.dunhas.com/) for detailed styles.

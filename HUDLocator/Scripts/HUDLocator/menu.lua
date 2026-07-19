@@ -53,6 +53,13 @@ local menuItems = {
         transKey = "Settings_ShowCaves"
     },
     {
+        name = "Show Notes",
+        get = function() return CONFIG.Notes.Enabled end,
+        set = function(v) CONFIG.Notes.Enabled = v end,
+        type = "boolean",
+        transKey = "Settings_ShowNotes"
+    },
+    {
         name = "Show Ground Loot",
         get = function() return CONFIG.Loot.Enabled end,
         set = function(v) CONFIG.Loot.Enabled = v end,
@@ -214,7 +221,8 @@ function M.Draw(hud, SizeX, SizeY)
 
     -- Define menu size & positioning (Left side HUD, modern layout)
     local menuW = font and 480.0 or 400.0
-    local menuH = font and (450.0 + 60.0 * scaleMult) or 480.0
+    local rowH = font and (28.0 + 8.0 * scaleMult) or 34.0
+    local menuH = font and (450.0 + 60.0 * scaleMult + rowH) or (480.0 + rowH)
     local menuX = 50.0
     local menuY = (screenH / 2.0) - (menuH / 2.0)
 
@@ -250,7 +258,6 @@ function M.Draw(hud, SizeX, SizeY)
 
     -- Draw menu items
     local startY = font and (menuY + 60.0 + 12.0 * scaleMult) or (menuY + 65.0)
-    local rowH = font and (28.0 + 8.0 * scaleMult) or 34.0
 
     for i, item in ipairs(menuItems) do
         local isSelected = (i == selectedIndex)

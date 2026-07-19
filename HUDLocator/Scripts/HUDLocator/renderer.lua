@@ -148,7 +148,7 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
 end
 
 -- Main entry point for drawing
-function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, activeCaves, activeLoot, cachedLocalPlayer, SizeX, SizeY)
+function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, activeCaves, activeLoot, activeNotes, cachedLocalPlayer, SizeX, SizeY)
     -- 1. Draw Settings Menu (always allowed, even if mod is disabled)
     menu.Draw(hud, SizeX, SizeY)
     
@@ -264,6 +264,20 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local name = pos.Name or "Loot"
             local distStr = distMeters .. "m"
             DrawTrackerLabel(hud, pos, name, distStr, CONFIG.Loot.Style)
+        end
+    end
+
+    -- 7. Draw Notes
+    if CONFIG.Notes.Enabled then
+        for _, pos in ipairs(activeNotes) do
+            local dx = pos.X - playerPos.X
+            local dy = pos.Y - playerPos.Y
+            local dz = pos.Z - playerPos.Z
+            local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+            local distMeters = math.floor(dist / 100.0)
+            local name = pos.Name or "Note"
+            local distStr = distMeters .. "m"
+            DrawTrackerLabel(hud, pos, name, distStr, CONFIG.Notes.Style)
         end
     end
 end
