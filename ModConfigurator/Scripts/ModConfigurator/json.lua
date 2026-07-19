@@ -137,8 +137,12 @@ function M.parse(str)
     end
 end
 
--- Lightweight JSON stringifier
-function M.stringify(val)
+-- Lightweight JSON stringifier with recursive pretty printing
+function M.stringify(val, indent)
+    indent = indent or 0
+    local indent_str = string.rep("  ", indent)
+    local next_indent_str = string.rep("  ", indent + 1)
+    
     local t = type(val)
     if t == "table" then
         local is_array = true
@@ -154,7 +158,7 @@ function M.stringify(val)
         if is_array then
             local parts = {}
             for i = 1, max_idx do
-                table.insert(parts, M.stringify(val[i]))
+                table.insert(parts, M.stringify(val[i], indent + 1))
             end
             return "[" .. table.concat(parts, ", ") .. "]"
         else
@@ -163,9 +167,9 @@ function M.stringify(val)
             for k in pairs(val) do table.insert(keys, k) end
             table.sort(keys)
             for _, k in ipairs(keys) do
-                table.insert(parts, '"' .. k .. '": ' .. M.stringify(val[k]))
+                table.insert(parts, next_indent_str .. '"' .. k .. '": ' .. M.stringify(val[k], indent + 1))
             end
-            return "{\n  " .. table.concat(parts, ",\n  ") .. "\n}"
+            return "{\n" .. table.concat(parts, ",\n") .. "\n" .. indent_str .. "}"
         end
     elseif t == "string" then
         return '"' .. val .. '"'

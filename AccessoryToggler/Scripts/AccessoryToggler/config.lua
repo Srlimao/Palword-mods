@@ -137,7 +137,11 @@ function json.parse(str)
     if status then return val else return nil end
 end
 
-function json.stringify(val)
+function json.stringify(val, indent)
+    indent = indent or 0
+    local indent_str = string.rep("  ", indent)
+    local next_indent_str = string.rep("  ", indent + 1)
+    
     local t = type(val)
     if t == "table" then
         local isArray = true
@@ -152,15 +156,18 @@ function json.stringify(val)
         if isArray then
             local parts = {}
             for i = 1, maxIndex do
-                table.insert(parts, json.stringify(val[i]))
+                table.insert(parts, json.stringify(val[i], indent + 1))
             end
             return "[" .. table.concat(parts, ", ") .. "]"
         else
             local parts = {}
-            for k, v in pairs(val) do
-                table.insert(parts, '"' .. k .. '": ' .. json.stringify(v))
+            local keys = {}
+            for k in pairs(val) do table.insert(keys, k) end
+            table.sort(keys)
+            for _, k in ipairs(keys) do
+                table.insert(parts, next_indent_str .. '"' .. k .. '": ' .. json.stringify(val[k], indent + 1))
             end
-            return "{" .. table.concat(parts, ", ") .. "}"
+            return "{\n" .. table.concat(parts, ",\n") .. "\n" .. indent_str .. "}"
         end
     elseif t == "string" then
         return '"' .. val .. '"'
