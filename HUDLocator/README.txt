@@ -45,7 +45,7 @@ Shortcuts
 -----------------------------
 Configuration File
 -----------------------------
-%USERPROFILE%\Documents\My Games\Palworld\ModConfigs\HUDLocator\config.json
+%LOCALAPPDATA%\Pal\Saved\Mods\HUDLocator\config.json
 (Generated automatically on first game launch)
 
 

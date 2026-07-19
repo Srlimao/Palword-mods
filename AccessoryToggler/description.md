@@ -43,7 +43,7 @@ A client-side UI/Lua mod for Palworld that lets you instantly equip or unequip a
 
 ## Configuration Path
 
-- `%USERPROFILE%\Documents\My Games\Palworld\ModConfigs\AccessoryToggler\config.json`
+- `%LOCALAPPDATA%\Pal\Saved\Mods\AccessoryToggler\config.json`
 *(Generated automatically on first load)*
 
 ---
@@ -71,4 +71,4 @@ A client-side UI/Lua mod for Palworld that lets you instantly equip or unequip a
 
 ### 配置文件路径
 
-- `%USERPROFILE%\Documents\My Games\Palworld\ModConfigs\AccessoryToggler\config.json`
+- `%LOCALAPPDATA%\Pal\Saved\Mods\AccessoryToggler\config.json`

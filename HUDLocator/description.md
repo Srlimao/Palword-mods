@@ -36,7 +36,7 @@ A client-side UI mod for Palworld that displays customizable floating 3D HUD ove
 
 ## Configuration Path
 
-- `%USERPROFILE%\Documents\My Games\Palworld\ModConfigs\HUDLocator\config.json`
+- `%LOCALAPPDATA%\Pal\Saved\Mods\HUDLocator\config.json`
 *(Generated automatically on first load)*
 
 ---
@@ -69,4 +69,4 @@ A client-side UI mod for Palworld that displays customizable floating 3D HUD ove
 
 ### 配置文件路径
 
-- `%USERPROFILE%\Documents\My Games\Palworld\ModConfigs\HUDLocator\config.json`
+- `%LOCALAPPDATA%\Pal\Saved\Mods\HUDLocator\config.json`
