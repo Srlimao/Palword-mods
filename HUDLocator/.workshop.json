@@ -1,5 +1,5 @@
 {
   "publishedfileid": "3764265846",
-  "changenote": "- Ground Loot - turned off as default",
-  "last_published_version": "2.2.1"
+  "changenote": "- Added option to filter Chest,Junk or both",
+  "last_published_version": "2.4.0"
 }

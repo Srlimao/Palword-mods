@@ -6,6 +6,7 @@ local M = {}
 
 M.MapObjectNameCache = {}
 M.ItemNameCache = {}
+M.DungeonNameCache = {}
 M.LoggedTranslations = {}
 M.MasterDataUtility = nil
 M.CachedFont = nil
@@ -120,7 +121,19 @@ function M.GetTranslatedMapObjectName(masterDataId)
             if status and outText then
                 local strStatus, str = pcall(function() return outText:ToString() end)
                 M.LogOnce(mapObjectKey .. "_str", string.format("MapObjectName stringify key=%s, strStatus=%s, str=%s", mapObjectKey, tostring(strStatus), tostring(str)))
-                if strStatus and str and str ~= "" and str ~= mapObjectKey then
+                if strStatus and str and str ~= "" then
+                    if str == mapObjectKey then
+                        -- Translation failed (e.g. custom constructed ID string like TreasureBox_GradeX), cache a fallback
+                        if string.find(idStr, "TreasureBox") then
+                            str = configMod.GetTranslation("Chest", "Chest")
+                        elseif string.find(idStr, "Relic") then
+                            str = configMod.GetTranslation("Relic", "Relic")
+                        elseif string.find(idStr, "PalEgg") then
+                            str = configMod.GetTranslation("Egg", "Egg")
+                        else
+                            str = idStr
+                        end
+                    end
                     M.MapObjectNameCache[idStr] = str
                     return str
                 end
@@ -128,7 +141,17 @@ function M.GetTranslatedMapObjectName(masterDataId)
         end
     end
     
-    return nil
+    -- Cache failure fallback to avoid calling GetLocalizedText on every scan loop tick
+    local fallback = idStr
+    if string.find(idStr, "TreasureBox") then
+        fallback = configMod.GetTranslation("Chest", "Chest")
+    elseif string.find(idStr, "Relic") then
+        fallback = configMod.GetTranslation("Relic", "Relic")
+    elseif string.find(idStr, "PalEgg") then
+        fallback = configMod.GetTranslation("Egg", "Egg")
+    end
+    M.MapObjectNameCache[idStr] = fallback
+    return fallback
 end
 
 function M.GetTranslatedDungeonName(overrideId)
@@ -143,6 +166,10 @@ function M.GetTranslatedDungeonName(overrideId)
     
     if configMod.CONFIG.Global.Language ~= "system" and configMod.CONFIG.Global.Language ~= "" then
         return configMod.GetTranslation("Cave")
+    end
+
+    if M.DungeonNameCache[idStr] then
+        return M.DungeonNameCache[idStr]
     end
     
     if not M.MasterDataUtility then
@@ -160,13 +187,20 @@ function M.GetTranslatedDungeonName(overrideId)
             if status and outText then
                 local strStatus, str = pcall(function() return outText:ToString() end)
                 M.LogOnce(dungeonKey .. "_str", string.format("DungeonName stringify key=%s, strStatus=%s, str=%s", dungeonKey, tostring(strStatus), tostring(str)))
-                if strStatus and str and str ~= "" and str ~= dungeonKey then
+                if strStatus and str and str ~= "" then
+                    if str == dungeonKey then
+                        str = configMod.GetTranslation("Cave", "Cave")
+                    end
+                    M.DungeonNameCache[idStr] = str
                     return str
                 end
             end
         end
     end
-    return nil
+    
+    -- Cache translation failure fallback
+    M.DungeonNameCache[idStr] = configMod.GetTranslation("Cave", "Cave")
+    return M.DungeonNameCache[idStr]
 end
 
 function M.GetTranslatedItemName(itemId)
@@ -203,7 +237,10 @@ function M.GetTranslatedItemName(itemId)
             if status and outText then
                 local strStatus, str = pcall(function() return outText:ToString() end)
                 M.LogOnce(itemKey .. "_str", string.format("ItemName stringify key=%s, strStatus=%s, str=%s", itemKey, tostring(strStatus), tostring(str)))
-                if strStatus and str and str ~= "" and str ~= itemKey then
+                if strStatus and str and str ~= "" then
+                    if str == itemKey then
+                        str = idStr
+                    end
                     M.ItemNameCache[idStr] = str
                     return str
                 end
@@ -211,7 +248,9 @@ function M.GetTranslatedItemName(itemId)
         end
     end
     
-    return nil
+    -- Cache failure fallback
+    M.ItemNameCache[idStr] = idStr
+    return idStr
 end
 
 function M.GetTranslatedRelicName(relicType)
@@ -381,4 +420,49 @@ function M.GetStringLength(str)
     return #str
 end
 
+local function GetModDir()
+    local info = debug.getinfo(1, "S")
+    if info and info.source and info.source:sub(1, 1) == "@" then
+        local src = info.source:sub(2)
+        local modDir = src:match("(.*)[/\\ ]Scripts[/\\]HUDLocator[/\\]utils%.lua")
+        if modDir then
+            return modDir
+        end
+    end
+    return "Mods/HUDLocator"
+end
+
+local hasDumpedTextures = false
+function M.DumpAllLoadedTextures()
+    if hasDumpedTextures then return end
+    hasDumpedTextures = true
+    
+    logger.log("Starting background texture scan...")
+    local status, textures = pcall(function() return FindAllOf("Texture2D") end)
+    if status and textures then
+        logger.log(string.format("Texture scan completed. Found %d loaded Texture2D objects.", #textures))
+        local modDir = GetModDir()
+        local filepath = modDir .. "/loaded_textures.txt"
+        logger.log("Writing textures to " .. filepath)
+        
+        local file = io.open(filepath, "w")
+        if file then
+            file:write("Loaded Texture2D objects:\n\n")
+            for _, t in ipairs(textures) do
+                if t:IsValid() then
+                    local name = t:GetFullName()
+                    file:write(name .. "\n")
+                end
+            end
+            file:close()
+            logger.log("Successfully wrote all loaded textures to file!")
+        else
+            logger.log("Failed to open loaded_textures.txt for writing")
+        end
+    else
+        logger.log("Failed to scan Texture2D: " .. tostring(textures))
+    end
+end
+
 return M
+

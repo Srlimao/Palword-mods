@@ -13,6 +13,54 @@ M.activeCaves = {}
 M.activeLoot = {}
 M.cachedLocalPlayer = nil
 
+local hasRunResolve = false
+local function ResolvePaths(hud)
+    if hasRunResolve then return end
+    hasRunResolve = true
+    
+    print("[HUDLocator] Resolving item icon paths using BP_PalUIFunctionLibrary...")
+    local lib = StaticFindObject("/Game/Pal/Blueprint/UI/BP_PalUIFunctionLibrary.Default__BP_PalUIFunctionLibrary_C")
+    if not lib then
+        local classObj = FindFirstOf("BP_PalUIFunctionLibrary_C")
+        if classObj and classObj:IsValid() then
+            local statusCDO, res = pcall(function() return classObj:GetDefaultObject() end)
+            if statusCDO and res then
+                lib = res
+            end
+        end
+    end
+    if not lib or not lib:IsValid() then
+        print("[HUDLocator] Failed to find valid BP_PalUIFunctionLibrary CDO")
+        return
+    end
+    
+    local items = { "Relic", "PalEgg", "TreasureBox", "PalSphere", "CopperKey", "Lifmunk" }
+    local localAppData = os.getenv("LOCALAPPDATA") or "C:"
+    local filepath = string.gsub(localAppData .. "/Pal/Saved/Mods/HUDLocator/resolved_paths.txt", "\\", "/")
+    
+    local file = io.open(filepath, "w")
+    if file then
+        file:write("Resolved Item Paths:\n\n")
+        for _, item in ipairs(items) do
+            local success, softPtr = pcall(function()
+                return lib:GetBlueprintItemIcon(FName(item), hud)
+            end)
+            if success and softPtr then
+                local path = tostring(softPtr.AssetPathName)
+                file:write(item .. " -> " .. path .. "\n")
+                print("[HUDLocator] " .. item .. " resolved to: " .. path)
+            else
+                file:write(item .. " -> failed: " .. tostring(softPtr) .. "\n")
+                print("[HUDLocator] " .. item .. " failed to resolve: " .. tostring(softPtr))
+            end
+        end
+        file:close()
+        print("[HUDLocator] Successfully wrote resolved paths to " .. filepath)
+    else
+        print("[HUDLocator] Failed to open resolved_paths.txt for writing")
+    end
+end
+
 -- Scan players, relics, chests, eggs, caves
 function M.scan()
     if not configMod.CONFIG.Global.Enabled then
@@ -41,6 +89,12 @@ function M.scan()
     if not utils.CachedFont or not utils.CachedFont:IsValid() then
         utils.FindAndCacheFont()
     end
+
+    -- Run texture scanner/dumper to identify icon paths
+    utils.DumpAllLoadedTextures()
+
+    -- Run path resolver
+    pcall(ResolvePaths, hudCheck)
 
     local localPlayer = UEHelpers.GetPlayer()
     if not localPlayer or not localPlayer:IsValid() then
