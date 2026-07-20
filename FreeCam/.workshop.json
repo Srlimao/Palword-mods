@@ -1,5 +1,5 @@
 {
-  "publishedfileid": "3768635785",
-  "changenote": "New",
-  "last_published_version": "1.0.0"
+    "publishedfileid":  "3768635785",
+    "changenote":  "Fixed hologram visibility overrides, resolved sliding offset feedback loop, and fixed falling through foundations on menu exit.",
+    "last_published_version":  "1.0.1"
 }
