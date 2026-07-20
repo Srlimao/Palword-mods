@@ -1,5 +1,5 @@
 {
     "publishedfileid":  "3764265846",
-    "changenote":  "Remove URL configuration query parameters from Configurator link",
-    "last_published_version":  "2.5.1"
+    "changenote":  "HUDLocator 2.6.0: Mod menu revamp, dynamic UI scaling, global font scale setting, and removed ALT requirement for menu navigation",
+    "last_published_version":  "2.6.0"
 }
