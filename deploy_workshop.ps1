@@ -1,6 +1,8 @@
 param (
     [Parameter(Mandatory=$true)]
-    [string]$ModName
+    [string]$ModName,
+    [Parameter(Mandatory=$false)]
+    [string]$ChangeNote
 )
 
 $ErrorActionPreference = "Stop"
@@ -52,7 +54,11 @@ $Workshop = Get-Content $WorkshopFile -Raw | ConvertFrom-Json
 
 $Version = $Info.Version
 $PublishedFileId = $Workshop.publishedfileid
-$ChangeNote = $Workshop.changenote
+
+# Use passed ChangeNote, otherwise fallback to .workshop.json value
+if (-not $ChangeNote -or $ChangeNote -eq "") {
+    $ChangeNote = $Workshop.changenote
+}
 $ThumbnailName = $Info.Thumbnail
 
 if (-not $PublishedFileId -or $PublishedFileId -eq "") {
@@ -110,6 +116,15 @@ $PreviewFileAbs = (Resolve-Path (Join-Path $ModStagingDir $ThumbnailName)).Path
 $ContentFolderEsc = $ContentFolderAbs.Replace('\', '\\')
 $PreviewFileEsc = $PreviewFileAbs.Replace('\', '\\')
 
+# Load description if available
+$DescriptionFile = Join-Path $ModDir "description_steam.txt"
+$DescriptionEsc = ""
+if (Test-Path $DescriptionFile) {
+    $DescriptionContent = Get-Content $DescriptionFile -Raw
+    $DescriptionEsc = $DescriptionContent.Replace('\', '\\').Replace('"', '\"')
+    Write-Host "Found description_steam.txt. Including description in upload VDF." -ForegroundColor Cyan
+}
+
 $VdfContent = @"
 "workshopitem"
 {
@@ -118,8 +133,13 @@ $VdfContent = @"
   "contentfolder" "$ContentFolderEsc"
   "previewfile" "$PreviewFileEsc"
   "changenote" "$ChangeNote"
-}
 "@
+
+if ($DescriptionEsc -ne "") {
+    $VdfContent += "`n  `"description`" `"$DescriptionEsc`""
+}
+
+$VdfContent += "`n}"
 
 [System.IO.File]::WriteAllText($VdfPath, $VdfContent)
 Write-Host "Generated VDF at: $VdfPath" -ForegroundColor Gray
@@ -128,7 +148,7 @@ Write-Host "Generated VDF at: $VdfPath" -ForegroundColor Gray
 Write-Host "Launching SteamCMD to upload mod (ID: $PublishedFileId) to Steam Workshop..." -ForegroundColor Yellow
 Write-Host "SteamCMD Command: & '$SteamCmdPath' +login $SteamUsername +workshop_build_item '$VdfPath' +quit" -ForegroundColor DarkGray
 
-$OutFile = Join-Path $ModStagingDir "steamcmd_output.log"
+$OutFile = Join-Path $StagingDir "steamcmd_output_$ModName.log"
 $Process = Start-Process -FilePath $SteamCmdPath -ArgumentList "+login", $SteamUsername, "+workshop_build_item", "`"$VdfPath`"", "+quit" -Wait -NoNewWindow -PassThru -RedirectStandardOutput $OutFile
 
 # Print log to console
@@ -138,7 +158,7 @@ $LogContent | Write-Host
 # 6. Analyze Output and Update Metadata
 $Success = $false
 foreach ($line in $LogContent) {
-    if ($line -like "*Success. Workshop item ID*" -or $line -like "*Success. Update workshop item*") {
+    if ($line -like "*Success. Workshop item ID*" -or $line -like "*Success. Update workshop item*" -or $line -like "*Committing update...Success*") {
         $Success = $true
         break
     }
@@ -149,9 +169,10 @@ if ($Success) {
     
     # Update .workshop.json
     $Workshop.last_published_version = $Version
+    $Workshop.changenote = $ChangeNote
     $UpdatedJson = $Workshop | ConvertTo-Json
     [System.IO.File]::WriteAllText($WorkshopFile, $UpdatedJson)
-    Write-Host "Updated last_published_version in .workshop.json to $Version." -ForegroundColor Gray
+    Write-Host "Updated last_published_version and changenote in .workshop.json." -ForegroundColor Gray
 } else {
     Write-Error "SteamCMD failed to publish the mod. Please check the logs above or steamcmd_output.log."
 }

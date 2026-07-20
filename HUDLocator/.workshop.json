@@ -1,5 +1,5 @@
 {
-  "publishedfileid": "3764265846",
-  "changenote": "- Added option to filter Chest,Junk or both",
-  "last_published_version": "2.4.0"
+    "publishedfileid":  "3764265846",
+    "changenote":  "⚡ Optimized tracker spatial checks to avoid C++ FVector reflection, added Note Tracker, and improved translation defaults",
+    "last_published_version":  "2.5.0"
 }
