@@ -1,5 +1,5 @@
 {
     "publishedfileid":  "3764265846",
-    "changenote":  "Update workshop page with Simplified and Traditional Chinese localized descriptions",
-    "last_published_version":  "2.5.0"
+    "changenote":  "Remove URL configuration query parameters from Configurator link",
+    "last_published_version":  "2.5.1"
 }

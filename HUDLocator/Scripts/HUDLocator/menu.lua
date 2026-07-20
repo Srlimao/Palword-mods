@@ -80,12 +80,6 @@ local menuItems = {
         type = "action",
         action = function()
             local url = configMod.ConfiguratorURL or "https://pal-mod-configurator.dunhas.com/"
-            local json = require("HUDLocator.json")
-            local success, jsonStr = pcall(function() return json.stringify(CONFIG) end)
-            if success and jsonStr then
-                local encoded = utils.UrlEncode(jsonStr)
-                url = url .. "?config=" .. encoded
-            end
             utils.OpenURL(url)
             popup.Show(configMod.GetTranslation("Menu_OpeningURL", "Opening Configurator..."), 120)
             
