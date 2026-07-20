@@ -120,7 +120,7 @@ $PreviewFileEsc = $PreviewFileAbs.Replace('\', '\\')
 $DescriptionFile = Join-Path $ModDir "description_steam.txt"
 $DescriptionEsc = ""
 if (Test-Path $DescriptionFile) {
-    $DescriptionContent = Get-Content $DescriptionFile -Raw
+    $DescriptionContent = Get-Content $DescriptionFile -Encoding UTF8 -Raw
     $DescriptionEsc = $DescriptionContent.Replace('\', '\\').Replace('"', '\"')
     Write-Host "Found description_steam.txt. Including description in upload VDF." -ForegroundColor Cyan
 }
@@ -141,7 +141,7 @@ if ($DescriptionEsc -ne "") {
 
 $VdfContent += "`n}"
 
-[System.IO.File]::WriteAllText($VdfPath, $VdfContent)
+[System.IO.File]::WriteAllText($VdfPath, $VdfContent, [System.Text.Encoding]::UTF8)
 Write-Host "Generated VDF at: $VdfPath" -ForegroundColor Gray
 
 # 5. Run SteamCMD

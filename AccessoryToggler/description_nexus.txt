@@ -55,36 +55,3 @@ A client-side UI/Lua mod for Palworld that lets you instantly equip or unequip a
 [*] [b]%LOCALAPPDATA%\Pal\Saved\Mods\AccessoryToggler\config.json[/b]
 [i](Generated automatically on first load)[/i]
 [/list]
-
-[hr][/hr]
-
-[size=4][b]Chinese Description[/b][/size]
-
-饰品快捷装备切换模组，无需打开背包，即可使用快捷键瞬间装备或卸下饰品（如慈悲戒指、抗寒/抗热内衣）。包含游戏内状态 HUD 悬浮窗。
-
-[size=3][b]主要功能[/b][/size]
-
-[list]
-[*] [b]快捷键切换[/b]：使用快捷键瞬间切换饰品栏 1 到 4（默认快捷键：[b]5[/b]、[b]6[/b]、[b]7[/b]、[b]8[/b]）。
-[*] [b]状态 HUD[/b]：在屏幕上显示当前装备的饰品及其启用/禁用状态。
-[*] [b]HUD 交互式调整模式[/b]：按 [b]Alt + F7[/b] 进入编辑模式，使用方向键移动 HUD，使用 [b]+[/b] / [b]-[/b] 调整大小，按 [b]Alt + R[/b] 恢复默认位置。
-[*] [b]配置重载[/b]：在非编辑模式下按 [b]Alt + R[/b] 从配置文件重载设置。
-[*] [b]自动状态保存[/b]：跨存档或重启自动记忆 HUD 的位置、缩放比例和饰品状态。
-[*] [b]多语言支持[/b]：根据游戏语言自动读取饰品中文名称。
-[/list]
-
-[size=3][b]快捷键[/b][/size]
-
-[list]
-[*] [b]5, 6, 7, 8[/b]：切换饰品栏 1、2、3、4。
-[*] [b]Alt + F7[/b]：开启/关闭 HUD 编辑模式。
-[*] [b]Alt + R[/b]：恢复 HUD 默认位置（编辑模式下）/ 重新加载配置（普通模式下）。
-[*] [b]方向键[/b]：移动 HUD 位置（编辑模式下）。
-[*] [b]+ / -[/b]：缩放 HUD 大小（编辑模式下）。
-[/list]
-
-[size=3][b]配置文件路径[/b][/size]
-
-[list]
-[*] [b]%LOCALAPPDATA%\Pal\Saved\Mods\AccessoryToggler\config.json[/b]
-[/list]

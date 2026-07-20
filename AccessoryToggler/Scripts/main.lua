@@ -25,7 +25,7 @@ local function HandleEditModeHolding()
         return 
     end
     
-    local pc = UEHelpers:GetPlayerController()
+    local pc = UEHelpers.GetPlayerController()
     if not pc or not pc:IsValid() then return end
     
     local dx = 0

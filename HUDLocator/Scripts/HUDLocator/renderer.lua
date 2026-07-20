@@ -158,8 +158,9 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     if not CONFIG.Global.Enabled then return end
     
     if not cachedLocalPlayer or not cachedLocalPlayer:IsValid() then return end
-    local playerPos = cachedLocalPlayer:K2_GetActorLocation()
-    if not playerPos then return end
+    local uePlayerPos = cachedLocalPlayer:K2_GetActorLocation()
+    if not uePlayerPos then return end
+    local playerPos = { X = uePlayerPos.X, Y = uePlayerPos.Y, Z = uePlayerPos.Z }
 
     -- 1. Draw Players
     if CONFIG.Players.Enabled then

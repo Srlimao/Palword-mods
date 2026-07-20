@@ -72,8 +72,9 @@ function M.ScanRelics(playerPos, maxDistSq)
     for _, relic in ipairs(relics) do
         if relic:IsValid() and not utils.IsRelicPicked(relic) then
             pcall(function()
-                local relicPos = relic:K2_GetActorLocation()
-                if relicPos then
+                local ueRelicPos = relic:K2_GetActorLocation()
+                if ueRelicPos then
+                    local relicPos = { X = ueRelicPos.X, Y = ueRelicPos.Y, Z = ueRelicPos.Z }
                     if utils.GetDistanceSq(relicPos, playerPos) <= maxDistSq then
                         local name = nil
                         local statusType, relicType = pcall(function() return relic:GetRelicType() end)
@@ -106,8 +107,9 @@ function M.ScanChests(playerPos, maxDistSq)
     for _, chest in ipairs(chests) do
         if chest:IsValid() and not utils.IsChestOpened(chest) then
             pcall(function()
-                local chestPos = chest:K2_GetActorLocation()
-                if chestPos then
+                local ueChestPos = chest:K2_GetActorLocation()
+                if ueChestPos then
+                    local chestPos = { X = ueChestPos.X, Y = ueChestPos.Y, Z = ueChestPos.Z }
                     if utils.GetDistanceSq(chestPos, playerPos) <= maxDistSq then
                         local name = configMod.GetTranslation("Chest", "Chest")
                         local isJunk = false
@@ -181,8 +183,9 @@ function M.ScanEggs(playerPos, maxDistSq, eggFilter, debug)
         local isPicked = utils.IsEggPicked(egg)
         if egg:IsValid() and not isPicked then
             pcall(function()
-                local eggPos = egg:K2_GetActorLocation()
-                if eggPos then
+                local ueEggPos = egg:K2_GetActorLocation()
+                if ueEggPos then
+                    local eggPos = { X = ueEggPos.X, Y = ueEggPos.Y, Z = ueEggPos.Z }
                     if utils.GetDistanceSq(eggPos, playerPos) <= maxDistSq then
                         local sizeStr = ""
                         local statusScale, scale = pcall(function() return egg.Scale end)
@@ -266,8 +269,9 @@ function M.ScanCaves(playerPos, maxDistSq)
     for _, cave in ipairs(caves) do
         if cave:IsValid() then
             local status, err = pcall(function()
-                local cavePos = cave:K2_GetActorLocation()
-                if cavePos then
+                local ueCavePos = cave:K2_GetActorLocation()
+                if ueCavePos then
+                    local cavePos = { X = ueCavePos.X, Y = ueCavePos.Y, Z = ueCavePos.Z }
                     successCount = successCount + 1
                     local distSq = utils.GetDistanceSq(cavePos, playerPos)
                     if distSq < closestDistSq then
@@ -415,8 +419,9 @@ function M.ScanLoot(playerPos, maxDistSq, filters)
     for _, actor in ipairs(uniqueActors) do
         if actor:IsValid() then
             pcall(function()
-                local lootPos = actor:K2_GetActorLocation()
-                if lootPos then
+                local ueLootPos = actor:K2_GetActorLocation()
+                if ueLootPos then
+                    local lootPos = { X = ueLootPos.X, Y = ueLootPos.Y, Z = ueLootPos.Z }
                     if utils.GetDistanceSq(lootPos, playerPos) <= maxDistSq then
                         local name, itemIdStr = GetItemDetails(actor)
                         if name and name ~= "" then
@@ -458,8 +463,9 @@ function M.ScanNotes(playerPos, maxDistSq)
     for _, note in ipairs(notes) do
         if note:IsValid() and not utils.IsNotePicked(note) then
             pcall(function()
-                local notePos = note:K2_GetActorLocation()
-                if notePos then
+                local ueNotePos = note:K2_GetActorLocation()
+                if ueNotePos then
+                    local notePos = { X = ueNotePos.X, Y = ueNotePos.Y, Z = ueNotePos.Z }
                     if utils.GetDistanceSq(notePos, playerPos) <= maxDistSq then
                         local name = nil
                         local statusName, noteKey = pcall(function() return note.NoteRowName.Key end)

@@ -50,7 +50,7 @@ end
 
 -- Toggle Free Camera Mode
 function camera.ToggleFreeCam()
-    local pc = UEHelpers:GetPlayerController()
+    local pc = UEHelpers.GetPlayerController()
     if not pc or not pc:IsValid() then return end
     
     local localPlayer = UEHelpers.GetPlayer()
@@ -258,9 +258,21 @@ function camera.UpdateCameraMovement()
     currentCameraRotation = {Pitch = controlRot.Pitch, Yaw = controlRot.Yaw, Roll = controlRot.Roll}
     
     -- Get direction vectors from the camera component itself
-    local forward = cameraComponent:GetForwardVector()
-    local right = cameraComponent:GetRightVector()
-    local up = cameraComponent:GetUpVector()
+    local ueForward = cameraComponent:GetForwardVector()
+    local ueRight = cameraComponent:GetRightVector()
+    local ueUp = cameraComponent:GetUpVector()
+    
+    local fX, fY, fZ = ueForward.X, ueForward.Y, ueForward.Z
+    if type(fX) == "userdata" and fX.get then fX = fX:get() fY = fY:get() fZ = fZ:get() end
+    local forward = { X = fX, Y = fY, Z = fZ }
+    
+    local rX, rY, rZ = ueRight.X, ueRight.Y, ueRight.Z
+    if type(rX) == "userdata" and rX.get then rX = rX:get() rY = rY:get() rZ = rZ:get() end
+    local right = { X = rX, Y = rY, Z = rZ }
+    
+    local uX, uY, uZ = ueUp.X, ueUp.Y, ueUp.Z
+    if type(uX) == "userdata" and uX.get then uX = uX:get() uY = uY:get() uZ = uZ:get() end
+    local up = { X = uX, Y = uY, Z = uZ }
     
     -- Calculate movement direction
     local moveDir = {X = 0.0, Y = 0.0, Z = 0.0}

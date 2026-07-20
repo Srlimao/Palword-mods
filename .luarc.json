@@ -8,7 +8,10 @@
         "HUDLocator/Scripts/?.lua",
         "AccessoryToggler/Scripts/?.lua",
         "ProductionRepeat/Scripts/?.lua",
-        "IdleServerShutdown/Scripts/?.lua"
+        "IdleServerShutdown/Scripts/?.lua",
+        "FreeCam/Scripts/?.lua",
+        "HoldToFire/Scripts/?.lua",
+        "ModConfigurator/Scripts/?.lua"
     ],
     "workspace.maxPreload": 100000,
     "workspace.preloadFileSize": 10000,
@@ -36,6 +39,11 @@
         "GetEngineVersion",
         "GetUE4SSVersion",
         "IsUE4SSLoaded",
-        "Print"
+        "Print",
+        "CreateInvalidObject",
+        "ModRef",
+        "UnrealVersion",
+        "EFindName",
+        "NAME_None"
     ]
 }

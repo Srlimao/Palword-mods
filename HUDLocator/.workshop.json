@@ -1,5 +1,5 @@
 {
     "publishedfileid":  "3764265846",
-    "changenote":  "⚡ Optimized tracker spatial checks to avoid C++ FVector reflection, added Note Tracker, and improved translation defaults",
+    "changenote":  "Update workshop page with Simplified and Traditional Chinese localized descriptions",
     "last_published_version":  "2.5.0"
 }
