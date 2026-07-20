@@ -31,7 +31,7 @@ local menuItems = {
         transKey = "Settings_ShowRelics"
     },
     {
-        name = "Show Chests",
+        name = "Chest/Junk Tracker",
         get = function() return CONFIG.Chests.Enabled end,
         set = function(v) CONFIG.Chests.Enabled = v end,
         type = "boolean",
@@ -120,6 +120,17 @@ local menuItems = {
         transKey = "Settings_ScanInterval"
     },
     {
+        name = "Font Scale",
+        get = function() return CONFIG.Global.FontScale or 1.0 end,
+        set = function(v) CONFIG.Global.FontScale = v end,
+        type = "number",
+        min = 0.5,
+        max = 2.0,
+        step = 0.1,
+        format = function(v) return string.format("%.1fx", v or 1.0) end,
+        transKey = "Settings_FontScale"
+    },
+    {
         name = "Language",
         get = function() return CONFIG.Global.Language or "system" end,
         set = function(v) CONFIG.Global.Language = v end,
@@ -128,6 +139,22 @@ local menuItems = {
         transKey = "Settings_Language"
     }
 }
+
+local function GetVisibleItems()
+    local visible = {}
+    for _, item in ipairs(menuItems) do
+        local isVisible = true
+        if item.name == "Chest Filter" then
+            if not CONFIG.Chests.Enabled then
+                isVisible = false
+            end
+        end
+        if isVisible then
+            table.insert(visible, item)
+        end
+    end
+    return visible
+end
 
 function M.Toggle()
     M.isOpen = not M.isOpen
@@ -145,14 +172,24 @@ end
 function M.Navigate(dir)
     if not M.isOpen then return end
 
+    local visibleItems = GetVisibleItems()
+    if #visibleItems == 0 then return end
+
+    -- Ensure selectedIndex is within range of visible items
+    if selectedIndex > #visibleItems then
+        selectedIndex = #visibleItems
+    elseif selectedIndex < 1 then
+        selectedIndex = 1
+    end
+
     if dir == "up" then
         selectedIndex = selectedIndex - 1
-        if selectedIndex < 1 then selectedIndex = #menuItems end
+        if selectedIndex < 1 then selectedIndex = #visibleItems end
     elseif dir == "down" then
         selectedIndex = selectedIndex + 1
-        if selectedIndex > #menuItems then selectedIndex = 1 end
+        if selectedIndex > #visibleItems then selectedIndex = 1 end
     elseif dir == "left" or dir == "right" then
-        local item = menuItems[selectedIndex]
+        local item = visibleItems[selectedIndex]
         if item.type == "action" then
             if item.action then
                 pcall(item.action)
@@ -213,57 +250,41 @@ function M.Draw(hud, SizeX, SizeY)
     -- Retrieve cached font and scale multiplier
     local font, scaleMult = utils.GetFontAndScale()
 
-    -- Define menu size & positioning (Left side HUD, modern layout)
-    local menuW = font and 480.0 or 400.0
-    local rowH = font and (28.0 + 8.0 * scaleMult) or 34.0
-    local menuH = font and (450.0 + 60.0 * scaleMult + rowH) or (480.0 + rowH)
-    local menuX = 50.0
-    local menuY = (screenH / 2.0) - (menuH / 2.0)
-
-    local padL = font and 30.0 or 20.0
-    local padHighlight = font and 20.0 or 10.0
-    local padText = font and 28.0 or 15.0
-    local padVal = font and 35.0 or 25.0
-
-    -- Draw modern semi-transparent glass panel
-    local cardBg = { R = 0.05, G = 0.07, B = 0.15, A = 0.85 }
-    local borderCol = { R = 0.0, G = 0.95, B = 1.0, A = 0.6 }
-    local borderShadow = { R = 0.0, G = 0.0, B = 0.0, A = 0.9 }
-
-    -- Main panel drop shadow
-    hud:DrawRect(borderShadow, menuX - 2.0, menuY - 2.0, menuW + 4.0, menuH + 4.0)
-    -- Main background panel
-    hud:DrawRect(cardBg, menuX, menuY, menuW, menuH)
-    -- Sleek top accent line (Neon Blue)
-    hud:DrawRect(borderCol, menuX, menuY, menuW, 3.0)
-
-    -- Header text
-    local headerText = configMod.GetTranslation("Settings_Title", "HUD LOCATOR SETTINGS")
-    utils.DrawText(hud, headerText, { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }, menuX + padL, menuY + 15.0, 1.2, false)
-
-    -- Subheader keybind tips
-    local tipText = configMod.GetTranslation("Menu_Tips", "ALT+Up/Down: Navigate | ALT+Left/Right: Change")
-    local tipY = font and (menuY + 38.0 + 8.0 * scaleMult) or (menuY + 38.0)
-    utils.DrawText(hud, tipText, { R = 0.6, G = 0.6, B = 0.7, A = 1.0 }, menuX + padL, tipY, 0.75, false)
-
-    -- Separator line
-    local sepY = font and (menuY + 52.0 + 12.0 * scaleMult) or (menuY + 52.0)
-    hud:DrawRect({ R = 0.2, G = 0.2, B = 0.3, A = 0.4 }, menuX + padL, sepY, menuW - padL * 2, 1.0)
-
-    -- Draw menu items
-    local startY = font and (menuY + 60.0 + 12.0 * scaleMult) or (menuY + 65.0)
-
-    for i, item in ipairs(menuItems) do
+    -- Measure text widths to dynamically size the menu and position the values
+    local maxNameW = 0
+    local maxValW = 0
+    local charW = font and (7.0 + 2.0 * scaleMult) or 7.5
+    
+    local itemNames = {}
+    local formattedValues = {}
+    
+    local visibleItems = GetVisibleItems()
+    
+    -- Ensure selectedIndex is within range of visible items
+    if selectedIndex > #visibleItems then
+        selectedIndex = math.max(1, #visibleItems)
+    elseif selectedIndex < 1 then
+        selectedIndex = 1
+    end
+    
+    for i, item in ipairs(visibleItems) do
         local isSelected = (i == selectedIndex)
-        local itemY = startY + (i - 1) * rowH
-
-        -- Selection highlight background row bar
-        if isSelected then
-            local highlightBg = { R = 0.0, G = 0.95, B = 1.0, A = 0.15 }
-            hud:DrawRect(highlightBg, menuX + padHighlight, itemY - 4.0, menuW - padHighlight * 2, rowH - 4.0)
+        
+        -- Formatted Name
+        local prefix = isSelected and "> " or "  "
+        local displayName = configMod.GetTranslation(item.transKey, item.name)
+        local displayStr = prefix .. displayName
+        itemNames[i] = displayStr
+        
+        local nameW = utils.GetTextSize(hud, displayStr, 1.0)
+        if not nameW or nameW == 0 then
+            nameW = utils.GetStringLength(displayStr) * charW * scaleMult
         end
-
-        -- Get display value
+        if nameW > maxNameW then
+            maxNameW = nameW
+        end
+        
+        -- Formatted Value
         local rawVal = item.get()
         local valStr = ""
         if item.type == "boolean" then
@@ -282,10 +303,106 @@ function M.Draw(hud, SizeX, SizeY)
         elseif item.type == "action" then
             valStr = configMod.GetTranslation(item.valKey or "Action_OpenURL", "Alt+Right to Open")
         end
+        
+        local valueText = isSelected and "[ " .. valStr .. " ]" or valStr
+        formattedValues[i] = valueText
+        
+        local valW = utils.GetTextSize(hud, valueText, 1.0)
+        if not valW or valW == 0 then
+            valW = utils.GetStringLength(valueText) * charW * scaleMult
+        end
+        if valW > maxValW then
+            maxValW = valW
+        end
+    end
+
+    -- Header and tip translations
+    local headerText = configMod.GetTranslation("Settings_Title", "HUD LOCATOR SETTINGS")
+    local tipText = configMod.GetTranslation("Menu_Tips", "ALT+Up/Down: Navigate | ALT+Left/Right: Change")
+    local footerText = configMod.GetTranslation("Menu_Footer", "ALT+F6 to Close & Save Settings")
+
+    -- Pad definitions
+    local padL = font and 30.0 or 20.0
+    local padHighlight = font and 20.0 or 10.0
+    local padText = font and 28.0 or 15.0
+    local padVal = font and 35.0 or 25.0
+    local gap = font and 40.0 or 30.0
+
+    -- Dynamic width calculation
+    local contentW = maxNameW + maxValW + padText + padVal + gap
+    
+    local headerW = utils.GetTextSize(hud, headerText, 1.2)
+    if not headerW or headerW == 0 then
+        headerW = utils.GetStringLength(headerText) * charW * 1.2 * scaleMult
+    end
+    
+    local tipW = utils.GetTextSize(hud, tipText, 0.75)
+    if not tipW or tipW == 0 then
+        tipW = utils.GetStringLength(tipText) * charW * 0.75 * scaleMult
+    end
+    
+    local footerW = utils.GetTextSize(hud, footerText, 0.75)
+    if not footerW or footerW == 0 then
+        footerW = utils.GetStringLength(footerText) * charW * 0.75 * scaleMult
+    end
+    
+    local maxHeaderFooterW = math.max(headerW, tipW, footerW) + padL * 2
+    local menuW = math.max(font and 480.0 or 400.0, contentW, maxHeaderFooterW)
+
+    -- Define menu sizing & positioning (Left side HUD, modern layout)
+    local rowH = font and (28.0 + 8.0 * scaleMult) or 34.0
+    local menuX = 50.0
+
+    -- Sizing height and offsets dynamically
+    local headerOffset = 15.0
+    local tipOffset = font and (38.0 + 8.0 * scaleMult) or 38.0
+    local topSepOffset = font and (52.0 + 12.0 * scaleMult) or 52.0
+    local startYOffset = font and (60.0 + 12.0 * scaleMult) or 65.0
+    
+    local itemsBottomOffset = startYOffset + #visibleItems * rowH
+    local bottomSepOffset = itemsBottomOffset + 12.0
+    local footerOffset = bottomSepOffset + 15.0
+    local menuH = footerOffset + (font and 25.0 or 20.0)
+    
+    local menuY = (screenH / 2.0) - (menuH / 2.0)
+
+    -- Draw modern semi-transparent glass panel
+    local cardBg = { R = 0.05, G = 0.07, B = 0.15, A = 0.85 }
+    local borderCol = { R = 0.0, G = 0.95, B = 1.0, A = 0.6 }
+    local borderShadow = { R = 0.0, G = 0.0, B = 0.0, A = 0.9 }
+
+    -- Main panel drop shadow
+    hud:DrawRect(borderShadow, menuX - 2.0, menuY - 2.0, menuW + 4.0, menuH + 4.0)
+    -- Main background panel
+    hud:DrawRect(cardBg, menuX, menuY, menuW, menuH)
+    -- Sleek top accent line (Neon Blue)
+    hud:DrawRect(borderCol, menuX, menuY, menuW, 3.0)
+
+    -- Header text
+    utils.DrawText(hud, headerText, { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }, menuX + padL, menuY + headerOffset, 1.2, false)
+
+    -- Subheader keybind tips
+    utils.DrawText(hud, tipText, { R = 0.6, G = 0.6, B = 0.7, A = 1.0 }, menuX + padL, menuY + tipOffset, 0.75, false)
+
+    -- Separator line
+    hud:DrawRect({ R = 0.2, G = 0.2, B = 0.3, A = 0.4 }, menuX + padL, menuY + topSepOffset, menuW - padL * 2, 1.0)
+
+    -- Draw menu items
+    for i, item in ipairs(visibleItems) do
+        local isSelected = (i == selectedIndex)
+        local itemY = menuY + startYOffset + (i - 1) * rowH
+
+        -- Selection highlight background row bar
+        if isSelected then
+            local highlightBg = { R = 0.0, G = 0.95, B = 1.0, A = 0.15 }
+            hud:DrawRect(highlightBg, menuX + padHighlight, itemY - 4.0, menuW - padHighlight * 2, rowH - 4.0)
+        end
 
         -- Color definitions
         local nameColor = isSelected and { R = 0.0, G = 0.95, B = 1.0, A = 1.0 } or
             { R = 0.9, G = 0.9, B = 0.95, A = 1.0 }
+        
+        local rawVal = item.get()
         local valColor = { R = 1.0, G = 1.0, B = 1.0, A = 1.0 }
         if item.type == "boolean" then
             valColor = rawVal and { R = 0.0, G = 0.96, B = 0.83, A = 1.0 } or { R = 1.0, G = 0.35, B = 0.37, A = 1.0 }
@@ -294,25 +411,24 @@ function M.Draw(hud, SizeX, SizeY)
         end
 
         -- Name string
-        local prefix = isSelected and "> " or "  "
-        local displayName = configMod.GetTranslation(item.transKey, item.name)
-        local displayStr = prefix .. displayName
+        local displayStr = itemNames[i]
         utils.DrawText(hud, displayStr, nameColor, menuX + padText, itemY, 1.0, false)
 
         -- Value string (aligned right)
-        local valueText = isSelected and "[ " .. valStr .. " ]" or valStr
-        local charW = font and (7.0 + 2.0 * scaleMult) or 7.5
-        local valueW = utils.GetStringLength(valueText) * charW * scaleMult
-        local valueX = menuX + menuW - valueW - padVal
+        local valueText = formattedValues[i]
+        local valW = utils.GetTextSize(hud, valueText, 1.0)
+        if not valW or valW == 0 then
+            valW = utils.GetStringLength(valueText) * charW * scaleMult
+        end
+        local valueX = menuX + menuW - valW - padVal
         utils.DrawText(hud, valueText, valColor, valueX, itemY, 1.0, false)
     end
 
-    -- Separator line
-    hud:DrawRect({ R = 0.2, G = 0.2, B = 0.3, A = 0.4 }, menuX + padL, menuY + menuH - 50.0, menuW - padL * 2, 1.0)
+    -- Bottom separator line
+    hud:DrawRect({ R = 0.2, G = 0.2, B = 0.3, A = 0.4 }, menuX + padL, menuY + bottomSepOffset, menuW - padL * 2, 1.0)
 
     -- Footer status / version
-    local footerText = configMod.GetTranslation("Menu_Footer", "ALT+F6 to Close & Save Settings")
-    utils.DrawText(hud, footerText, { R = 0.5, G = 0.5, B = 0.6, A = 1.0 }, menuX + padL, menuY + menuH - 32.0, 0.75,
+    utils.DrawText(hud, footerText, { R = 0.5, G = 0.5, B = 0.6, A = 1.0 }, menuX + padL, menuY + footerOffset, 0.75,
         false)
 end
 

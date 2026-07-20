@@ -11,6 +11,7 @@ M.CONFIG = {
         Enabled = true,
         Language = "system",
         ScanIntervalMs = 1500,
+        FontScale = 1.0,
         Debug = false,
         KeyBinds = {
             ToggleMenu = "F6",
@@ -223,6 +224,7 @@ local defaultJSON = [[{
     "Enabled": true,
     "Language": "system",
     "ScanIntervalMs": 1500,
+    "FontScale": 1.0,
     "Debug": false,
     "KeyBinds": {
       "ToggleMenu": "F6",

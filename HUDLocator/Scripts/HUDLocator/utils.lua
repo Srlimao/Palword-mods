@@ -17,8 +17,12 @@ local fontScanInterval = 10.0
 
 function M.GetFontAndScale()
     local font = M.CachedFont
-    local scaleMult = font and M.FontScaleMultiplier or 1.0
-    return font, scaleMult
+    local systemMult = font and M.FontScaleMultiplier or 1.0
+    local userScale = 1.0
+    if configMod.CONFIG and configMod.CONFIG.Global and configMod.CONFIG.Global.FontScale then
+        userScale = configMod.CONFIG.Global.FontScale
+    end
+    return font, systemMult * userScale
 end
 
 function M.OpenURL(url)

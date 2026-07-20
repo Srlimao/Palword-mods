@@ -24,7 +24,7 @@ A client-side UI mod for Palworld that displays customizable floating 3D HUD ove
 ## In-Game Controls
 
 - **Alt + F6**: Toggle settings menu.
-- **Alt + Up/Down/Left/Right**: Navigate menu and adjust values.
+- **Up/Down/Left/Right**: Navigate menu and adjust values.
 - **Alt + R**: Reload configuration from settings file.
 
 ---
@@ -65,7 +65,7 @@ A client-side UI mod for Palworld that displays customizable floating 3D HUD ove
 ### 快捷键
 
 - **Alt + F6**：开启/关闭内置设置菜单。
-- **Alt + 方向键**：在菜单中选择项目并调整参数。
+- **方向键**：在菜单中选择项目并调整参数。
 - **Alt + R**：从配置文件重新加载配置。
 
 ### 配置文件路径
