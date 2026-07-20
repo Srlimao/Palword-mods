@@ -40,8 +40,9 @@ Consolidated into **HUDLocator**:
 
 ## 🚀 Deployment & Testing
 
-For local testing and development, always use the automated `debugDeploy.bat` script located within each mod's directory to copy files to your game's debug folder (e.g. `HUDLocatorDEBUG` or `AccessoryTogglerDEBUG`), rather than manually copying files to the production mod folders.
+For local testing and development, always use the automated `debugDeploy.bat` script located within each mod's directory to copy files to your alternative game client's debug folder under `D:\Games\Palworld_Alt\`, rather than manually copying files to your primary Steam game folders.
 
+- **FreeCam:** Run [FreeCam/debugDeploy.bat](file:///d:/Mods/Palword/FreeCam/debugDeploy.bat) to deploy to `FreeCamDEBUG`.
 - **HUDLocator:** Run [HUDLocator/debugDeploy.bat](file:///d:/Mods/Palword/HUDLocator/debugDeploy.bat) to deploy to `HUDLocatorDEBUG`.
 - **AccessoryToggler:** Run [AccessoryToggler/debugDeploy.bat](file:///d:/Mods/Palword/AccessoryToggler/debugDeploy.bat) to deploy to `AccessoryTogglerDEBUG`.
 
