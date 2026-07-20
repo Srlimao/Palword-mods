@@ -115,18 +115,18 @@ METADATA_ACCESSORY_TOGGLER = {
         "options": ["system", "en", "es", "ja", "zh-Hans", "zh-Hant", "fr", "it", "de", "ko", "pt-BR", "ru", "th", "vi", "id", "tr", "pl", "es-MX"]
     },
     "HUDX": {
-        "description": "Manual horizontal coordinate of the display HUD widget. Leave null for auto/drag-and-drop position.",
+        "description": "Manual horizontal coordinate of the display HUD widget as a percentage of screen width (0 to 100). Leave null for auto/drag-and-drop position.",
         "type": "number",
         "min": 0,
-        "max": 4000,
-        "step": 10
+        "max": 100,
+        "step": 0.1
     },
     "HUDY": {
-        "description": "Manual vertical coordinate of the display HUD widget. Leave null for auto/drag-and-drop position.",
+        "description": "Manual vertical coordinate of the display HUD widget as a percentage of screen height (0 to 100). Leave null for auto/drag-and-drop position.",
         "type": "number",
         "min": 0,
-        "max": 4000,
-        "step": 10
+        "max": 100,
+        "step": 0.1
     },
     "HUDScale": {
         "description": "Scale factor for the accessory HUD display size.",

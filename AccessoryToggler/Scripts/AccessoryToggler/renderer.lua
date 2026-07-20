@@ -196,17 +196,57 @@ function M.Draw(hud, SizeX, SizeY)
     local gap = 12.0 * scale
     local totalW = (4.0 * size) + (3.0 * gap)
 
-    -- Bottom Center Positioning
-    local x = configMod.CONFIG.HUDX or ((screenW / 2.0) - (totalW / 2.0))
-    local y = configMod.CONFIG.HUDY or (screenH - size - 130.0)
+    local maxScrollX = screenW - totalW
+    if maxScrollX <= 0 then maxScrollX = 1 end
+    local maxScrollY = screenH - size
+    if maxScrollY <= 0 then maxScrollY = 1 end
+
+    local x
+    local migrated = false
+    local oldX = configMod.CONFIG.HUDX
+    local oldY = configMod.CONFIG.HUDY
+
+    if configMod.CONFIG.HUDX then
+        if configMod.CONFIG.HUDX > 100.0 then
+            local newX = tonumber(string.format("%.1f", (configMod.CONFIG.HUDX / maxScrollX) * 100.0))
+            print(string.format("[AccessoryToggler] Migrating HUDX from pixel %.1f to percentage %.1f%% (ScreenW: %.1f, HUDW: %.1f)", configMod.CONFIG.HUDX, newX, screenW, totalW))
+            configMod.CONFIG.HUDX = newX
+            migrated = true
+        end
+        configMod.CONFIG.HUDX = math.max(0.0, math.min(100.0, configMod.CONFIG.HUDX))
+        x = (configMod.CONFIG.HUDX / 100.0) * maxScrollX
+    else
+        x = (screenW / 2.0) - (totalW / 2.0)
+    end
+
+    local y
+    if configMod.CONFIG.HUDY then
+        if configMod.CONFIG.HUDY > 100.0 then
+            local newY = tonumber(string.format("%.1f", (configMod.CONFIG.HUDY / maxScrollY) * 100.0))
+            print(string.format("[AccessoryToggler] Migrating HUDY from pixel %.1f to percentage %.1f%% (ScreenH: %.1f, HUDH: %.1f)", configMod.CONFIG.HUDY, newY, screenH, size))
+            configMod.CONFIG.HUDY = newY
+            migrated = true
+        end
+        configMod.CONFIG.HUDY = math.max(0.0, math.min(100.0, configMod.CONFIG.HUDY))
+        y = (configMod.CONFIG.HUDY / 100.0) * maxScrollY
+    else
+        y = screenH - size - 130.0
+    end
+
+    if migrated then
+        pcall(function()
+            configMod.SaveConfig()
+            print(string.format("[AccessoryToggler] Legacy coordinate config successfully migrated: HUDX (%s -> %s%%), HUDY (%s -> %s%%)", tostring(oldX), tostring(configMod.CONFIG.HUDX), tostring(oldY), tostring(configMod.CONFIG.HUDY)))
+        end)
+    end
 
     -- Materialize coordinate defaults if Edit Mode is active
     if configMod.EditModeActive then
         if not configMod.CONFIG.HUDX then
-            configMod.CONFIG.HUDX = x
+            configMod.CONFIG.HUDX = tonumber(string.format("%.1f", (x / maxScrollX) * 100.0))
         end
         if not configMod.CONFIG.HUDY then
-            configMod.CONFIG.HUDY = y
+            configMod.CONFIG.HUDY = tonumber(string.format("%.1f", (y / maxScrollY) * 100.0))
         end
     end
 

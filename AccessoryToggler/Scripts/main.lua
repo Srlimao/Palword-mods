@@ -19,7 +19,7 @@ DebugPrint("Initializing Accessory Toggler Mod...")
 local holdFrames = 0
 
 -- Helper to safely adjust HUD coordinates and scale continuously
-local function HandleEditModeHolding()
+local function HandleEditModeHolding(SizeX, SizeY)
     if not configMod.EditModeActive then 
         holdFrames = 0
         return 
@@ -70,11 +70,55 @@ local function HandleEditModeHolding()
     local scaleAmount = 0.005 * speedMultiplier
     
     pcall(function()
-        if not configMod.CONFIG.HUDX then configMod.CONFIG.HUDX = 800.0 end
-        if not configMod.CONFIG.HUDY then configMod.CONFIG.HUDY = 800.0 end
+        local sx = SizeX
+        if type(sx) == "userdata" or type(sx) == "table" then
+            local status, val = pcall(function() return sx:get() end)
+            if status then sx = val end
+        end
+        local sy = SizeY
+        if type(sy) == "userdata" or type(sy) == "table" then
+            local status, val = pcall(function() return sy:get() end)
+            if status then sy = val end
+        end
+
+        local screenW = (type(sx) == "number" and sx > 0) and sx or 1920.0
+        local screenH = (type(sy) == "number" and sy > 0) and sy or 1080.0
+
+        local scale = configMod.CONFIG.HUDScale or 1.0
+        local size = 56.0 * scale
+        local gap = 12.0 * scale
+        local totalW = (4.0 * size) + (3.0 * gap)
+
+        local maxScrollX = screenW - totalW
+        if maxScrollX <= 0 then maxScrollX = 1 end
+        local maxScrollY = screenH - size
+        if maxScrollY <= 0 then maxScrollY = 1 end
+
+        if not configMod.CONFIG.HUDX then
+            configMod.CONFIG.HUDX = 50.0
+        end
+        if not configMod.CONFIG.HUDY then
+            local defaultY = screenH - size - 130.0
+            configMod.CONFIG.HUDY = tonumber(string.format("%.1f", (defaultY / maxScrollY) * 100.0))
+        end
+
+        -- Ensure they are converted to percentage if they were absolute pixels
+        if configMod.CONFIG.HUDX > 100.0 then
+            configMod.CONFIG.HUDX = tonumber(string.format("%.1f", (configMod.CONFIG.HUDX / maxScrollX) * 100.0))
+        end
+        if configMod.CONFIG.HUDY > 100.0 then
+            configMod.CONFIG.HUDY = tonumber(string.format("%.1f", (configMod.CONFIG.HUDY / maxScrollY) * 100.0))
+        end
+
+        local pctDx = (dx * moveAmount) / maxScrollX * 100.0
+        local pctDy = (dy * moveAmount) / maxScrollY * 100.0
+
+        configMod.CONFIG.HUDX = math.max(0.0, math.min(100.0, configMod.CONFIG.HUDX + pctDx))
+        configMod.CONFIG.HUDY = math.max(0.0, math.min(100.0, configMod.CONFIG.HUDY + pctDy))
         
-        configMod.CONFIG.HUDX = configMod.CONFIG.HUDX + (dx * moveAmount)
-        configMod.CONFIG.HUDY = configMod.CONFIG.HUDY + (dy * moveAmount)
+        -- Round to 1 decimal place
+        configMod.CONFIG.HUDX = tonumber(string.format("%.1f", configMod.CONFIG.HUDX))
+        configMod.CONFIG.HUDY = tonumber(string.format("%.1f", configMod.CONFIG.HUDY))
         
         if dScale ~= 0 then
             local currentScale = configMod.CONFIG.HUDScale or 1.0
@@ -107,7 +151,7 @@ local function RegisterHUDHook()
             if not hud or not hud:IsValid() then return end
             
             -- Apply continuous holding checks in edit mode
-            HandleEditModeHolding()
+            HandleEditModeHolding(SizeX, SizeY)
             
             local drawStatus, drawErr = pcall(function()
                 renderer.Draw(hud, SizeX, SizeY)

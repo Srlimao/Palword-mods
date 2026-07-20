@@ -1088,19 +1088,19 @@
       },
       "HUDX": {
         "type": "number",
-        "description": "Manual horizontal coordinate of the display HUD widget. Leave null for auto/drag-and-drop position.",
+        "description": "Manual horizontal coordinate of the display HUD widget as a percentage of screen width (0 to 100). Leave null for auto/drag-and-drop position.",
         "default": null,
         "min": 0,
-        "max": 4000,
-        "step": 10
+        "max": 100,
+        "step": 0.1
       },
       "HUDY": {
         "type": "number",
-        "description": "Manual vertical coordinate of the display HUD widget. Leave null for auto/drag-and-drop position.",
+        "description": "Manual vertical coordinate of the display HUD widget as a percentage of screen height (0 to 100). Leave null for auto/drag-and-drop position.",
         "default": null,
         "min": 0,
-        "max": 4000,
-        "step": 10
+        "max": 100,
+        "step": 0.1
       },
       "HUDScale": {
         "type": "number",
