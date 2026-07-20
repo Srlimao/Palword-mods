@@ -115,8 +115,11 @@ function M.scan()
 
     M.cachedLocalPlayer = localPlayer
 
-    local playerPos = localPlayer:K2_GetActorLocation()
-    if not playerPos then return end
+    local uePlayerPos = localPlayer:K2_GetActorLocation()
+    if not uePlayerPos then return end
+
+    -- Optimize: Convert UE FVector to native Lua table to avoid thousands of C++ property reflection lookups during distance checks
+    local playerPos = { X = uePlayerPos.X, Y = uePlayerPos.Y, Z = uePlayerPos.Z }
 
     -- 1. Scan Players
     if configMod.CONFIG.Players.Enabled then
