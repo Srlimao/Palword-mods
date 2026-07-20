@@ -315,6 +315,14 @@ def build_schema(config_node, path_parts, metadata_db):
     is_color = isinstance(config_node, dict) and 'R' in config_node and 'G' in config_node and 'B' in config_node
     
     if isinstance(config_node, dict) and not is_color:
+        explicit_type = meta.get("type")
+        if explicit_type in ("array", "map"):
+            return {
+                "type": explicit_type,
+                "description": meta.get("description", f"Configuration for {path_parts[-1]}."),
+                "default": [] if explicit_type == "array" else {}
+            }
+            
         node_type = "section" if len(path_parts) == 1 else "group"
         properties = {}
         for key, val in config_node.items():

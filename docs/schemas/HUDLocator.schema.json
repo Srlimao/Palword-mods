@@ -799,9 +799,9 @@
           "step": 1000
         },
         "Filters": {
-          "type": "group",
+          "type": "array",
           "description": "Whitelist of item names or IDs to show (leave empty to show all dropped items).",
-          "properties": {}
+          "default": []
         },
         "Style": {
           "type": "group",
