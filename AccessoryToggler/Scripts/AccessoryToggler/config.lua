@@ -2,6 +2,28 @@ local M = {}
 M.ConfigLoadedOnce = false
 
 -- Default settings
+M.AccessoryNames = {
+    Accessory_NonKilling = "Ring of Mercy",
+    Accessory_Attack_1 = "Attack Pendant",
+    Accessory_Attack_2 = "Attack Pendant +1",
+    Accessory_Attack_3 = "Attack Pendant +2",
+    Accessory_Defense_1 = "Defense Pendant",
+    Accessory_Defense_2 = "Defense Pendant +1",
+    Accessory_Defense_3 = "Defense Pendant +2",
+    Accessory_HP_1 = "Life Pendant",
+    Accessory_HP_2 = "Life Pendant +1",
+    Accessory_HP_3 = "Life Pendant +2",
+    Accessory_HeatResist_1 = "Heat Resistant Underwear",
+    Accessory_HeatResist_2 = "Heat Resistant Underwear +1",
+    Accessory_HeatResist_3 = "Heat Resistant Underwear +2",
+    Accessory_ColdResist_1 = "Thermal Underwear",
+    Accessory_ColdResist_2 = "Thermal Underwear +1",
+    Accessory_ColdResist_3 = "Thermal Underwear +2",
+    Accessory_WorkSpeed_1 = "Work Pendant",
+    Accessory_WorkSpeed_2 = "Work Pendant +1",
+    Accessory_WorkSpeed_3 = "Work Pendant +2",
+}
+
 M.CONFIG = {
     Enabled = true,
     Language = "system",
@@ -17,28 +39,6 @@ M.CONFIG = {
     TextColorEnabled = { R = 0.0, G = 0.96, B = 0.83, A = 1.0 },   -- Neon Green/Cyan
     TextColorDisabled = { R = 1.0, G = 0.35, B = 0.37, A = 1.0 },  -- Neon Red/Orange
     TextColorLabel = { R = 0.9, G = 0.9, B = 0.95, A = 1.0 },       -- Sleek White/Gray
-    -- Mappings for friendly names
-    AccessoryNames = {
-        Accessory_NonKilling = "Ring of Mercy",
-        Accessory_Attack_1 = "Attack Pendant",
-        Accessory_Attack_2 = "Attack Pendant +1",
-        Accessory_Attack_3 = "Attack Pendant +2",
-        Accessory_Defense_1 = "Defense Pendant",
-        Accessory_Defense_2 = "Defense Pendant +1",
-        Accessory_Defense_3 = "Defense Pendant +2",
-        Accessory_HP_1 = "Life Pendant",
-        Accessory_HP_2 = "Life Pendant +1",
-        Accessory_HP_3 = "Life Pendant +2",
-        Accessory_HeatResist_1 = "Heat Resistant Underwear",
-        Accessory_HeatResist_2 = "Heat Resistant Underwear +1",
-        Accessory_HeatResist_3 = "Heat Resistant Underwear +2",
-        Accessory_ColdResist_1 = "Thermal Underwear",
-        Accessory_ColdResist_2 = "Thermal Underwear +1",
-        Accessory_ColdResist_3 = "Thermal Underwear +2",
-        Accessory_WorkSpeed_1 = "Work Pendant",
-        Accessory_WorkSpeed_2 = "Work Pendant +1",
-        Accessory_WorkSpeed_3 = "Work Pendant +2",
-    },
     KeyBinds = {
         ToggleSlot1 = "FIVE",
         ToggleSlot2 = "SIX",
@@ -244,7 +244,7 @@ end
 
 local function IsValidAccessoryTogglerConfig(parsed)
     if not parsed or type(parsed) ~= "table" then return false end
-    if parsed.AccessoryNames or parsed.TextColorEnabled or parsed.TextColorDisabled or parsed.CardBg or parsed.ToggleSlot1 ~= nil then
+    if parsed.TextColorEnabled or parsed.TextColorDisabled or parsed.CardBg or parsed.ToggleSlot1 ~= nil then
         return true
     end
     if parsed.KeyBinds and (parsed.KeyBinds.ToggleSlot1 or parsed.KeyBinds.ToggleEditMode) then

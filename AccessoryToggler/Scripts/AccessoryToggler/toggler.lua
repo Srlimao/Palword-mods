@@ -126,7 +126,7 @@ local function GetAccessoryName(staticId)
     local trans = GetTranslatedItemName(staticId)
     if trans then return trans end
 
-    local mapped = configMod.CONFIG.AccessoryNames[staticId]
+    local mapped = configMod.AccessoryNames[staticId]
     if mapped then return mapped end
     
     -- Format ID: Accessory_NonKilling -> Ring of Mercy style format
