@@ -1,0 +1,1053 @@
+{
+  "modName": "HUDLocator",
+  "version": "2.5.0",
+  "schema": {
+    "Global": {
+      "type": "section",
+      "description": "Global settings for the HUD Locator mod.",
+      "properties": {
+        "Enabled": {
+          "type": "boolean",
+          "description": "Enable or disable HUD Locator globally.",
+          "default": true
+        },
+        "Language": {
+          "type": "enum",
+          "description": "Language code for the UI labels (e.g. system, en, es, ja, zh-Hans, zh-Hant). 'system' will detect the game language.",
+          "default": "system",
+          "options": [
+            "system",
+            "en",
+            "es",
+            "ja",
+            "zh-Hans",
+            "zh-Hant",
+            "fr",
+            "it",
+            "de",
+            "ko",
+            "pt-BR",
+            "ru",
+            "th",
+            "vi",
+            "id",
+            "tr",
+            "pl",
+            "es-MX"
+          ]
+        },
+        "ScanIntervalMs": {
+          "type": "number",
+          "description": "Frequency of entity radar sweeps in milliseconds. Lower is more responsive, higher improves performance.",
+          "default": 1500,
+          "min": 500,
+          "max": 5000,
+          "step": 250
+        },
+        "Debug": {
+          "type": "boolean",
+          "description": "Show diagnostic messages in the UE4SS log console.",
+          "default": false
+        },
+        "KeyBinds": {
+          "type": "group",
+          "description": "Keybindings for navigating the in-game configuration menu.",
+          "properties": {
+            "ToggleMenu": {
+              "type": "keybind",
+              "description": "Hotkey to toggle the configuration menu overlay.",
+              "default": "F6"
+            },
+            "MenuUp": {
+              "type": "keybind",
+              "description": "Hotkey to navigate up the configuration menu list.",
+              "default": "UP_ARROW"
+            },
+            "MenuDown": {
+              "type": "keybind",
+              "description": "Hotkey to navigate down the configuration menu list.",
+              "default": "DOWN_ARROW"
+            },
+            "MenuLeft": {
+              "type": "keybind",
+              "description": "Hotkey to decrease option values or navigate left.",
+              "default": "LEFT_ARROW"
+            },
+            "MenuRight": {
+              "type": "keybind",
+              "description": "Hotkey to increase option values or navigate right.",
+              "default": "RIGHT_ARROW"
+            }
+          }
+        }
+      }
+    },
+    "Players": {
+      "type": "section",
+      "description": "Configure tracking overlay for other Players.",
+      "properties": {
+        "Enabled": {
+          "type": "boolean",
+          "description": "Show other players on HUD.",
+          "default": true
+        },
+        "MaxDistance": {
+          "type": "number",
+          "description": "Maximum tracking range for players (cm).",
+          "default": 15000.0,
+          "min": 1000,
+          "max": 100000,
+          "step": 1000
+        },
+        "GraceRadiusM": {
+          "type": "number",
+          "description": "Radius (meters) within which player names are hidden to avoid screen clutter.",
+          "default": 30,
+          "min": 0,
+          "max": 100,
+          "step": 5
+        },
+        "Style": {
+          "type": "group",
+          "description": "Style customization for this category's overlay widgets.",
+          "properties": {
+            "DrawBox": {
+              "type": "boolean",
+              "description": "Draw a background border box around the label.",
+              "default": false
+            },
+            "FontScale": {
+              "type": "number",
+              "description": "Font size multiplier for the main label text.",
+              "default": 1.2,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "SmallFontScale": {
+              "type": "number",
+              "description": "Font size multiplier for sub-text (e.g. distance/details).",
+              "default": 0.9,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "TextOffsetZ": {
+              "type": "number",
+              "description": "Vertical offset (units) above the entity to position the HUD tag.",
+              "default": 120.0,
+              "min": -200,
+              "max": 500,
+              "step": 10
+            },
+            "NameColor": {
+              "type": "color",
+              "description": "RGBA color of the name / label text.",
+              "default": {
+                "R": 0.0,
+                "G": 0.0,
+                "B": 0.0,
+                "A": 1.0
+              }
+            },
+            "DistColor": {
+              "type": "color",
+              "description": "RGBA color of the distance / details text.",
+              "default": {
+                "R": 0.0,
+                "G": 0.0,
+                "B": 0.0,
+                "A": 1.0
+              }
+            },
+            "BoxColor": {
+              "type": "color",
+              "description": "RGBA background fill color of the bounding box.",
+              "default": {
+                "R": 0.8,
+                "G": 0.8,
+                "B": 1.0,
+                "A": 1.0
+              }
+            },
+            "BorderColor": {
+              "type": "color",
+              "description": "RGBA border outline color of the bounding box.",
+              "default": {
+                "R": 0.0,
+                "G": 0.0,
+                "B": 0.0,
+                "A": 1.0
+              }
+            },
+            "BorderWidth": {
+              "type": "number",
+              "description": "Border line thickness.",
+              "default": 1.5,
+              "min": 0.5,
+              "max": 5.0,
+              "step": 0.1
+            },
+            "BoxPadX": {
+              "type": "number",
+              "description": "Horizontal padding inside the bounding box.",
+              "default": 10.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "BoxPadY": {
+              "type": "number",
+              "description": "Vertical padding inside the bounding box.",
+              "default": 6.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "FontCharW": {
+              "type": "number",
+              "description": "Font width calibration value.",
+              "default": 8.0,
+              "min": 1,
+              "max": 20,
+              "step": 0.5
+            },
+            "FontLineH": {
+              "type": "number",
+              "description": "Font line height calibration value.",
+              "default": 12.0,
+              "min": 1,
+              "max": 30,
+              "step": 0.5
+            }
+          }
+        }
+      }
+    },
+    "Relics": {
+      "type": "section",
+      "description": "Configure tracking overlay for Lifmunk Relics.",
+      "properties": {
+        "Enabled": {
+          "type": "boolean",
+          "description": "Show Lifmunk Relics on HUD.",
+          "default": true
+        },
+        "MaxDistance": {
+          "type": "number",
+          "description": "Maximum tracking range for relics (cm).",
+          "default": 15000.0,
+          "min": 1000,
+          "max": 100000,
+          "step": 1000
+        },
+        "Style": {
+          "type": "group",
+          "description": "Style customization for this category's overlay widgets.",
+          "properties": {
+            "DrawBox": {
+              "type": "boolean",
+              "description": "Draw a background border box around the label.",
+              "default": false
+            },
+            "FontScale": {
+              "type": "number",
+              "description": "Font size multiplier for the main label text.",
+              "default": 1.2,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "SmallFontScale": {
+              "type": "number",
+              "description": "Font size multiplier for sub-text (e.g. distance/details).",
+              "default": 0.9,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "TextOffsetZ": {
+              "type": "number",
+              "description": "Vertical offset (units) above the entity to position the HUD tag.",
+              "default": 80.0,
+              "min": -200,
+              "max": 500,
+              "step": 10
+            },
+            "NameColor": {
+              "type": "color",
+              "description": "RGBA color of the name / label text.",
+              "default": {
+                "R": 0.1,
+                "G": 0.9,
+                "B": 0.9,
+                "A": 1.0
+              }
+            },
+            "DistColor": {
+              "type": "color",
+              "description": "RGBA color of the distance / details text.",
+              "default": {
+                "R": 0.1,
+                "G": 0.9,
+                "B": 0.9,
+                "A": 1.0
+              }
+            },
+            "BoxColor": {
+              "type": "color",
+              "description": "RGBA background fill color of the bounding box.",
+              "default": {
+                "R": 0.8,
+                "G": 0.8,
+                "B": 1.0,
+                "A": 1.0
+              }
+            },
+            "BorderColor": {
+              "type": "color",
+              "description": "RGBA border outline color of the bounding box.",
+              "default": {
+                "R": 0.0,
+                "G": 0.0,
+                "B": 0.0,
+                "A": 1.0
+              }
+            },
+            "BorderWidth": {
+              "type": "number",
+              "description": "Border line thickness.",
+              "default": 1.5,
+              "min": 0.5,
+              "max": 5.0,
+              "step": 0.1
+            },
+            "BoxPadX": {
+              "type": "number",
+              "description": "Horizontal padding inside the bounding box.",
+              "default": 10.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "BoxPadY": {
+              "type": "number",
+              "description": "Vertical padding inside the bounding box.",
+              "default": 6.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "FontCharW": {
+              "type": "number",
+              "description": "Font width calibration value.",
+              "default": 8.0,
+              "min": 1,
+              "max": 20,
+              "step": 0.5
+            },
+            "FontLineH": {
+              "type": "number",
+              "description": "Font line height calibration value.",
+              "default": 12.0,
+              "min": 1,
+              "max": 30,
+              "step": 0.5
+            }
+          }
+        }
+      }
+    },
+    "Chests": {
+      "type": "section",
+      "description": "Configure tracking overlay for Treasure Chests.",
+      "properties": {
+        "Enabled": {
+          "type": "boolean",
+          "description": "Show chests on HUD.",
+          "default": true
+        },
+        "Filter": {
+          "type": "enum",
+          "description": "Filter which chests to track: Both, Chests (locked/rare only), or Junk (common items).",
+          "default": "Both",
+          "options": [
+            "Both",
+            "Chests",
+            "Junk"
+          ]
+        },
+        "MaxDistance": {
+          "type": "number",
+          "description": "Maximum tracking range for chests (cm).",
+          "default": 15000.0,
+          "min": 1000,
+          "max": 100000,
+          "step": 1000
+        },
+        "Style": {
+          "type": "group",
+          "description": "Style customization for this category's overlay widgets.",
+          "properties": {
+            "DrawBox": {
+              "type": "boolean",
+              "description": "Draw a background border box around the label.",
+              "default": false
+            },
+            "FontScale": {
+              "type": "number",
+              "description": "Font size multiplier for the main label text.",
+              "default": 1.2,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "SmallFontScale": {
+              "type": "number",
+              "description": "Font size multiplier for sub-text (e.g. distance/details).",
+              "default": 0.9,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "TextOffsetZ": {
+              "type": "number",
+              "description": "Vertical offset (units) above the entity to position the HUD tag.",
+              "default": 80.0,
+              "min": -200,
+              "max": 500,
+              "step": 10
+            },
+            "NameColor": {
+              "type": "color",
+              "description": "RGBA color of the name / label text.",
+              "default": {
+                "R": 0.9,
+                "G": 0.7,
+                "B": 0.1,
+                "A": 1.0
+              }
+            },
+            "DistColor": {
+              "type": "color",
+              "description": "RGBA color of the distance / details text.",
+              "default": {
+                "R": 0.9,
+                "G": 0.7,
+                "B": 0.1,
+                "A": 1.0
+              }
+            },
+            "BoxColor": {
+              "type": "color",
+              "description": "RGBA background fill color of the bounding box.",
+              "default": {
+                "R": 0.8,
+                "G": 0.8,
+                "B": 1.0,
+                "A": 1.0
+              }
+            },
+            "BorderColor": {
+              "type": "color",
+              "description": "RGBA border outline color of the bounding box.",
+              "default": {
+                "R": 0.0,
+                "G": 0.0,
+                "B": 0.0,
+                "A": 1.0
+              }
+            },
+            "BorderWidth": {
+              "type": "number",
+              "description": "Border line thickness.",
+              "default": 1.5,
+              "min": 0.5,
+              "max": 5.0,
+              "step": 0.1
+            },
+            "BoxPadX": {
+              "type": "number",
+              "description": "Horizontal padding inside the bounding box.",
+              "default": 10.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "BoxPadY": {
+              "type": "number",
+              "description": "Vertical padding inside the bounding box.",
+              "default": 6.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "FontCharW": {
+              "type": "number",
+              "description": "Font width calibration value.",
+              "default": 8.0,
+              "min": 1,
+              "max": 20,
+              "step": 0.5
+            },
+            "FontLineH": {
+              "type": "number",
+              "description": "Font line height calibration value.",
+              "default": 12.0,
+              "min": 1,
+              "max": 30,
+              "step": 0.5
+            }
+          }
+        }
+      }
+    },
+    "Eggs": {
+      "type": "section",
+      "description": "Configure tracking overlay for Pal Eggs.",
+      "properties": {
+        "Filter": {
+          "type": "enum",
+          "description": "Filter which eggs to track: All, Large+ (Large, Huge), HugeOnly, or None.",
+          "default": "All",
+          "options": [
+            "All",
+            "Large+",
+            "HugeOnly",
+            "None"
+          ]
+        },
+        "MaxDistance": {
+          "type": "number",
+          "description": "Maximum tracking range for Pal eggs (cm).",
+          "default": 15000.0,
+          "min": 1000,
+          "max": 100000,
+          "step": 1000
+        },
+        "Style": {
+          "type": "group",
+          "description": "Style customization for this category's overlay widgets.",
+          "properties": {
+            "DrawBox": {
+              "type": "boolean",
+              "description": "Draw a background border box around the label.",
+              "default": false
+            },
+            "FontScale": {
+              "type": "number",
+              "description": "Font size multiplier for the main label text.",
+              "default": 1.2,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "SmallFontScale": {
+              "type": "number",
+              "description": "Font size multiplier for sub-text (e.g. distance/details).",
+              "default": 0.9,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "TextOffsetZ": {
+              "type": "number",
+              "description": "Vertical offset (units) above the entity to position the HUD tag.",
+              "default": 80.0,
+              "min": -200,
+              "max": 500,
+              "step": 10
+            },
+            "NameColor": {
+              "type": "color",
+              "description": "RGBA color of the name / label text.",
+              "default": {
+                "R": 0.8,
+                "G": 0.5,
+                "B": 0.8,
+                "A": 1.0
+              }
+            },
+            "DistColor": {
+              "type": "color",
+              "description": "RGBA color of the distance / details text.",
+              "default": {
+                "R": 0.8,
+                "G": 0.5,
+                "B": 0.8,
+                "A": 1.0
+              }
+            },
+            "BoxColor": {
+              "type": "color",
+              "description": "RGBA background fill color of the bounding box.",
+              "default": {
+                "R": 0.8,
+                "G": 0.8,
+                "B": 1.0,
+                "A": 1.0
+              }
+            },
+            "BorderColor": {
+              "type": "color",
+              "description": "RGBA border outline color of the bounding box.",
+              "default": {
+                "R": 0.0,
+                "G": 0.0,
+                "B": 0.0,
+                "A": 1.0
+              }
+            },
+            "BorderWidth": {
+              "type": "number",
+              "description": "Border line thickness.",
+              "default": 1.5,
+              "min": 0.5,
+              "max": 5.0,
+              "step": 0.1
+            },
+            "BoxPadX": {
+              "type": "number",
+              "description": "Horizontal padding inside the bounding box.",
+              "default": 10.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "BoxPadY": {
+              "type": "number",
+              "description": "Vertical padding inside the bounding box.",
+              "default": 6.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "FontCharW": {
+              "type": "number",
+              "description": "Font width calibration value.",
+              "default": 8.0,
+              "min": 1,
+              "max": 20,
+              "step": 0.5
+            },
+            "FontLineH": {
+              "type": "number",
+              "description": "Font line height calibration value.",
+              "default": 12.0,
+              "min": 1,
+              "max": 30,
+              "step": 0.5
+            }
+          }
+        }
+      }
+    },
+    "Caves": {
+      "type": "section",
+      "description": "Configure tracking overlay for Dungeon/Cave entrances.",
+      "properties": {
+        "Enabled": {
+          "type": "boolean",
+          "description": "Show dungeons/caves on HUD.",
+          "default": true
+        },
+        "MaxDistance": {
+          "type": "number",
+          "description": "Maximum tracking range for caves (cm).",
+          "default": 15000.0,
+          "min": 1000,
+          "max": 100000,
+          "step": 1000
+        },
+        "Style": {
+          "type": "group",
+          "description": "Style customization for this category's overlay widgets.",
+          "properties": {
+            "DrawBox": {
+              "type": "boolean",
+              "description": "Draw a background border box around the label.",
+              "default": false
+            },
+            "FontScale": {
+              "type": "number",
+              "description": "Font size multiplier for the main label text.",
+              "default": 1.2,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "SmallFontScale": {
+              "type": "number",
+              "description": "Font size multiplier for sub-text (e.g. distance/details).",
+              "default": 0.9,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "TextOffsetZ": {
+              "type": "number",
+              "description": "Vertical offset (units) above the entity to position the HUD tag.",
+              "default": 80.0,
+              "min": -200,
+              "max": 500,
+              "step": 10
+            },
+            "NameColor": {
+              "type": "color",
+              "description": "RGBA color of the name / label text.",
+              "default": {
+                "R": 0.6,
+                "G": 0.2,
+                "B": 0.9,
+                "A": 1.0
+              }
+            },
+            "DistColor": {
+              "type": "color",
+              "description": "RGBA color of the distance / details text.",
+              "default": {
+                "R": 0.6,
+                "G": 0.2,
+                "B": 0.9,
+                "A": 1.0
+              }
+            },
+            "BoxColor": {
+              "type": "color",
+              "description": "RGBA background fill color of the bounding box.",
+              "default": {
+                "R": 0.8,
+                "G": 0.8,
+                "B": 1.0,
+                "A": 1.0
+              }
+            },
+            "BorderColor": {
+              "type": "color",
+              "description": "RGBA border outline color of the bounding box.",
+              "default": {
+                "R": 0.0,
+                "G": 0.0,
+                "B": 0.0,
+                "A": 1.0
+              }
+            },
+            "BorderWidth": {
+              "type": "number",
+              "description": "Border line thickness.",
+              "default": 1.5,
+              "min": 0.5,
+              "max": 5.0,
+              "step": 0.1
+            },
+            "BoxPadX": {
+              "type": "number",
+              "description": "Horizontal padding inside the bounding box.",
+              "default": 10.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "BoxPadY": {
+              "type": "number",
+              "description": "Vertical padding inside the bounding box.",
+              "default": 6.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "FontCharW": {
+              "type": "number",
+              "description": "Font width calibration value.",
+              "default": 8.0,
+              "min": 1,
+              "max": 20,
+              "step": 0.5
+            },
+            "FontLineH": {
+              "type": "number",
+              "description": "Font line height calibration value.",
+              "default": 12.0,
+              "min": 1,
+              "max": 30,
+              "step": 0.5
+            }
+          }
+        }
+      }
+    },
+    "Loot": {
+      "type": "section",
+      "description": "Configure tracking overlay for dropped ground items.",
+      "properties": {
+        "Enabled": {
+          "type": "boolean",
+          "description": "Show dropped ground items on HUD.",
+          "default": false
+        },
+        "MaxDistance": {
+          "type": "number",
+          "description": "Maximum tracking range for dropped loot (cm).",
+          "default": 15000.0,
+          "min": 1000,
+          "max": 100000,
+          "step": 1000
+        },
+        "Filters": {
+          "type": "group",
+          "description": "Whitelist of item names or IDs to show (leave empty to show all dropped items).",
+          "properties": {}
+        },
+        "Style": {
+          "type": "group",
+          "description": "Style customization for this category's overlay widgets.",
+          "properties": {
+            "DrawBox": {
+              "type": "boolean",
+              "description": "Draw a background border box around the label.",
+              "default": false
+            },
+            "FontScale": {
+              "type": "number",
+              "description": "Font size multiplier for the main label text.",
+              "default": 1.2,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "SmallFontScale": {
+              "type": "number",
+              "description": "Font size multiplier for sub-text (e.g. distance/details).",
+              "default": 0.9,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "TextOffsetZ": {
+              "type": "number",
+              "description": "Vertical offset (units) above the entity to position the HUD tag.",
+              "default": 80.0,
+              "min": -200,
+              "max": 500,
+              "step": 10
+            },
+            "NameColor": {
+              "type": "color",
+              "description": "RGBA color of the name / label text.",
+              "default": {
+                "R": 0.2,
+                "G": 0.9,
+                "B": 0.4,
+                "A": 1.0
+              }
+            },
+            "DistColor": {
+              "type": "color",
+              "description": "RGBA color of the distance / details text.",
+              "default": {
+                "R": 0.2,
+                "G": 0.9,
+                "B": 0.4,
+                "A": 1.0
+              }
+            },
+            "BoxColor": {
+              "type": "color",
+              "description": "RGBA background fill color of the bounding box.",
+              "default": {
+                "R": 0.8,
+                "G": 1.0,
+                "B": 0.8,
+                "A": 1.0
+              }
+            },
+            "BorderColor": {
+              "type": "color",
+              "description": "RGBA border outline color of the bounding box.",
+              "default": {
+                "R": 0.0,
+                "G": 0.0,
+                "B": 0.0,
+                "A": 1.0
+              }
+            },
+            "BorderWidth": {
+              "type": "number",
+              "description": "Border line thickness.",
+              "default": 1.5,
+              "min": 0.5,
+              "max": 5.0,
+              "step": 0.1
+            },
+            "BoxPadX": {
+              "type": "number",
+              "description": "Horizontal padding inside the bounding box.",
+              "default": 10.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "BoxPadY": {
+              "type": "number",
+              "description": "Vertical padding inside the bounding box.",
+              "default": 6.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "FontCharW": {
+              "type": "number",
+              "description": "Font width calibration value.",
+              "default": 8.0,
+              "min": 1,
+              "max": 20,
+              "step": 0.5
+            },
+            "FontLineH": {
+              "type": "number",
+              "description": "Font line height calibration value.",
+              "default": 12.0,
+              "min": 1,
+              "max": 30,
+              "step": 0.5
+            }
+          }
+        }
+      }
+    },
+    "Notes": {
+      "type": "section",
+      "description": "Configure tracking overlay for Memo Journals / Notes.",
+      "properties": {
+        "Enabled": {
+          "type": "boolean",
+          "description": "Show Memo Journals/Notes on HUD.",
+          "default": true
+        },
+        "MaxDistance": {
+          "type": "number",
+          "description": "Maximum tracking range for notes (cm).",
+          "default": 15000.0,
+          "min": 1000,
+          "max": 100000,
+          "step": 1000
+        },
+        "Style": {
+          "type": "group",
+          "description": "Style customization for this category's overlay widgets.",
+          "properties": {
+            "DrawBox": {
+              "type": "boolean",
+              "description": "Draw a background border box around the label.",
+              "default": false
+            },
+            "FontScale": {
+              "type": "number",
+              "description": "Font size multiplier for the main label text.",
+              "default": 1.2,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "SmallFontScale": {
+              "type": "number",
+              "description": "Font size multiplier for sub-text (e.g. distance/details).",
+              "default": 0.9,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "TextOffsetZ": {
+              "type": "number",
+              "description": "Vertical offset (units) above the entity to position the HUD tag.",
+              "default": 80.0,
+              "min": -200,
+              "max": 500,
+              "step": 10
+            },
+            "NameColor": {
+              "type": "color",
+              "description": "RGBA color of the name / label text.",
+              "default": {
+                "R": 1.0,
+                "G": 0.4,
+                "B": 0.4,
+                "A": 1.0
+              }
+            },
+            "DistColor": {
+              "type": "color",
+              "description": "RGBA color of the distance / details text.",
+              "default": {
+                "R": 1.0,
+                "G": 0.4,
+                "B": 0.4,
+                "A": 1.0
+              }
+            },
+            "BoxColor": {
+              "type": "color",
+              "description": "RGBA background fill color of the bounding box.",
+              "default": {
+                "R": 1.0,
+                "G": 0.8,
+                "B": 0.8,
+                "A": 1.0
+              }
+            },
+            "BorderColor": {
+              "type": "color",
+              "description": "RGBA border outline color of the bounding box.",
+              "default": {
+                "R": 0.0,
+                "G": 0.0,
+                "B": 0.0,
+                "A": 1.0
+              }
+            },
+            "BorderWidth": {
+              "type": "number",
+              "description": "Border line thickness.",
+              "default": 1.5,
+              "min": 0.5,
+              "max": 5.0,
+              "step": 0.1
+            },
+            "BoxPadX": {
+              "type": "number",
+              "description": "Horizontal padding inside the bounding box.",
+              "default": 10.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "BoxPadY": {
+              "type": "number",
+              "description": "Vertical padding inside the bounding box.",
+              "default": 6.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "FontCharW": {
+              "type": "number",
+              "description": "Font width calibration value.",
+              "default": 8.0,
+              "min": 1,
+              "max": 20,
+              "step": 0.5
+            },
+            "FontLineH": {
+              "type": "number",
+              "description": "Font line height calibration value.",
+              "default": 12.0,
+              "min": 1,
+              "max": 30,
+              "step": 0.5
+            }
+          }
+        }
+      }
+    }
+  }
+}

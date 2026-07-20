@@ -107,6 +107,13 @@ if (Test-Path $ItemListPath) {
     Write-Host "Staged optional file: item_list.json"
 }
 
+# 5. Optional schema (if generated in docs/schemas)
+$SchemaPath = Join-Path $PSScriptRoot "docs/schemas/$ModName.schema.json"
+if (Test-Path $SchemaPath) {
+    Copy-Item $SchemaPath (Join-Path $ModStagingDir "schema.json")
+    Write-Host "Staged optional file: schema.json"
+}
+
 # 4. Generate VDF File
 $VdfPath = Join-Path $ModStagingDir "upload.vdf"
 $ContentFolderAbs = (Resolve-Path $ModStagingDir).Path

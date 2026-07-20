@@ -1,0 +1,70 @@
+{
+  "modName": "HoldToFire",
+  "version": "1.0.0",
+  "schema": {
+    "Enabled": {
+      "type": "boolean",
+      "description": "Enable or disable Hold To Fire globally.",
+      "default": true
+    },
+    "DebugMode": {
+      "type": "boolean",
+      "description": "Print debug messages to the UE4SS log console.",
+      "default": true
+    },
+    "ScanIntervalMs": {
+      "type": "number",
+      "description": "Interval in milliseconds between equipped weapon changes checks.",
+      "default": 2000,
+      "min": 100,
+      "max": 5000,
+      "step": 100
+    },
+    "WeaponTypes": {
+      "type": "section",
+      "description": "Toggles autofire functionality per weapon type.",
+      "properties": {
+        "Handgun": {
+          "type": "boolean",
+          "description": "Autofire for Handguns.",
+          "default": true
+        },
+        "SniperRifle": {
+          "type": "boolean",
+          "description": "Autofire for Sniper Rifles.",
+          "default": true
+        },
+        "Shotgun": {
+          "type": "boolean",
+          "description": "Autofire for Shotguns.",
+          "default": true
+        },
+        "RocketLauncher": {
+          "type": "boolean",
+          "description": "Autofire for Rocket Launchers.",
+          "default": true
+        },
+        "BowGun": {
+          "type": "boolean",
+          "description": "Autofire for Bows/Crossbows.",
+          "default": true
+        },
+        "LaserRifle": {
+          "type": "boolean",
+          "description": "Autofire for Laser Rifles.",
+          "default": true
+        },
+        "MissileLauncher": {
+          "type": "boolean",
+          "description": "Autofire for Missile Launchers.",
+          "default": true
+        },
+        "GrenadeLauncher": {
+          "type": "boolean",
+          "description": "Autofire for Grenade Launchers.",
+          "default": true
+        }
+      }
+    }
+  }
+}

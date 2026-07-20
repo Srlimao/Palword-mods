@@ -1,0 +1,41 @@
+name: Generate Configuration Schemas
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - '**/config.lua'
+      - 'generate_config_schemas.py'
+      - '.github/workflows/generate_schemas.yml'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Generate Schemas
+        run: python generate_config_schemas.py
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/schemas/
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: auto-generate config schemas"
+            git push
+          else
+            echo "No changes in schemas."
+          fi

@@ -1,0 +1,270 @@
+{
+  "modName": "AccessoryToggler",
+  "version": "1.3.0",
+  "schema": {
+    "Enabled": {
+      "type": "boolean",
+      "description": "Enable or disable Accessory Toggler globally.",
+      "default": true
+    },
+    "Language": {
+      "type": "enum",
+      "description": "Language code for the UI labels (e.g. system, en, es, ja, zh-Hans, zh-Hant). 'system' will detect the game language.",
+      "default": "system",
+      "options": [
+        "system",
+        "en",
+        "es",
+        "ja",
+        "zh-Hans",
+        "zh-Hant",
+        "fr",
+        "it",
+        "de",
+        "ko",
+        "pt-BR",
+        "ru",
+        "th",
+        "vi",
+        "id",
+        "tr",
+        "pl",
+        "es-MX"
+      ]
+    },
+    "HUDX": {
+      "type": "number",
+      "description": "Manual horizontal coordinate of the display HUD widget. Leave null for auto/drag-and-drop position.",
+      "default": null,
+      "min": 0,
+      "max": 4000,
+      "step": 10
+    },
+    "HUDY": {
+      "type": "number",
+      "description": "Manual vertical coordinate of the display HUD widget. Leave null for auto/drag-and-drop position.",
+      "default": null,
+      "min": 0,
+      "max": 4000,
+      "step": 10
+    },
+    "HUDScale": {
+      "type": "number",
+      "description": "Scale factor for the accessory HUD display size.",
+      "default": 1.5,
+      "min": 0.5,
+      "max": 3.0,
+      "step": 0.1
+    },
+    "ScanIntervalMs": {
+      "type": "number",
+      "description": "Interval between checking player accessories (ms).",
+      "default": 1000,
+      "min": 100,
+      "max": 5000,
+      "step": 100
+    },
+    "Debug": {
+      "type": "boolean",
+      "description": "Toggle debug diagnostic prints to the UE4SS log console.",
+      "default": false
+    },
+    "CardBg": {
+      "type": "color",
+      "description": "RGBA color of the HUD widget background panel.",
+      "default": {
+        "R": 0.05,
+        "G": 0.07,
+        "B": 0.15,
+        "A": 0.85
+      }
+    },
+    "BorderColor": {
+      "type": "color",
+      "description": "RGBA color of the HUD widget border line.",
+      "default": {
+        "R": 0.0,
+        "G": 0.95,
+        "B": 1.0,
+        "A": 0.6
+      }
+    },
+    "ShadowColor": {
+      "type": "color",
+      "description": "RGBA color of the drop shadow effect.",
+      "default": {
+        "R": 0.0,
+        "G": 0.0,
+        "B": 0.0,
+        "A": 0.9
+      }
+    },
+    "TextColorEnabled": {
+      "type": "color",
+      "description": "RGBA color of active/enabled slot values.",
+      "default": {
+        "R": 0.0,
+        "G": 0.96,
+        "B": 0.83,
+        "A": 1.0
+      }
+    },
+    "TextColorDisabled": {
+      "type": "color",
+      "description": "RGBA color of empty/disabled slot values.",
+      "default": {
+        "R": 1.0,
+        "G": 0.35,
+        "B": 0.37,
+        "A": 1.0
+      }
+    },
+    "TextColorLabel": {
+      "type": "color",
+      "description": "RGBA color of category / title labels.",
+      "default": {
+        "R": 0.9,
+        "G": 0.9,
+        "B": 0.95,
+        "A": 1.0
+      }
+    },
+    "AccessoryNames": {
+      "type": "section",
+      "description": "Dictionary mapping internal game accessory names to readable names shown on the HUD.",
+      "properties": {
+        "Accessory_NonKilling": {
+          "type": "string",
+          "description": "Configuration for Accessory_NonKilling.",
+          "default": "Ring of Mercy"
+        },
+        "Accessory_Attack_1": {
+          "type": "string",
+          "description": "Configuration for Accessory_Attack_1.",
+          "default": "Attack Pendant"
+        },
+        "Accessory_Attack_2": {
+          "type": "string",
+          "description": "Configuration for Accessory_Attack_2.",
+          "default": "Attack Pendant +1"
+        },
+        "Accessory_Attack_3": {
+          "type": "string",
+          "description": "Configuration for Accessory_Attack_3.",
+          "default": "Attack Pendant +2"
+        },
+        "Accessory_Defense_1": {
+          "type": "string",
+          "description": "Configuration for Accessory_Defense_1.",
+          "default": "Defense Pendant"
+        },
+        "Accessory_Defense_2": {
+          "type": "string",
+          "description": "Configuration for Accessory_Defense_2.",
+          "default": "Defense Pendant +1"
+        },
+        "Accessory_Defense_3": {
+          "type": "string",
+          "description": "Configuration for Accessory_Defense_3.",
+          "default": "Defense Pendant +2"
+        },
+        "Accessory_HP_1": {
+          "type": "string",
+          "description": "Configuration for Accessory_HP_1.",
+          "default": "Life Pendant"
+        },
+        "Accessory_HP_2": {
+          "type": "string",
+          "description": "Configuration for Accessory_HP_2.",
+          "default": "Life Pendant +1"
+        },
+        "Accessory_HP_3": {
+          "type": "string",
+          "description": "Configuration for Accessory_HP_3.",
+          "default": "Life Pendant +2"
+        },
+        "Accessory_HeatResist_1": {
+          "type": "string",
+          "description": "Configuration for Accessory_HeatResist_1.",
+          "default": "Heat Resistant Underwear"
+        },
+        "Accessory_HeatResist_2": {
+          "type": "string",
+          "description": "Configuration for Accessory_HeatResist_2.",
+          "default": "Heat Resistant Underwear +1"
+        },
+        "Accessory_HeatResist_3": {
+          "type": "string",
+          "description": "Configuration for Accessory_HeatResist_3.",
+          "default": "Heat Resistant Underwear +2"
+        },
+        "Accessory_ColdResist_1": {
+          "type": "string",
+          "description": "Configuration for Accessory_ColdResist_1.",
+          "default": "Thermal Underwear"
+        },
+        "Accessory_ColdResist_2": {
+          "type": "string",
+          "description": "Configuration for Accessory_ColdResist_2.",
+          "default": "Thermal Underwear +1"
+        },
+        "Accessory_ColdResist_3": {
+          "type": "string",
+          "description": "Configuration for Accessory_ColdResist_3.",
+          "default": "Thermal Underwear +2"
+        },
+        "Accessory_WorkSpeed_1": {
+          "type": "string",
+          "description": "Configuration for Accessory_WorkSpeed_1.",
+          "default": "Work Pendant"
+        },
+        "Accessory_WorkSpeed_2": {
+          "type": "string",
+          "description": "Configuration for Accessory_WorkSpeed_2.",
+          "default": "Work Pendant +1"
+        },
+        "Accessory_WorkSpeed_3": {
+          "type": "string",
+          "description": "Configuration for Accessory_WorkSpeed_3.",
+          "default": "Work Pendant +2"
+        }
+      }
+    },
+    "KeyBinds": {
+      "type": "section",
+      "description": "Keybindings for toggling accessory slots and editor mode.",
+      "properties": {
+        "ToggleSlot1": {
+          "type": "keybind",
+          "description": "Hotkey to toggle Slot 1 accessory.",
+          "default": "FIVE"
+        },
+        "ToggleSlot2": {
+          "type": "keybind",
+          "description": "Hotkey to toggle Slot 2 accessory.",
+          "default": "SIX"
+        },
+        "ToggleSlot3": {
+          "type": "keybind",
+          "description": "Hotkey to toggle Slot 3 accessory.",
+          "default": "SEVEN"
+        },
+        "ToggleSlot4": {
+          "type": "keybind",
+          "description": "Hotkey to toggle Slot 4 accessory.",
+          "default": "EIGHT"
+        },
+        "ToggleEditMode": {
+          "type": "keybind",
+          "description": "Hotkey to toggle screen-drag UI editor mode.",
+          "default": "F7"
+        },
+        "ResetCoords": {
+          "type": "keybind",
+          "description": "Hotkey to reset HUD coordinates back to default position in edit mode.",
+          "default": "R"
+        }
+      }
+    }
+  }
+}
