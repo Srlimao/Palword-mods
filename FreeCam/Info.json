@@ -1,6 +1,7 @@
 {
-  "ModName": "Free Camera (Native Spectator)",
+  "ModName": "Building Enhanced (Free Camera) - Beta version",
   "PackageName": "FreeCam",
+  "Thumbnail": "thumbnail.png",
   "Version": "1.0.0",
   "DebugMode": false,
   "MinRevision": 82182,

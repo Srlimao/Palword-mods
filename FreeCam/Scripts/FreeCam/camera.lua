@@ -22,6 +22,9 @@ local currentSpeed = 15.0 -- default camera speed
 local currentCameraLocation = {X = 0.0, Y = 0.0, Z = 0.0}
 local currentCameraRotation = {Pitch = 0.0, Yaw = 0.0, Roll = 0.0}
 
+local lastSetAimLoc = nil
+local lastLogTime = 0.0
+
 -- Cache active PlayerController and Character to avoid query lag every frame
 local activePC = nil
 local activePlayer = nil
@@ -151,28 +154,86 @@ function camera.ToggleFreeCam()
         
         -- Hide the player character model and attached items
         localPlayer:SetActorHiddenInGame(true)
+        -- Also hide attached actors (weapons, gliders, backpack)
+        pcall(function()
+            local outActors = {}
+            local attachedActors = localPlayer:GetAttachedActors(outActors, true, true)
+            
+            -- UE4SS sometimes returns the array, sometimes populates the passed table
+            local toHide = attachedActors
+            if type(toHide) ~= "table" and type(toHide) ~= "userdata" then
+                toHide = outActors
+            end
+            
+            if toHide then
+                for i = 1, #toHide do
+                    local attached = toHide[i]
+                    if attached and attached:IsValid() then
+                        print("[FreeCam Debug] Attached Actor: " .. attached:GetFullName())
+                        attached:SetActorHiddenInGame(true)
+                    end
+                end
+            end
+            
+            -- Debug log components
+            local comps = localPlayer:K2_GetComponentsByClass(StaticFindObject("/Script/Engine.SceneComponent"))
+            if comps then
+                for i = 1, #comps do
+                    local c = comps[i]
+                    if c and c:IsValid() then
+                        local cName = c:GetFullName()
+                        if string.find(cName, "Light") or string.find(cName, "Particle") or string.find(cName, "Niagara") then
+                            print("[FreeCam Debug] Found visual component: " .. cName)
+                            c:SetVisibility(false, true)
+                        end
+                    end
+                end
+            end
+            
+            -- Also explicitly hide the weapon if accessible
+            local shooter = localPlayer.ShooterComponent
+            if shooter and shooter:IsValid() then
+                local weapon = shooter:GetHasWeapon()
+                if weapon and weapon:IsValid() then
+                    weapon:SetActorHiddenInGame(true)
+                end
+            end
+        end)
+        
+        -- Use RelativeScale3D to make the mesh microscopic and effectively invisible
+        pcall(function()
+            if localPlayer.Mesh and localPlayer.Mesh:IsValid() then
+                localPlayer.Mesh:SetRelativeScale3D({X = 0.001, Y = 0.001, Z = 0.001})
+            end
+        end)
     else
         print("[FreeCam] FreeCam Disabled.")
         
         -- Re-enable movement input
         pc:SetIgnoreMoveInput(false)
         
-        -- Restore player character movement mode
+        -- Restore rotation flag
+        localPlayer.bUseControllerRotationYaw = originalRotationYaw
+        
+        -- 1. Re-enable player character collision FIRST
+        localPlayer:SetActorEnableCollision(true)
+        
+        -- 2. Restore player character location to its original position, offset slightly upwards
+        -- to prevent clipping into newly constructed foundations or structures
+        if originalPlayerLocation then
+            local safeLoc = {
+                X = originalPlayerLocation.X,
+                Y = originalPlayerLocation.Y,
+                Z = originalPlayerLocation.Z + 120.0
+            }
+            localPlayer:K2_SetActorLocation(safeLoc, false, {}, true)
+        end
+        
+        -- 3. Restore player character movement mode after being safely placed and collision active
         local movement = localPlayer.CharacterMovement
         if movement and movement:IsValid() then
             movement:SetMovementMode(originalMoveMode, originalCustomMode)
         end
-        
-        -- Restore rotation flag
-        localPlayer.bUseControllerRotationYaw = originalRotationYaw
-        
-        -- Restore player character location to its original position before flying
-        if originalPlayerLocation then
-            localPlayer:K2_SetActorLocation(originalPlayerLocation, false, {}, true)
-        end
-        
-        -- Re-enable player character collision
-        localPlayer:SetActorEnableCollision(true)
         
         -- Restore original camera pitch limits
         local cameraManager = pc.PlayerCameraManager
@@ -189,6 +250,39 @@ function camera.ToggleFreeCam()
         
         -- Show the player character model again
         localPlayer:SetActorHiddenInGame(false)
+        pcall(function()
+            local outActors = {}
+            local attachedActors = localPlayer:GetAttachedActors(outActors, true, true)
+            
+            local toUnhide = attachedActors
+            if type(toUnhide) ~= "table" and type(toUnhide) ~= "userdata" then
+                toUnhide = outActors
+            end
+            
+            if toUnhide then
+                for i = 1, #toUnhide do
+                    local attached = toHide[i] or toUnhide[i]
+                    if attached and attached:IsValid() then
+                        attached:SetActorHiddenInGame(false)
+                    end
+                end
+            end
+            
+            -- Also explicitly unhide the weapon if accessible
+            local shooter = localPlayer.ShooterComponent
+            if shooter and shooter:IsValid() then
+                local weapon = shooter:GetHasWeapon()
+                if weapon and weapon:IsValid() then
+                    weapon:SetActorHiddenInGame(false)
+                end
+            end
+        end)
+        
+        pcall(function()
+            if localPlayer.Mesh and localPlayer.Mesh:IsValid() then
+                localPlayer.Mesh:SetRelativeScale3D({X = 1.0, Y = 1.0, Z = 1.0})
+            end
+        end)
         
         -- Re-attach camera component to its original parent (EAttachmentRule::KeepRelative = 0)
         if cameraComponent and cameraComponent:IsValid() and originalParent and originalParent:IsValid() then
@@ -324,6 +418,19 @@ function camera.UpdateCameraMovement()
     -- Dynamically query terrain range and location in look direction
     local aimDist, aimLoc = helpers.GetAimDistanceAndLocation(activePlayer, cameraComponent, currentCameraLocation)
     
+    -- Diagnostic: Check if player position was reset since last frame
+    local timeNow = os.clock()
+    if lastSetAimLoc and activePlayer and activePlayer:IsValid() then
+        local currentLoc = activePlayer:K2_GetActorLocation()
+        local curX, curY, curZ = currentLoc.X, currentLoc.Y, currentLoc.Z
+        if type(curX) == "userdata" and curX.get then curX = curX:get() curY = curY:get() curZ = curZ:get() end
+        local distDiff = math.sqrt((curX - lastSetAimLoc.X)^2 + (curY - lastSetAimLoc.Y)^2 + (curZ - lastSetAimLoc.Z)^2)
+        if distDiff > 1.0 and (timeNow - lastLogTime) > 1.0 then
+            lastLogTime = timeNow
+            print(string.format("[FreeCam Debug] Pos mismatch! Diff = %.2f. Expected: (%.1f, %.1f, %.1f), Got: (%.1f, %.1f, %.1f)", distDiff, lastSetAimLoc.X, lastSetAimLoc.Y, lastSetAimLoc.Z, curX, curY, curZ))
+        end
+    end
+
     -- Set the builder installation distance dynamically.
     local builder = activePlayer.BuilderComponent
     if builder and builder:IsValid() then
@@ -380,9 +487,11 @@ function camera.UpdateCameraMovement()
                             local worldOffsetZ = fZ * xCenter + rZ * yCenter + uZ * zCenter
                             
                             -- Dynamically measure the game's building system forward/pivot offset
+                            -- Temporarily disabled to debug the sliding feedback loop
+                            local relX, relY, relZ = 0.0, 0.0, 0.0
+                            --[[
                             local previewLoc = preview:K2_GetActorLocation()
                             local playerLoc = activePlayer:K2_GetActorLocation()
-                            local relX, relY, relZ = 0.0, 0.0, 0.0
                             if previewLoc and playerLoc then
                                 local pX, pY, pZ = previewLoc.X, previewLoc.Y, previewLoc.Z
                                 local cX, cY, cZ = playerLoc.X, playerLoc.Y, playerLoc.Z
@@ -401,6 +510,7 @@ function camera.UpdateCameraMovement()
                                     relZ = 0.0
                                 end
                             end
+                            ]]
                             
                             aimLoc.X = aimLoc.X - worldOffsetX - relX
                             aimLoc.Y = aimLoc.Y - worldOffsetY - relY
@@ -412,8 +522,26 @@ function camera.UpdateCameraMovement()
         end
     end
     
+    -- Save the location we are about to set for diagnostics
+    lastSetAimLoc = {X = aimLoc.X, Y = aimLoc.Y, Z = aimLoc.Z}
+
     -- Teleport the hidden player character to the exact aim hit location on the ground/surface.
     activePlayer:K2_SetActorLocation(aimLoc, false, {}, true)
+    
+    -- Enforce hiding every frame to fight the building hologram override
+    pcall(function()
+        activePlayer:SetActorHiddenInGame(true)
+        if activePlayer.Mesh and activePlayer.Mesh:IsValid() then
+            activePlayer.Mesh:SetHiddenInGame(true)
+        end
+        local shooter = activePlayer.ShooterComponent
+        if shooter and shooter:IsValid() then
+            local weapon = shooter:GetHasWeapon()
+            if weapon and weapon:IsValid() then
+                weapon:SetActorHiddenInGame(true)
+            end
+        end
+    end)
 end
 
 return camera
