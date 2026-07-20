@@ -37,11 +37,17 @@ NotifyOnNewObject("/Game/Pal/Blueprint/UI/BP_PalHUD_InGame.BP_PalHUD_InGame_C", 
     RegisterHUDHook()
 end)
 
--- Hook IsInstallAtReticle to always return true when FreeCam is on
+-- Hook IsInstallAtReticle to return true in FreeCam only if snap mode is enabled
 pcall(function()
     RegisterHook("/Script/Pal.PalBuilderComponent:IsInstallAtReticle", function(self)
         if camera.IsSpectating() then
-            return true
+            local isSnap = false
+            pcall(function()
+                if self:IsSnapMode() then
+                    isSnap = true
+                end
+            end)
+            return isSnap
         end
     end)
     print("[FreeCam] Hooked PalBuilderComponent:IsInstallAtReticle successfully.")

@@ -325,6 +325,78 @@ function camera.UpdateCameraMovement()
             builder.InstallDistanceNormalFromOwner = originalInstallDistance * 15.0
         else
             builder.InstallDistanceNormalFromOwner = 0.0
+            
+            -- When snap mode is off, adjust character Z position to align the blueprint's 3D center with the reticle
+            pcall(function()
+                local checker = builder.InstallChecker
+                if checker and checker:IsValid() then
+                    local preview = checker.TargetBuildObject
+                    if preview and preview:IsValid() then
+                        local bounds = preview.LocalBounds
+                        if bounds then
+                            local xMin = bounds.Min.X
+                            local xMax = bounds.Max.X
+                            local yMin = bounds.Min.Y
+                            local yMax = bounds.Max.Y
+                            local zMin = bounds.Min.Z
+                            local zMax = bounds.Max.Z
+                            if type(xMin) == "userdata" and xMin.get then xMin = xMin:get() end
+                            if type(xMax) == "userdata" and xMax.get then xMax = xMax:get() end
+                            if type(yMin) == "userdata" and yMin.get then yMin = yMin:get() end
+                            if type(yMax) == "userdata" and yMax.get then yMax = yMax:get() end
+                            if type(zMin) == "userdata" and zMin.get then zMin = zMin:get() end
+                            if type(zMax) == "userdata" and zMax.get then zMax = zMax:get() end
+                            
+                            local xCenter = (xMin + xMax) / 2.0
+                            local yCenter = (yMin + yMax) / 2.0
+                            local zCenter = (zMin + zMax) / 2.0
+                            
+                            local forward = preview:GetActorForwardVector()
+                            local right = preview:GetActorRightVector()
+                            local up = preview:GetActorUpVector()
+                            
+                            local fX, fY, fZ = forward.X, forward.Y, forward.Z
+                            local rX, rY, rZ = right.X, right.Y, right.Z
+                            local uX, uY, uZ = up.X, up.Y, up.Z
+                            
+                            if type(fX) == "userdata" and fX.get then fX = fX:get() fY = fY:get() fZ = fZ:get() end
+                            if type(rX) == "userdata" and rX.get then rX = rX:get() rY = rY:get() rZ = rZ:get() end
+                            if type(uX) == "userdata" and uX.get then uX = uX:get() uY = uY:get() uZ = uZ:get() end
+                            
+                            local worldOffsetX = fX * xCenter + rX * yCenter + uX * zCenter
+                            local worldOffsetY = fY * xCenter + rY * yCenter + uY * zCenter
+                            local worldOffsetZ = fZ * xCenter + rZ * yCenter + uZ * zCenter
+                            
+                            -- Dynamically measure the game's building system forward/pivot offset
+                            local previewLoc = preview:K2_GetActorLocation()
+                            local playerLoc = activePlayer:K2_GetActorLocation()
+                            local relX, relY, relZ = 0.0, 0.0, 0.0
+                            if previewLoc and playerLoc then
+                                local pX, pY, pZ = previewLoc.X, previewLoc.Y, previewLoc.Z
+                                local cX, cY, cZ = playerLoc.X, playerLoc.Y, playerLoc.Z
+                                
+                                if type(pX) == "userdata" and pX.get then pX = pX:get() pY = pY:get() pZ = pZ:get() end
+                                if type(cX) == "userdata" and cX.get then cX = cX:get() cY = cY:get() cZ = cZ:get() end
+                                
+                                relX = pX - cX
+                                relY = pY - cY
+                                relZ = pZ - cZ
+                                
+                                local dist = math.sqrt(relX^2 + relY^2 + relZ^2)
+                                if dist > 1500.0 then
+                                    relX = 0.0
+                                    relY = 0.0
+                                    relZ = 0.0
+                                end
+                            end
+                            
+                            aimLoc.X = aimLoc.X - worldOffsetX - relX
+                            aimLoc.Y = aimLoc.Y - worldOffsetY - relY
+                            aimLoc.Z = aimLoc.Z - worldOffsetZ - relZ
+                        end
+                    end
+                end
+            end)
         end
     end
     
