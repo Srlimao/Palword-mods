@@ -19,3 +19,7 @@ AccessoryToggler/*.zip
 .idea/
 .vscode/
 .agents/
+
+# Local deployment configurations and staging
+deploy_config.json
+staging/

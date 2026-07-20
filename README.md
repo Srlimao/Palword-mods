@@ -14,6 +14,8 @@ Welcome! This workspace contains highly optimized client-side Lua and native mod
     *   **Chests:** Treasure chests, Gilded boxes, and other loot.
     *   **Eggs:** Pal eggs with configurable size filters (All, Large+, HugeOnly).
     *   **Caves:** Dungeon entrances with level and clearance state indicators.
+    *   **Journals / Notes:** Coral/salmon overlays for uncollected lore memos/journals.
+    *   **Ground Loot:** Green overlays for wild spheres, skill fruits, arrows, and coins.
 *   **Interactive Menu:** Alt + F6 toggles the modern, semi-transparent in-game settings menu. Alt + Arrows navigates and changes options.
 *   **Localization:** Fully supports automatic game-engine localization (system language) or custom language selections.
 
@@ -61,6 +63,9 @@ All developers must follow these grouped directives to prevent crashes, frame-ti
 
 #### GC Spike & Scan Interval Directive
 *   **Directive:** Restrict heavy resource scans (e.g., `FindAllOf("PalPlayerState")`) to intervals of 1.5 - 5 seconds to prevent garbage collection stutters.
+
+#### FVector C++ Reflection Lookup Directive
+*   **Directive:** In UE4SS Lua mods, accessing properties on Unreal FVector userdata (like `.X`, `.Y`, `.Z`) triggers heavy C++ reflection lookups. In high-frequency scanning loops or rendering loops, convert the FVector to a native Lua table (e.g., `local pos = { X = uePos.X, Y = uePos.Y, Z = uePos.Z }`) *before* executing the loop to change O(N) reflection lookups to fast O(1) native Lua properties.
 
 #### Palworld Modding Kit
 *   **Directive:** Use Palworld Modding Kit for deeper scan of cpp and header files when needed: `D:\Mods\PalworkdModdingKit\PalworldModdingKit`
