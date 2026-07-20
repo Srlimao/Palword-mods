@@ -372,7 +372,7 @@ def main():
             "name": "AccessoryToggler",
             "lua_path": "AccessoryToggler/Scripts/AccessoryToggler/config.lua",
             "metadata": METADATA_ACCESSORY_TOGGLER,
-            "version": "1.3.0"
+            "version": "1.4.0"
         },
         {
             "name": "HoldToFire",
