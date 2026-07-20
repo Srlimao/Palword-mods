@@ -45,6 +45,11 @@
             "max": 5000,
             "step": 250
           },
+          "FontScale": {
+            "type": "number",
+            "description": "Configuration for FontScale.",
+            "default": 1.0
+          },
           "Debug": {
             "type": "boolean",
             "description": "Show diagnostic messages in the UE4SS log console.",
