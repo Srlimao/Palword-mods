@@ -1,0 +1,33 @@
+[h1]Free Camera (Native Spectator)[/h1]
+
+A client-side mod for Palworld that detaches the camera component from the player character during construction, allowing you to fly freely and build without collision constraints within Base Camp boundaries.
+
+[hr][/hr]
+
+[h1]Key Features[/h1]
+
+[list]
+[*] [b]Free Flight Construction[/b]: Build freely around your base camp by detaching the camera from your character.
+[*] [b]Collision-Free Building[/b]: No more struggling with character collisions while trying to place structures.
+[*] [b]Auto Toggle[/b]: Automatically enables spectator mode when selecting a construction blueprint inside your base camp.
+[*] [b]Dynamic Placement[/b]: Construction objects can be placed precisely at the reticle instead of locking onto the player character.
+[/list]
+
+[hr][/hr]
+
+[h1]How It Works[/h1]
+
+[list=1]
+[*] Select a construction blueprint while within your Base Camp boundaries.
+[*] The mod automatically disables character collision and detaches the camera, entering Free Camera (Spectator) mode.
+[*] Fly the camera using your standard movement keys. Your character model will be hidden and teleported to follow your look location.
+[*] Deselect the blueprint to automatically re-attach the camera, re-enable collision, and return to your original position.
+[/list]
+
+[hr][/hr]
+
+[h1]Requirements[/h1]
+
+[list]
+[*] [b]UE4SS[/b] (Compatible with the latest Palworld version)
+[/list]
