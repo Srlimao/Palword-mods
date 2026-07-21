@@ -46,12 +46,16 @@ function M.ScanPlayers(localPlayerState)
                         local nameStr = namePrivate:ToString()
                         if not seen[nameStr] then
                             local loc = state.CachedPlayerLocation
-                            if loc and (loc.X ~= 0.0 or loc.Y ~= 0.0 or loc.Z ~= 0.0) then
-                                seen[nameStr] = true
-                                table.insert(newPlayers, {
-                                    Name = nameStr,
-                                    Pos = { X = loc.X, Y = loc.Y, Z = loc.Z }
-                                })
+                            if loc then
+                                -- Optimize: Convert UE FVector to native Lua table to avoid thousands of C++ property reflection lookups during distance checks
+                                local locX, locY, locZ = loc.X, loc.Y, loc.Z
+                                if locX ~= 0.0 or locY ~= 0.0 or locZ ~= 0.0 then
+                                    seen[nameStr] = true
+                                    table.insert(newPlayers, {
+                                        Name = nameStr,
+                                        Pos = { X = locX, Y = locY, Z = locZ }
+                                    })
+                                end
                             end
                         end
                     end
