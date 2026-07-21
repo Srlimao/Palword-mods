@@ -1,0 +1,19 @@
+{
+  "AutoSwitchOnBuild": false,
+  "InputMode": "Keyboard",
+  "DefaultSpeed": 15.0,
+  "KeyBinds": {
+    "ToggleFreeCam": "F8",
+    "UseAltModifier": true,
+    "FlyUp": "SpaceBar",
+    "FlyDown": "LeftShift",
+    "SpeedUp": "PAGE_UP",
+    "SpeedDown": "PAGE_DOWN"
+  },
+  "Gamepad": {
+    "ModifierButton": "Gamepad_LeftTrigger",
+    "ToggleButton": "Gamepad_Special_Right",
+    "FlyUpButton": "Gamepad_RightThumbstick",
+    "FlyDownButton": "Gamepad_LeftThumbstick"
+  }
+}

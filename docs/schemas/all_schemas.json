@@ -1295,5 +1295,126 @@
         }
       }
     }
+  },
+  "FreeCam": {
+    "modName": "FreeCam",
+    "version": "1.0.1",
+    "schema": {
+      "AutoSwitchOnBuild": {
+        "type": "boolean",
+        "description": "Automatically enable FreeCam when selecting a building structure in a Base Camp.",
+        "default": false
+      },
+      "InputMode": {
+        "type": "enum",
+        "description": "Select the active control device for FreeCam (Keyboard or Gamepad).",
+        "default": "Keyboard",
+        "options": [
+          "Keyboard",
+          "Gamepad"
+        ]
+      },
+      "DefaultSpeed": {
+        "type": "number",
+        "description": "Default camera flight speed.",
+        "default": 15.0,
+        "min": 2.0,
+        "max": 150.0,
+        "step": 1.0
+      },
+      "KeyBinds": {
+        "type": "section",
+        "description": "Keybindings for controlling the FreeCam mod.",
+        "properties": {
+          "ToggleFreeCam": {
+            "type": "keybind",
+            "description": "Hotkey to manually toggle FreeCam mode.",
+            "default": "F8"
+          },
+          "UseAltModifier": {
+            "type": "boolean",
+            "description": "Require holding the ALT key along with the toggle hotkey.",
+            "default": true
+          },
+          "FlyUp": {
+            "type": "keybind",
+            "description": "Hotkey to fly upwards.",
+            "default": "SpaceBar"
+          },
+          "FlyDown": {
+            "type": "keybind",
+            "description": "Hotkey to fly downwards.",
+            "default": "LeftShift"
+          },
+          "SpeedUp": {
+            "type": "keybind",
+            "description": "Hotkey to increase camera flight speed.",
+            "default": "PAGE_UP"
+          },
+          "SpeedDown": {
+            "type": "keybind",
+            "description": "Hotkey to decrease camera flight speed.",
+            "default": "PAGE_DOWN"
+          }
+        }
+      },
+      "Gamepad": {
+        "type": "section",
+        "description": "Gamepad input and controller shortcut settings.",
+        "properties": {
+          "ModifierButton": {
+            "type": "enum",
+            "description": "Required modifier button on the controller (e.g. Left Trigger, Right Trigger, or None).",
+            "default": "Gamepad_LeftTrigger",
+            "options": [
+              "Gamepad_LeftTrigger",
+              "Gamepad_RightTrigger",
+              "Gamepad_LeftShoulder",
+              "Gamepad_RightShoulder",
+              "None"
+            ]
+          },
+          "ToggleButton": {
+            "type": "enum",
+            "description": "Gamepad action button to trigger FreeCam toggle.",
+            "default": "Gamepad_Special_Right",
+            "options": [
+              "Gamepad_Special_Right",
+              "Gamepad_Special_Left",
+              "Gamepad_LeftThumbstick",
+              "Gamepad_RightThumbstick",
+              "Gamepad_FaceButton_Top",
+              "Gamepad_FaceButton_Left"
+            ]
+          },
+          "FlyUpButton": {
+            "type": "enum",
+            "description": "Gamepad button to fly upwards (R3 / RS click by default).",
+            "default": "Gamepad_RightThumbstick",
+            "options": [
+              "Gamepad_RightThumbstick",
+              "Gamepad_LeftThumbstick",
+              "Gamepad_RightShoulder",
+              "Gamepad_LeftShoulder",
+              "Gamepad_FaceButton_Top",
+              "None"
+            ]
+          },
+          "FlyDownButton": {
+            "type": "enum",
+            "description": "Gamepad button to fly downwards (L3 / LS click by default).",
+            "default": "Gamepad_LeftThumbstick",
+            "options": [
+              "Gamepad_LeftThumbstick",
+              "Gamepad_RightThumbstick",
+              "Gamepad_LeftShoulder",
+              "Gamepad_RightShoulder",
+              "Gamepad_FaceButton_Bottom",
+              "None"
+            ]
+          }
+        }
+      }
+    }
   }
 }

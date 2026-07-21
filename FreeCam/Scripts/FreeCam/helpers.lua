@@ -19,10 +19,10 @@ end
 local function CheckPlayerInBaseCampInternal(localPlayer)
     local _, PalUtility = helpers.GetEngineHelpers()
     if not PalUtility or not PalUtility:IsValid() then return false end
-    
+
     local manager = PalUtility:GetBaseCampManager(localPlayer)
     if not manager or not manager:IsValid() then return false end
-    
+
     local playerLoc = localPlayer:K2_GetActorLocation()
     local baseCamp = manager:GetInRangedBaseCamp(playerLoc, 0.0)
     return baseCamp and baseCamp:IsValid()
@@ -43,7 +43,7 @@ local function PerformLineTrace(Kismet, activePlayer, cameraComponent, currentCa
         Y = currentCameraLocation.Y + forward.Y * 25000.0,
         Z = currentCameraLocation.Z + forward.Z * 25000.0
     }
-    
+
     local hitResult = {}
     -- TraceTypeQuery1 = 1 (Visibility channel - hits terrain and building static meshes like foundations)
     local hasHit = Kismet:LineTraceSingle(activePlayer, startPos, endPos, 1, false, {}, 0, hitResult, true, {}, {}, 0.0)
@@ -58,39 +58,52 @@ function helpers.GetAimDistanceAndLocation(activePlayer, cameraComponent, curren
         Y = currentCameraLocation.Y,
         Z = currentCameraLocation.Z
     }
-    
+
     local Kismet, _ = helpers.GetEngineHelpers()
     if not Kismet or not Kismet:IsValid() or not activePlayer or not activePlayer:IsValid() or not cameraComponent or not cameraComponent:IsValid() then
         return defaultDist, defaultLoc
     end
-    
-    local success, hasHit, hitResult, forward = pcall(PerformLineTrace, Kismet, activePlayer, cameraComponent, currentCameraLocation)
+
+    local success, hasHit, hitResult, forward = pcall(PerformLineTrace, Kismet, activePlayer, cameraComponent,
+        currentCameraLocation)
     if not success then
         return defaultDist, defaultLoc
     end
-    
+
+    local maxAimDistance = 3000.0 -- 30 meters maximum distance from camera to aim location
+
     if hasHit and hitResult and hitResult.Location then
         local loc = hitResult.Location
-        
-        -- Calculate 2D horizontal distance (hypotenuse projection correction)
         local dx = loc.X - currentCameraLocation.X
         local dy = loc.Y - currentCameraLocation.Y
-        defaultDist = math.sqrt(dx^2 + dy^2)
-        
-        defaultLoc = {X = loc.X, Y = loc.Y, Z = loc.Z}
+        local dz = loc.Z - currentCameraLocation.Z
+        local totalDist = math.sqrt(dx^2 + dy^2 + dz^2)
+
+        if totalDist > maxAimDistance then
+            defaultDist = math.sqrt((forward.X * maxAimDistance)^2 + (forward.Y * maxAimDistance)^2)
+            defaultLoc = {
+                X = currentCameraLocation.X + forward.X * maxAimDistance,
+                Y = currentCameraLocation.Y + forward.Y * maxAimDistance,
+                Z = currentCameraLocation.Z + forward.Z * maxAimDistance
+            }
+        else
+            defaultDist = math.sqrt(dx^2 + dy^2)
+            defaultLoc = { X = loc.X, Y = loc.Y, Z = loc.Z }
+        end
     else
-        -- If looking at sky, default to a reasonable distance in front of the camera
-        local dx = forward.X * defaultDist
-        local dy = forward.Y * defaultDist
+        -- If looking at sky, default to maxAimDistance in front of the camera
+        local targetDist = math.min(defaultDist, maxAimDistance)
+        local dx = forward.X * targetDist
+        local dy = forward.Y * targetDist
         defaultDist = math.sqrt(dx^2 + dy^2)
-        
+
         defaultLoc = {
-            X = currentCameraLocation.X + forward.X * defaultDist,
-            Y = currentCameraLocation.Y + forward.Y * defaultDist,
-            Z = currentCameraLocation.Z + forward.Z * defaultDist
+            X = currentCameraLocation.X + forward.X * targetDist,
+            Y = currentCameraLocation.Y + forward.Y * targetDist,
+            Z = currentCameraLocation.Z + forward.Z * targetDist
         }
     end
-    
+
     return defaultDist, defaultLoc
 end
 

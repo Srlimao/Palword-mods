@@ -1,5 +1,6 @@
 local UEHelpers = require("UEHelpers")
 local helpers = require("FreeCam.helpers")
+local config = require("FreeCam.config")
 
 local camera = {}
 
@@ -39,6 +40,54 @@ local KeyA = FName("A")
 local KeyD = FName("D")
 local KeySpace = FName("SpaceBar")
 local KeyLShift = FName("LeftShift") -- Changed to LeftShift to prevent conflicts with LCtrl/C
+local FreeCamFlag = FName("FreeCam")
+
+-- Pre-allocate gamepad key structures for movement
+local GamepadLeftX = { KeyName = FName("Gamepad_LeftX") }
+local GamepadLeftY = { KeyName = FName("Gamepad_LeftY") }
+local GamepadRightShoulder = { KeyName = FName("Gamepad_RightShoulder") }
+local GamepadLeftShoulder = { KeyName = FName("Gamepad_LeftShoulder") }
+local GamepadDPadUp = { KeyName = FName("Gamepad_DPad_Up") }
+local GamepadDPadDown = { KeyName = FName("Gamepad_DPad_Down") }
+local GamepadDPadLeft = { KeyName = FName("Gamepad_DPad_Left") }
+local GamepadDPadRight = { KeyName = FName("Gamepad_DPad_Right") }
+local KeyEscape = { KeyName = FName("Escape") }
+
+local pendingClosePauseFrames = 0
+local lastBuilderMode = -1
+
+-- Cached Key structures for zero-allocation per-frame input checking
+local modKeyObj = nil
+local toggleKeyObj = nil
+local flyUpGpKeyObj = nil
+local flyDownGpKeyObj = nil
+local flyUpKbKeyObj = nil
+local flyDownKbKeyObj = nil
+
+local function CacheConfigKeyObjects()
+    if config.CONFIG.Gamepad then
+        local modName = config.CONFIG.Gamepad.ModifierButton or "Gamepad_LeftTrigger"
+        local toggleName = config.CONFIG.Gamepad.ToggleButton or "Gamepad_Special_Right"
+        local flyUpGp = config.CONFIG.Gamepad.FlyUpButton or "Gamepad_RightThumbstick"
+        local flyDownGp = config.CONFIG.Gamepad.FlyDownButton or "Gamepad_LeftThumbstick"
+
+        modKeyObj = (modName ~= "None" and modName ~= "") and { KeyName = FName(modName) } or nil
+        toggleKeyObj = { KeyName = FName(toggleName) }
+        flyUpGpKeyObj = (flyUpGp ~= "None" and flyUpGp ~= "") and { KeyName = FName(flyUpGp) } or nil
+        flyDownGpKeyObj = (flyDownGp ~= "None" and flyDownGp ~= "") and { KeyName = FName(flyDownGp) } or nil
+    end
+
+    if config.CONFIG.KeyBinds then
+        local flyUpKb = config.CONFIG.KeyBinds.FlyUp or "SpaceBar"
+        local flyDownKb = config.CONFIG.KeyBinds.FlyDown or "LeftShift"
+        flyUpKbKeyObj = { KeyName = FName(flyUpKb) }
+        flyDownKbKeyObj = { KeyName = FName(flyDownKb) }
+    end
+end
+
+function camera.RefreshConfigCache()
+    CacheConfigKeyObjects()
+end
 
 function camera.IsSpectating()
     return isSpectating
@@ -75,6 +124,8 @@ function camera.ToggleFreeCam()
         end
         
         print("[FreeCam] FreeCam Enabled.")
+        
+        currentSpeed = config.CONFIG.DefaultSpeed or 15.0
         
         -- Get the active camera component the builder is using
         cameraComponent = builder.OwnerCamera
@@ -127,12 +178,15 @@ function camera.ToggleFreeCam()
         -- Detach camera component (EDetachmentRule::KeepWorld = 1 for location/rotation/scale)
         cameraComponent:K2_DetachFromComponent(1, 1, 1, false)
         
-        -- Ignore movement inputs on player character
+        -- Ignore movement inputs on player character and disable character action inputs via Palworld engine flags
         pc:SetIgnoreMoveInput(true)
+        pcall(function() localPlayer:DisableInput(pc) end)
+        pcall(function() localPlayer:SetDisablePlayerInput(FreeCamFlag, true) end)
         
         -- Cache player movement component and state
         local movement = localPlayer.CharacterMovement
         if movement and movement:IsValid() then
+            pcall(function() movement:SetInputDisableFlag(FreeCamFlag, true) end)
             originalMoveMode = movement.MovementMode
             pcall(function() if type(originalMoveMode) == "userdata" then originalMoveMode = originalMoveMode:get() end end)
             
@@ -229,11 +283,31 @@ function camera.ToggleFreeCam()
             localPlayer:K2_SetActorLocation(safeLoc, false, {}, true)
         end
         
-        -- 3. Restore player character movement mode after being safely placed and collision active
+        -- Restore player character movement mode and UI state
+        pc:SetIgnoreMoveInput(false)
+        pc:SetIgnoreLookInput(false)
+        pc.bShowMouseCursor = false
+        pcall(function() pc:SetInputModeGameOnly() end)
+        
+        -- Reset Palworld CommonUI input and Slate navigation locks
+        pcall(function()
+            local uiUtil = StaticFindObject("/Script/Pal.Default__PalUIUtility")
+            if uiUtil and uiUtil:IsValid() then
+                uiUtil:ResetEnableCommonUIInput(localPlayer)
+                uiUtil:ResetSlateNavigation(localPlayer)
+            end
+        end)
+        
+        pcall(function() localPlayer:EnableInput(pc) end)
+        pcall(function() localPlayer:SetDisablePlayerInput(FreeCamFlag, false) end)
         local movement = localPlayer.CharacterMovement
         if movement and movement:IsValid() then
+            pcall(function() movement:SetInputDisableFlag(FreeCamFlag, false) end)
             movement:SetMovementMode(originalMoveMode, originalCustomMode)
         end
+        
+        -- Cleanly intercept and close any pause menu opened by ESC
+        pendingClosePauseFrames = 3
         
         -- Restore original camera pitch limits
         local cameraManager = pc.PlayerCameraManager
@@ -333,15 +407,82 @@ function camera.UpdateCameraMovement()
         print(string.format("[FreeCam] Construction Preview State Changed: hasPreview=%s, isSpectating=%s", tostring(hasPreview), tostring(isSpectating)))
     end
     
-    -- Auto-toggle logic
-    if hasPreview and not isSpectating then
-        if helpers.IsPlayerInBaseCamp(localPlayer) then
-            print("[FreeCam] Auto-triggering FreeCam (Structure selected inside Base Camp)")
+    -- Auto-toggle logic (if enabled in config)
+    if config.CONFIG.AutoSwitchOnBuild then
+        if hasPreview and not isSpectating then
+            if helpers.IsPlayerInBaseCamp(localPlayer) then
+                print("[FreeCam] Auto-triggering FreeCam (Structure selected inside Base Camp)")
+                camera.ToggleFreeCam()
+            end
+        elseif not hasPreview and isSpectating then
+            print("[FreeCam] Auto-disabling FreeCam (No structure selected)")
             camera.ToggleFreeCam()
         end
-    elseif not hasPreview and isSpectating then
-        print("[FreeCam] Auto-disabling FreeCam (No structure selected)")
-        camera.ToggleFreeCam()
+    end
+    
+    -- Ensure key objects are cached
+    if not toggleKeyObj then CacheConfigKeyObjects() end
+
+    -- Intercept & close any pause menu opened from pressing ESC to exit FreeCam
+    if pendingClosePauseFrames > 0 then
+        pendingClosePauseFrames = pendingClosePauseFrames - 1
+        local pc = activePC or UEHelpers.GetPlayerController()
+        if pc and pc:IsValid() then
+            pcall(function()
+                pc.bShowMouseCursor = false
+                pc:SetIgnoreLookInput(false)
+                pc:SetIgnoreMoveInput(false)
+                pc:SetInputModeGameOnly()
+                
+                local uiUtil = StaticFindObject("/Script/Pal.Default__PalUIUtility")
+                if uiUtil and uiUtil:IsValid() and activePlayer and activePlayer:IsValid() then
+                    uiUtil:ResetEnableCommonUIInput(activePlayer)
+                    uiUtil:ResetSlateNavigation(activePlayer)
+                end
+                
+                local hud = pc.MyHUD or pc:GetHUD()
+                if hud and hud:IsValid() then
+                    local stack = hud.StackableUIWidgets
+                    if stack then
+                        for i = 1, #stack do
+                            local w = stack[i]
+                            if w and w:IsValid() then
+                                w:Close()
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+
+    -- Check universal ESC key press while spectating
+    if isSpectating then
+        local pc = activePC or UEHelpers.GetPlayerController()
+        if pc and pc:IsValid() then
+            if pc:WasInputKeyJustPressed(KeyEscape) then
+                print("[FreeCam] ESC key detected: Exiting FreeCam mode.")
+                camera.ToggleFreeCam()
+                return
+            end
+        end
+    end
+
+    -- Gamepad shortcut handler (if InputMode is Gamepad)
+    local inputMode = config.CONFIG.InputMode or "Keyboard"
+    if inputMode == "Gamepad" and config.CONFIG.Gamepad then
+        local pc = activePC or UEHelpers.GetPlayerController()
+        if pc and pc:IsValid() then
+            local isModDown = true
+            if modKeyObj then
+                isModDown = pc:IsInputKeyDown(modKeyObj)
+            end
+            
+            if isModDown and pc:WasInputKeyJustPressed(toggleKeyObj) then
+                print("[FreeCam] Gamepad shortcut detected! Toggling FreeCam.")
+                camera.ToggleFreeCam()
+            end
+        end
     end
     
     -- If not currently spectating, do not run flight updates
@@ -371,35 +512,86 @@ function camera.UpdateCameraMovement()
     -- Calculate movement direction
     local moveDir = {X = 0.0, Y = 0.0, Z = 0.0}
     
-    if activePC:IsInputKeyDown({ KeyName = KeyW }) then
-        moveDir.X = moveDir.X + forward.X
-        moveDir.Y = moveDir.Y + forward.Y
-        moveDir.Z = moveDir.Z + forward.Z
-    end
-    if activePC:IsInputKeyDown({ KeyName = KeyS }) then
-        moveDir.X = moveDir.X - forward.X
-        moveDir.Y = moveDir.Y - forward.Y
-        moveDir.Z = moveDir.Z - forward.Z
-    end
-    if activePC:IsInputKeyDown({ KeyName = KeyD }) then
-        moveDir.X = moveDir.X + right.X
-        moveDir.Y = moveDir.Y + right.Y
-        moveDir.Z = moveDir.Z + right.Z
-    end
-    if activePC:IsInputKeyDown({ KeyName = KeyA }) then
-        moveDir.X = moveDir.X - right.X
-        moveDir.Y = moveDir.Y - right.Y
-        moveDir.Z = moveDir.Z - right.Z
-    end
-    if activePC:IsInputKeyDown({ KeyName = KeySpace }) then
-        moveDir.X = moveDir.X + up.X
-        moveDir.Y = moveDir.Y + up.Y
-        moveDir.Z = moveDir.Z + up.Z
-    end
-    if activePC:IsInputKeyDown({ KeyName = KeyLShift }) then
-        moveDir.X = moveDir.X - up.X
-        moveDir.Y = moveDir.Y - up.Y
-        moveDir.Z = moveDir.Z - up.Z
+    if inputMode == "Keyboard" then
+        if activePC:IsInputKeyDown({ KeyName = KeyW }) then
+            moveDir.X = moveDir.X + forward.X
+            moveDir.Y = moveDir.Y + forward.Y
+            moveDir.Z = moveDir.Z + forward.Z
+        end
+        if activePC:IsInputKeyDown({ KeyName = KeyS }) then
+            moveDir.X = moveDir.X - forward.X
+            moveDir.Y = moveDir.Y - forward.Y
+            moveDir.Z = moveDir.Z - forward.Z
+        end
+        if activePC:IsInputKeyDown({ KeyName = KeyD }) then
+            moveDir.X = moveDir.X + right.X
+            moveDir.Y = moveDir.Y + right.Y
+            moveDir.Z = moveDir.Z + right.Z
+        end
+        if activePC:IsInputKeyDown({ KeyName = KeyA }) then
+            moveDir.X = moveDir.X - right.X
+            moveDir.Y = moveDir.Y - right.Y
+            moveDir.Z = moveDir.Z - right.Z
+        end
+        if flyUpKbKeyObj and activePC:IsInputKeyDown(flyUpKbKeyObj) then
+            moveDir.X = moveDir.X + up.X
+            moveDir.Y = moveDir.Y + up.Y
+            moveDir.Z = moveDir.Z + up.Z
+        end
+        if flyDownKbKeyObj and activePC:IsInputKeyDown(flyDownKbKeyObj) then
+            moveDir.X = moveDir.X - up.X
+            moveDir.Y = moveDir.Y - up.Y
+            moveDir.Z = moveDir.Z - up.Z
+        end
+    elseif inputMode == "Gamepad" and config.CONFIG.Gamepad then
+        -- Gamepad movement (Left Stick analog + Configured FlyUp/FlyDown Buttons + D-Pad)
+        local stickX = activePC:GetInputAnalogKeyState(GamepadLeftX) or 0.0
+        local stickY = activePC:GetInputAnalogKeyState(GamepadLeftY) or 0.0
+        if type(stickX) == "userdata" and stickX.get then stickX = stickX:get() end
+        if type(stickY) == "userdata" and stickY.get then stickY = stickY:get() end
+
+        if math.abs(stickY) > 0.15 then
+            moveDir.X = moveDir.X + forward.X * stickY
+            moveDir.Y = moveDir.Y + forward.Y * stickY
+            moveDir.Z = moveDir.Z + forward.Z * stickY
+        end
+        if math.abs(stickX) > 0.15 then
+            moveDir.X = moveDir.X + right.X * stickX
+            moveDir.Y = moveDir.Y + right.Y * stickX
+            moveDir.Z = moveDir.Z + right.Z * stickX
+        end
+
+        if flyUpGpKeyObj and activePC:IsInputKeyDown(flyUpGpKeyObj) then
+            moveDir.X = moveDir.X + up.X
+            moveDir.Y = moveDir.Y + up.Y
+            moveDir.Z = moveDir.Z + up.Z
+        end
+        if flyDownGpKeyObj and activePC:IsInputKeyDown(flyDownGpKeyObj) then
+            moveDir.X = moveDir.X - up.X
+            moveDir.Y = moveDir.Y - up.Y
+            moveDir.Z = moveDir.Z - up.Z
+        end
+
+        if activePC:IsInputKeyDown(GamepadDPadUp) then
+            moveDir.X = moveDir.X + forward.X
+            moveDir.Y = moveDir.Y + forward.Y
+            moveDir.Z = moveDir.Z + forward.Z
+        end
+        if activePC:IsInputKeyDown(GamepadDPadDown) then
+            moveDir.X = moveDir.X - forward.X
+            moveDir.Y = moveDir.Y - forward.Y
+            moveDir.Z = moveDir.Z - forward.Z
+        end
+        if activePC:IsInputKeyDown(GamepadDPadRight) then
+            moveDir.X = moveDir.X + right.X
+            moveDir.Y = moveDir.Y + right.Y
+            moveDir.Z = moveDir.Z + right.Z
+        end
+        if activePC:IsInputKeyDown(GamepadDPadLeft) then
+            moveDir.X = moveDir.X - right.X
+            moveDir.Y = moveDir.Y - right.Y
+            moveDir.Z = moveDir.Z - right.Z
+        end
     end
     
     -- Normalize and apply speed
@@ -431,20 +623,46 @@ function camera.UpdateCameraMovement()
         end
     end
 
-    -- Set the builder installation distance dynamically.
+    -- Set the builder installation distance dynamically for Build, Snap, Dismantle, and Paint modes.
     local builder = activePlayer.BuilderComponent
     if builder and builder:IsValid() then
-        local isSnap = false
-        local successSnap, resSnap = pcall(CheckIsSnapMode, builder)
-        if successSnap and resSnap then
-            isSnap = true
+        local mode = builder:GetCurrentMode()
+        local modeNum = 0
+        if type(mode) == "number" then
+            modeNum = mode
+        elseif type(mode) == "userdata" and mode.get then
+            modeNum = mode:get()
         end
+        
+        if modeNum ~= lastBuilderMode then
+            lastBuilderMode = modeNum
+            print(string.format("[FreeCam Debug] Builder Mode Changed: mode = %d (0=None, 1=Building, 2=Dismantling, 3=Painting)", modeNum))
+        end
+        
+        local isSnap = false
+        pcall(function()
+            if CheckIsSnapMode(builder) then isSnap = true end
+        end)
         
         if isSnap then
             builder.InstallDistanceNormalFromOwner = originalInstallDistance * 15.0
         else
             builder.InstallDistanceNormalFromOwner = 0.0
-            
+        end
+        
+        if modeNum == 2 and (timeNow - lastLogTime) > 1.5 then
+            lastLogTime = timeNow
+            local targetName = "None"
+            pcall(function()
+                local targetObj = builder:GetDismantleTargetObject()
+                if targetObj and targetObj:IsValid() then
+                    targetName = targetObj:GetFullName()
+                end
+            end)
+            print(string.format("[FreeCam Debug] Dismantle Mode Active: Mode=%d, InstallDist=%.1f, TargetObj=%s", modeNum, builder.InstallDistanceNormalFromOwner, targetName))
+        end
+        
+        if not isSnap then
             -- When snap mode is off, adjust character Z position to align the blueprint's 3D center with the reticle
             pcall(function()
                 local checker = builder.InstallChecker
@@ -486,31 +704,7 @@ function camera.UpdateCameraMovement()
                             local worldOffsetY = fY * xCenter + rY * yCenter + uY * zCenter
                             local worldOffsetZ = fZ * xCenter + rZ * yCenter + uZ * zCenter
                             
-                            -- Dynamically measure the game's building system forward/pivot offset
-                            -- Temporarily disabled to debug the sliding feedback loop
                             local relX, relY, relZ = 0.0, 0.0, 0.0
-                            --[[
-                            local previewLoc = preview:K2_GetActorLocation()
-                            local playerLoc = activePlayer:K2_GetActorLocation()
-                            if previewLoc and playerLoc then
-                                local pX, pY, pZ = previewLoc.X, previewLoc.Y, previewLoc.Z
-                                local cX, cY, cZ = playerLoc.X, playerLoc.Y, playerLoc.Z
-                                
-                                if type(pX) == "userdata" and pX.get then pX = pX:get() pY = pY:get() pZ = pZ:get() end
-                                if type(cX) == "userdata" and cX.get then cX = cX:get() cY = cY:get() cZ = cZ:get() end
-                                
-                                relX = pX - cX
-                                relY = pY - cY
-                                relZ = pZ - cZ
-                                
-                                local dist = math.sqrt(relX^2 + relY^2 + relZ^2)
-                                if dist > 1500.0 then
-                                    relX = 0.0
-                                    relY = 0.0
-                                    relZ = 0.0
-                                end
-                            end
-                            ]]
                             
                             aimLoc.X = aimLoc.X - worldOffsetX - relX
                             aimLoc.Y = aimLoc.Y - worldOffsetY - relY

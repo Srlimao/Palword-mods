@@ -196,6 +196,79 @@ METADATA_HOLD_TO_FIRE = {
     "WeaponTypes.GrenadeLauncher": { "description": "Autofire for Grenade Launchers.", "type": "boolean" }
 }
 
+METADATA_FREECAM = {
+    "AutoSwitchOnBuild": {
+        "description": "Automatically enable FreeCam when selecting a building structure in a Base Camp.",
+        "type": "boolean"
+    },
+    "InputMode": {
+        "description": "Select the active control device for FreeCam (Keyboard or Gamepad).",
+        "type": "enum",
+        "options": ["Keyboard", "Gamepad"]
+    },
+    "DefaultSpeed": {
+        "description": "Default camera flight speed.",
+        "type": "number",
+        "min": 2.0,
+        "max": 150.0,
+        "step": 1.0
+    },
+    "KeyBinds": {
+        "description": "Keybindings for controlling the FreeCam mod."
+    },
+    "KeyBinds.ToggleFreeCam": {
+        "description": "Hotkey to manually toggle FreeCam mode.",
+        "type": "keybind"
+    },
+    "KeyBinds.UseAltModifier": {
+        "description": "Require holding the ALT key along with the toggle hotkey.",
+        "type": "boolean"
+    },
+    "KeyBinds.FlyUp": {
+        "description": "Hotkey to fly upwards.",
+        "type": "keybind"
+    },
+    "KeyBinds.FlyDown": {
+        "description": "Hotkey to fly downwards.",
+        "type": "keybind"
+    },
+    "KeyBinds.SpeedUp": {
+        "description": "Hotkey to increase camera flight speed.",
+        "type": "keybind"
+    },
+    "KeyBinds.SpeedDown": {
+        "description": "Hotkey to decrease camera flight speed.",
+        "type": "keybind"
+    },
+    "Gamepad": {
+        "description": "Gamepad input and controller shortcut settings."
+    },
+    "Gamepad.EnableGamepad": {
+        "description": "Enable controller shortcuts to toggle FreeCam mode.",
+        "type": "boolean"
+    },
+    "Gamepad.ModifierButton": {
+        "description": "Required modifier button on the controller (e.g. Left Trigger, Right Trigger, or None).",
+        "type": "enum",
+        "options": ["Gamepad_LeftTrigger", "Gamepad_RightTrigger", "Gamepad_LeftShoulder", "Gamepad_RightShoulder", "None"]
+    },
+    "Gamepad.ToggleButton": {
+        "description": "Gamepad action button to trigger FreeCam toggle.",
+        "type": "enum",
+        "options": ["Gamepad_Special_Right", "Gamepad_Special_Left", "Gamepad_LeftThumbstick", "Gamepad_RightThumbstick", "Gamepad_FaceButton_Top", "Gamepad_FaceButton_Left"]
+    },
+    "Gamepad.FlyUpButton": {
+        "description": "Gamepad button to fly upwards (R3 / RS click by default).",
+        "type": "enum",
+        "options": ["Gamepad_RightThumbstick", "Gamepad_LeftThumbstick", "Gamepad_RightShoulder", "Gamepad_LeftShoulder", "Gamepad_FaceButton_Top", "None"]
+    },
+    "Gamepad.FlyDownButton": {
+        "description": "Gamepad button to fly downwards (L3 / LS click by default).",
+        "type": "enum",
+        "options": ["Gamepad_LeftThumbstick", "Gamepad_RightThumbstick", "Gamepad_LeftShoulder", "Gamepad_RightShoulder", "Gamepad_FaceButton_Bottom", "None"]
+    }
+}
+
 # --- Lua Tokenizer and Parser ---
 
 def tokenize_lua(source):
@@ -387,6 +460,12 @@ def main():
             "lua_path": "HoldToFire/Scripts/HoldToFire/config.lua",
             "metadata": METADATA_HOLD_TO_FIRE,
             "version": "1.0.0"
+        },
+        {
+            "name": "FreeCam",
+            "lua_path": "FreeCam/Scripts/FreeCam/config.lua",
+            "metadata": METADATA_FREECAM,
+            "version": "1.0.1"
         }
     ]
     
