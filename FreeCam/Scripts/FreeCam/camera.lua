@@ -55,6 +55,7 @@ local KeyEscape = { KeyName = FName("Escape") }
 
 local pendingClosePauseFrames = 0
 local lastBuilderMode = -1
+local lastDismantleTarget = nil
 
 -- Cached Key structures for zero-allocation per-frame input checking
 local modKeyObj = nil
@@ -657,26 +658,55 @@ function camera.UpdateCameraMovement()
         
         if modeNum == 2 then
             pcall(function()
+                pc:SetControlRotation(currentCameraRotation)
                 local checker = builder.DismantleChecker
-                if checker and checker:IsValid() and hitActor and hitActor:IsValid() then
-                    checker.TargetBuildObject = hitActor
-                    local actorLoc = hitActor:K2_GetActorLocation()
-                    if actorLoc then
-                        aimLoc = {X = actorLoc.X, Y = actorLoc.Y, Z = actorLoc.Z}
+                
+                -- Clear previous dismantle visual highlight if target changed
+                if lastDismantleTarget and lastDismantleTarget:IsValid() and lastDismantleTarget ~= hitActor then
+                    pcall(function()
+                        if lastDismantleTarget.OnChangeVisualForDismantle then
+                            lastDismantleTarget:OnChangeVisualForDismantle(false)
+                        end
+                        lastDismantleTarget.bDismantleTargetInLocal = false
+                    end)
+                    lastDismantleTarget = nil
+                end
+
+                if hitActor and hitActor:IsValid() then
+                    if checker and checker:IsValid() then
+                        checker.TargetBuildObject = hitActor
                     end
+                    pcall(function()
+                        if hitActor.OnChangeVisualForDismantle then
+                            hitActor:OnChangeVisualForDismantle(true)
+                        end
+                        hitActor.bDismantleTargetInLocal = true
+                    end)
+                    lastDismantleTarget = hitActor
                 end
             end)
             
             if (timeNow - lastLogTime) > 1.5 then
                 lastLogTime = timeNow
                 local targetName = "None"
+                local hitActorName = (hitActor and hitActor:IsValid()) and hitActor:GetFullName() or "None"
                 pcall(function()
                     local targetObj = builder:GetDismantleTargetObject()
                     if targetObj and targetObj:IsValid() then
                         targetName = targetObj:GetFullName()
                     end
                 end)
-                print(string.format("[FreeCam Debug] Dismantle Mode Active: Mode=%d, InstallDist=%.1f, TargetObj=%s", modeNum, builder.InstallDistanceNormalFromOwner, targetName))
+                print(string.format("[FreeCam Debug] Dismantle Mode: hitActor=%s, GetDismantleTarget=%s", hitActorName, targetName))
+            end
+        else
+            if lastDismantleTarget and lastDismantleTarget:IsValid() then
+                pcall(function()
+                    if lastDismantleTarget.OnChangeVisualForDismantle then
+                        lastDismantleTarget:OnChangeVisualForDismantle(false)
+                    end
+                    lastDismantleTarget.bDismantleTargetInLocal = false
+                end)
+                lastDismantleTarget = nil
             end
         end
         
@@ -754,6 +784,10 @@ function camera.UpdateCameraMovement()
             end
         end
     end)
+end
+
+function camera.GetReticleTargetObject()
+    return lastDismantleTarget
 end
 
 return camera

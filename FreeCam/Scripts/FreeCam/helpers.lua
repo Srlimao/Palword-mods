@@ -61,13 +61,12 @@ function helpers.GetAimDistanceAndLocation(activePlayer, cameraComponent, curren
 
     local Kismet, _ = helpers.GetEngineHelpers()
     if not Kismet or not Kismet:IsValid() or not activePlayer or not activePlayer:IsValid() or not cameraComponent or not cameraComponent:IsValid() then
-        return defaultDist, defaultLoc
+        return defaultDist, defaultLoc, nil
     end
 
-    local success, hasHit, hitResult, forward = pcall(PerformLineTrace, Kismet, activePlayer, cameraComponent,
-        currentCameraLocation)
+    local success, hasHit, hitResult, forward = pcall(PerformLineTrace, Kismet, activePlayer, cameraComponent, currentCameraLocation)
     if not success then
-        return defaultDist, defaultLoc
+        return defaultDist, defaultLoc, nil
     end
 
     local maxAimDistance = 3000.0 -- 30 meters maximum distance from camera to aim location

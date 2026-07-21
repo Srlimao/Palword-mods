@@ -80,3 +80,44 @@ pcall(function()
     end)
     print("[FreeCam] Hooked PalBuilderComponent:IsInstallAtReticle successfully.")
 end)
+
+local lastHookLogTime = 0
+
+-- Hook PalBuilderComponent:GetDismantleTargetObject to return the reticle target in FreeCam
+pcall(function()
+    RegisterHook("/Script/Pal.PalBuilderComponent:GetDismantleTargetObject", function(self)
+        if camera.IsSpectating() then
+            local target = camera.GetReticleTargetObject()
+            local now = os.clock()
+            if (now - lastHookLogTime) > 1.0 then
+                lastHookLogTime = now
+                print(string.format("[FreeCam Hook Debug] GetDismantleTargetObject called! Target=%s", target and target:IsValid() and target:GetFullName() or "Nil"))
+            end
+            if target and target:IsValid() then
+                return target
+            end
+        end
+    end)
+    print("[FreeCam] Hooked PalBuilderComponent:GetDismantleTargetObject successfully.")
+end)
+
+-- Hook PalBuilderComponent:CanRequestDismantle to allow dismantling from FreeCam distance
+pcall(function()
+    RegisterHook("/Script/Pal.PalBuilderComponent:CanRequestDismantle", function(self)
+        if camera.IsSpectating() then
+            print("[FreeCam Hook Debug] CanRequestDismantle called! Returning 0")
+            return 0 -- EPalMapObjectOperationResult::Success = 0
+        end
+    end)
+    print("[FreeCam] Hooked PalBuilderComponent:CanRequestDismantle successfully.")
+end)
+
+-- Hook PalBuilderComponent:IsEnableDismantle to return true in FreeCam
+pcall(function()
+    RegisterHook("/Script/Pal.PalBuilderComponent:IsEnableDismantle", function(self)
+        if camera.IsSpectating() then
+            return true
+        end
+    end)
+    print("[FreeCam] Hooked PalBuilderComponent:IsEnableDismantle successfully.")
+end)
