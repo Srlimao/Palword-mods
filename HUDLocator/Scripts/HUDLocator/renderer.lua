@@ -11,8 +11,12 @@ local function DrawCaveBeacon(hud, pos, color)
     local baseWorld = { X = pos.X, Y = pos.Y, Z = pos.Z }
     local topWorld = { X = pos.X, Y = pos.Y, Z = pos.Z + 1500.0 } -- 15 meters tall
     
-    local screenBase = hud:Project(baseWorld, false)
-    local screenTop = hud:Project(topWorld, false)
+    local ueScreenBase = hud:Project(baseWorld, false)
+    local ueScreenTop = hud:Project(topWorld, false)
+
+    -- Optimize: Convert UE FVector to native Lua table to avoid thousands of C++ property reflection lookups during distance checks
+    local screenBase = { X = ueScreenBase.X, Y = ueScreenBase.Y, Z = ueScreenBase.Z }
+    local screenTop = { X = ueScreenTop.X, Y = ueScreenTop.Y, Z = ueScreenTop.Z }
     
     if screenBase.Z > 0.0 or screenTop.Z > 0.0 then
         -- Draw glowing cylinder beam using thick Canvas DrawLine calls
@@ -34,7 +38,9 @@ end
 -- Render tracker label (either box style or simple text style)
 local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
     local textWorldPos = { X = worldPos.X, Y = worldPos.Y, Z = worldPos.Z + style.TextOffsetZ }
-    local textScreen = hud:Project(textWorldPos, false)
+    local ueTextScreen = hud:Project(textWorldPos, false)
+    -- Optimize: Convert UE FVector to native Lua table to avoid thousands of C++ property reflection lookups during distance checks
+    local textScreen = { X = ueTextScreen.X, Y = ueTextScreen.Y, Z = ueTextScreen.Z }
     
     if textScreen.Z > 0.0 then
         local font, scaleMult = utils.GetFontAndScale()
