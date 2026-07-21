@@ -104,7 +104,12 @@ function helpers.GetAimDistanceAndLocation(activePlayer, cameraComponent, curren
         }
     end
 
-    return defaultDist, defaultLoc
+    local hitActor = nil
+    if hasHit and hitResult and hitResult.Actor and hitResult.Actor:IsValid() then
+        hitActor = hitResult.Actor
+    end
+
+    return defaultDist, defaultLoc, hitActor
 end
 
 return helpers

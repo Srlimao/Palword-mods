@@ -281,6 +281,10 @@ function camera.ToggleFreeCam()
                 Z = originalPlayerLocation.Z + 120.0
             }
             localPlayer:K2_SetActorLocation(safeLoc, false, {}, true)
+            local currentRot = localPlayer:K2_GetActorRotation()
+            local curYaw = (currentRot and currentRot.Yaw) and currentRot.Yaw or 0.0
+            if type(curYaw) == "userdata" and curYaw.get then curYaw = curYaw:get() end
+            localPlayer:K2_SetActorRotation({Pitch = 0.0, Yaw = curYaw, Roll = 0.0}, false)
         end
         
         -- Restore player character movement mode and UI state
@@ -608,7 +612,7 @@ function camera.UpdateCameraMovement()
     cameraComponent:K2_SetWorldLocationAndRotation(currentCameraLocation, currentCameraRotation, false, {}, false)
     
     -- Dynamically query terrain range and location in look direction
-    local aimDist, aimLoc = helpers.GetAimDistanceAndLocation(activePlayer, cameraComponent, currentCameraLocation)
+    local aimDist, aimLoc, hitActor = helpers.GetAimDistanceAndLocation(activePlayer, cameraComponent, currentCameraLocation)
     
     -- Diagnostic: Check if player position was reset since last frame
     local timeNow = os.clock()
@@ -644,22 +648,36 @@ function camera.UpdateCameraMovement()
             if CheckIsSnapMode(builder) then isSnap = true end
         end)
         
-        if isSnap then
+        local isDismantle = (modeNum == 2)
+        if isSnap or isDismantle then
             builder.InstallDistanceNormalFromOwner = originalInstallDistance * 15.0
         else
             builder.InstallDistanceNormalFromOwner = 0.0
         end
         
-        if modeNum == 2 and (timeNow - lastLogTime) > 1.5 then
-            lastLogTime = timeNow
-            local targetName = "None"
+        if modeNum == 2 then
             pcall(function()
-                local targetObj = builder:GetDismantleTargetObject()
-                if targetObj and targetObj:IsValid() then
-                    targetName = targetObj:GetFullName()
+                local checker = builder.DismantleChecker
+                if checker and checker:IsValid() and hitActor and hitActor:IsValid() then
+                    checker.TargetBuildObject = hitActor
+                    local actorLoc = hitActor:K2_GetActorLocation()
+                    if actorLoc then
+                        aimLoc = {X = actorLoc.X, Y = actorLoc.Y, Z = actorLoc.Z}
+                    end
                 end
             end)
-            print(string.format("[FreeCam Debug] Dismantle Mode Active: Mode=%d, InstallDist=%.1f, TargetObj=%s", modeNum, builder.InstallDistanceNormalFromOwner, targetName))
+            
+            if (timeNow - lastLogTime) > 1.5 then
+                lastLogTime = timeNow
+                local targetName = "None"
+                pcall(function()
+                    local targetObj = builder:GetDismantleTargetObject()
+                    if targetObj and targetObj:IsValid() then
+                        targetName = targetObj:GetFullName()
+                    end
+                end)
+                print(string.format("[FreeCam Debug] Dismantle Mode Active: Mode=%d, InstallDist=%.1f, TargetObj=%s", modeNum, builder.InstallDistanceNormalFromOwner, targetName))
+            end
         end
         
         if not isSnap then
