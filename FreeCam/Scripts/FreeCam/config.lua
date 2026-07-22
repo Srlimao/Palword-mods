@@ -71,15 +71,22 @@ function M.LoadConfig()
     }
     
     local file = nil
+    local loadedPath = nil
     for _, path in ipairs(paths) do
         file = io.open(path, "r")
-        if file then break end
+        if file then
+            loadedPath = path
+            break
+        end
     end
+    
+    -- Ensure the AppData directory is created
+    local modConfigDir = GetModConfigsDir() .. "/FreeCam"
+    pcall(function() os.execute('mkdir "' .. string.gsub(modConfigDir, "/", "\\") .. '" >nul 2>nul') end)
     
     if not file then
         M.DebugPrint("Config file not found. Creating default config.json...")
-        local writePath = primaryPath or localPath or "Mods/FreeCam/config.json"
-        local outFile = io.open(writePath, "w")
+        local outFile = io.open(primaryPath, "w")
         if outFile then
             local defaultJson = [[{
   "Debug": false,
@@ -102,15 +109,27 @@ function M.LoadConfig()
 }]]
             outFile:write(defaultJson)
             outFile:close()
-            M.DebugPrint("Default config.json created successfully at " .. writePath)
+            M.DebugPrint("Default config.json created successfully at " .. primaryPath)
         else
-            M.DebugPrint("Failed to create default config.json at " .. writePath)
+            M.DebugPrint("Failed to create default config.json at " .. primaryPath)
         end
         return
     end
     
     local content = file:read("*all")
     file:close()
+    
+    -- If we loaded it from somewhere else, write it to primaryPath (AppData) so it is initialized there
+    if loadedPath ~= primaryPath then
+        local outFile = io.open(primaryPath, "w")
+        if outFile then
+            outFile:write(content)
+            outFile:close()
+            M.DebugPrint("Successfully initialized config file at central path: " .. primaryPath)
+        else
+            M.DebugPrint("Failed to copy config file to central path: " .. primaryPath)
+        end
+    end
     
     local parsed = json.parse(content)
     if parsed then
