@@ -9,19 +9,22 @@ A client-side mod for Palworld that detaches the camera component from the playe
 - **Free Flight Construction & Dismantling**: Build and dismantle freely around your base camp by detaching the camera from your character.
 - **Collision-Free Building**: No more struggling with character collisions while trying to place structures.
 - **Gamepad & Keyboard Support**: Full support for both Keyboard and Gamepad flight, elevation (Fly Up/Down), and mode toggling.
-- **ModConfigurator Integration**: In-game GUI configuration support for keybinds, speed settings, and automatic mode switching.
+- **ModConfigurator Integration**: In-game GUI configuration support for keybinds and speed settings.
 - **Adjustable Flight Speed**: Change camera flight speed on the fly using `Page Up` / `Page Down` keys.
-- **Auto Toggle Option**: Automatically enables spectator mode when selecting a construction blueprint inside your base camp.
+- **Extended Dismantle & Snap Range**: Snapping and dismantling distances are increased by 15x while in FreeCam, allowing you to remodel your base easily from high above.
 - **Dynamic Reticle Placement**: Construction objects and dismantle targets can be placed/selected precisely at the reticle instead of locking onto the player character.
+- **Optimized Performance**: Zero runtime table allocations in the tick loop, ensuring zero frame stutters or garbage collection lag during camera movement.
 
 ---
 
 ## How It Works
 
-1. Select a construction blueprint or enter Dismantle mode while within your Base Camp boundaries (or press **F8** / **Gamepad LT + Select**).
+1. Press **Alt + F8** (Keyboard) or **Gamepad LT + Start** (Gamepad) while within your Base Camp boundaries.
 2. The mod automatically disables character collision and detaches the camera, entering Free Camera (Spectator) mode.
 3. Fly the camera using your movement keys/analog stick. Your character model will be hidden and teleported to follow your look location.
-4. Deselect the blueprint or press **ESC** to automatically re-attach the camera, re-enable collision, and return to your original position.
+4. Press **Alt + F8** (Keyboard) or **Gamepad LT + Start** (Gamepad) to exit Free Camera mode, re-attach the camera, re-enable collision, and return to your original position.
+
+*Note: Keyboard and Gamepad bindings can be fully customized in `%LOCALAPPDATA%/Pal/Saved/Mods/FreeCam/config.json`.*
 
 ---
 
@@ -36,7 +39,7 @@ A client-side mod for Palworld that detaches the camera component from the playe
 
 自由视角建筑 (Free Camera / Native Spectator)
 
-Palworld 的客户端模组。在建造和拆除模式下，模组会自动将摄像机与玩家角色分离，使你能够在据点范围内自由飞行，不受角色碰撞限制地进行建造和拆除。
+Palworld 的客户端模组。在建造和拆除模式下，模组会自动将摄像机与玩家角色分离，使你能够在据点范围内自由飞行，不受角色碰撞限制地进行建造 and 拆除。
 
 ---
 
@@ -45,17 +48,20 @@ Palworld 的客户端模组。在建造和拆除模式下，模组会自动将�
 - **自由飞行建造与拆除**：在据点内建造或拆除时，摄像机脱离角色，让你全方位自由飞行。
 - **无碰撞建筑**：放置建筑时不再被角色自身碰撞体积阻挡。
 - **手柄与键盘全面支持**：支持键盘和手柄飞行、垂直升降（上升/下降）以及快捷键切换。
-- **ModConfigurator 整合**：支持游戏内图形化配置菜单，可设置按键绑定、飞行速度及自动切换选项。
+- **ModConfigurator 整合**：支持游戏内图形化配置菜单，可设置按键绑定和飞行速度。
 - **动态调整飞行速度**：通过 `Page Up` / `Page Down` 快捷键在飞行过程中实时调整摄像机移动速度。
-- **自动切换选项**：在据点范围内选择建筑蓝图时，自动进入自由视角（旁观者）模式。
+- **超远拆除与对齐距离**：在自由视角下，建筑对齐 and 拆除的最大距离提升了 15 倍，站在高处也能轻松重构据点。
 - **动态准星放置**：建造与拆除目标可以直接定位在准星指示的位置，而不是锁定在玩家角色附近。
+- **极致性能优化**：飞行和更新更新循环中实现零运行时表分配与垃圾回收 (GC) 开销，确保无任何帧率抖动或延迟。
 
 ### 工作原理
 
-1. 在据点范围内选择一个建筑蓝图或进入拆除模式（或按下 **F8** / 手柄 **LT + Select**）。
+1. 在据点范围内按下 **Alt + F8**（键盘）或手柄 **LT + Start**。
 2. 模组会自动禁用角色碰撞、分离摄像机，并进入自由视角模式。
 3. 使用常规移动键/摇杆自由飞行，角色模型将隐藏并自动跟随你的视线位置。
-4. 取消选择蓝图或按下 **ESC** 键后，摄像机将自动重新附加，恢复碰撞体积并回到初始位置。
+4. 再次按下 **Alt + F8**（键盘）或手柄 **LT + Start** 键退出自由视角模式，摄像机将自动重新附加，恢复碰撞体积并回到初始位置。
+
+*注：键盘与手柄快捷键绑定均可在 `%LOCALAPPDATA%/Pal/Saved/Mods/FreeCam/config.json` 配置文件中完全自定义。*
 
 ### 运行环境需求
 
