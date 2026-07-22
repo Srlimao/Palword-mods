@@ -1300,11 +1300,6 @@
     "modName": "FreeCam",
     "version": "1.0.1",
     "schema": {
-      "AutoSwitchOnBuild": {
-        "type": "boolean",
-        "description": "Automatically enable FreeCam when selecting a building structure in a Base Camp.",
-        "default": false
-      },
       "InputMode": {
         "type": "enum",
         "description": "Select the active control device for FreeCam (Keyboard or Gamepad).",
