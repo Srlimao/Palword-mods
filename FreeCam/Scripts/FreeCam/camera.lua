@@ -33,6 +33,7 @@ local rightVec = { X = 0.0, Y = 0.0, Z = 0.0 }
 local upVec = { X = 0.0, Y = 0.0, Z = 0.0 }
 local aimLocCache = { X = 0.0, Y = 0.0, Z = 0.0 }
 local lastSetAimLoc = { X = 0.0, Y = 0.0, Z = 0.0 }
+local limitRadius = 5250.0
 local hasLastSetAimLoc = false
 local lastLogTime = 0.0
 
@@ -67,10 +68,20 @@ function camera.ToggleFreeCam()
     if not builder or not builder:IsValid() then return end
     
     if not isSpectating then
-        if not helpers.IsPlayerInBaseCamp(localPlayer) then
+        local inBase, baseCampObj = helpers.GetPlayerBaseCamp(localPlayer)
+        if not inBase or not baseCampObj then
             print("[FreeCam] Cannot enable FreeCam: Player is not within Base Camp boundaries.")
             return
         end
+        
+        local range = 3500.0
+        pcall(function()
+            local r = baseCampObj:GetRange()
+            if type(r) == "userdata" and r.get then r = r:get() end
+            if type(r) == "number" and r > 0 then range = r end
+        end)
+        limitRadius = range * 1.5
+        print(string.format("[FreeCam Debug] Enforcing flight radius limit: %.1f units (%.1f meters)", limitRadius, limitRadius / 100.0))
     end
     
     isSpectating = not isSpectating
@@ -170,6 +181,19 @@ function camera.UpdateCameraMovement()
         currentCameraLocation.X = currentCameraLocation.X + (moveDir.X / length) * currentSpeed
         currentCameraLocation.Y = currentCameraLocation.Y + (moveDir.Y / length) * currentSpeed
         currentCameraLocation.Z = currentCameraLocation.Z + (moveDir.Z / length) * currentSpeed
+    end
+    
+    -- Limit camera's 2D horizontal movement to 1.5x the base camp radius from its starting point
+    local origLoc = player_m.GetOriginalPlayerLocation()
+    if origLoc then
+        local dx = currentCameraLocation.X - origLoc.X
+        local dy = currentCameraLocation.Y - origLoc.Y
+        local dist2D = math.sqrt(dx * dx + dy * dy)
+        if dist2D > limitRadius then
+            local ratio = limitRadius / dist2D
+            currentCameraLocation.X = origLoc.X + dx * ratio
+            currentCameraLocation.Y = origLoc.Y + dy * ratio
+        end
     end
     
     -- Update camera coordinates

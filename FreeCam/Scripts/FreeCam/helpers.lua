@@ -115,14 +115,23 @@ local function CheckPlayerInBaseCampInternal(localPlayer)
 
     local playerLoc = localPlayer:K2_GetActorLocation()
     local baseCamp = manager:GetInRangedBaseCamp(playerLoc, 0.0)
-    return baseCamp and baseCamp:IsValid()
+    return baseCamp and baseCamp:IsValid(), baseCamp
+end
+
+-- Helper to retrieve player's current base camp object
+function helpers.GetPlayerBaseCamp(localPlayer)
+    if not localPlayer or not localPlayer:IsValid() then return false, nil end
+    local success, inBaseCamp, baseCampObj = pcall(CheckPlayerInBaseCampInternal, localPlayer)
+    if success and inBaseCamp then
+        return true, baseCampObj
+    end
+    return false, nil
 end
 
 -- Helper to check if the player character is inside a base camp boundary
 function helpers.IsPlayerInBaseCamp(localPlayer)
-    if not localPlayer or not localPlayer:IsValid() then return false end
-    local success, inBaseCamp = pcall(CheckPlayerInBaseCampInternal, localPlayer)
-    return success and inBaseCamp
+    local inBase, _ = helpers.GetPlayerBaseCamp(localPlayer)
+    return inBase
 end
 
 local function PerformLineTrace(Kismet, activePlayer, cameraComponent, currentCameraLocation)

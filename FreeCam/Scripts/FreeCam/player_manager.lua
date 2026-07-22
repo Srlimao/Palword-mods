@@ -7,7 +7,6 @@ local originalMoveMode = 1
 local originalCustomMode = 0
 local originalRotationYaw = true
 local originalPlayerLocation = nil
-local originalAttachedHiddenStates = nil
 local FreeCamFlag = FName("FreeCam")
 
 -- Caches original states and disables player movement inputs and visibility
@@ -64,49 +63,9 @@ function player_manager.Setup(player, pc)
     end)
     player.bUseControllerRotationYaw = false
     
-    -- Hide player character using both Actor hidden state and native Palworld functions
-    player:SetActorHiddenInGame(true)
-    pcall(function() player:SetVisibleCharacterMesh(false) end)
-    pcall(function() player:SetVisibleHandAttachMesh(false) end)
-    pcall(function() player:SetLocalHiddenForCutscene(true) end)
-    
-    -- Cache and hide attached actors (like weapons)
-    originalAttachedHiddenStates = {}
-    local status, err = pcall(function()
-        local outActors = {}
-        local attachedActors = player:GetAttachedActors(outActors, true, true)
-        local toHide = helpers.TArrayToTable(attachedActors)
-        if #toHide == 0 then
-            toHide = helpers.TArrayToTable(outActors)
-        end
-        
-        local count = #toHide
-        print(string.format("[FreeCam Debug] Found %d attached actors to hide.", count))
-        
-        if count > 0 then
-            for i = 1, count do
-                local attached = toHide[i]
-                if attached and attached:IsValid() then
-                    local name = attached:GetFullName()
-                    local isHidden = helpers.SafeIsActorHidden(attached)
-                    print(string.format("[FreeCam Debug] Hiding attached actor [%s], original hidden state: %s", name, tostring(isHidden)))
-                    originalAttachedHiddenStates[name] = { actor = attached, wasHidden = isHidden }
-                    attached:SetActorHiddenInGame(true)
-                end
-            end
-        end
-        
-        -- Also explicitly hide active weapon if accessible
-        local shooter = player.ShooterComponent
-        if shooter and shooter:IsValid() then
-            local weapon = shooter:GetHasWeapon()
-            if weapon and weapon:IsValid() then
-                weapon:SetActorHiddenInGame(true)
-            end
-        end
-    end)
-    if not status then
-        print("[FreeCam Error] Error in attached actors hiding loop: " .. tostring(err))
+    -- Make player skeletal mesh microscopic (hides character model and attached weapon/glider/accessory meshes cleanly)
+    if player.Mesh and player.Mesh:IsValid() then
+        pcall(function() player.Mesh:SetRelativeScale3D({X = 0.001, Y = 0.001, Z = 0.001}) end)
     end
     
     return true
@@ -153,67 +112,28 @@ function player_manager.Teardown(player, pc)
         end
     end
     
-    -- Show player character model again and restore mesh visibility
-    player:SetActorHiddenInGame(false)
-    pcall(function() player:SetVisibleCharacterMesh(true) end)
-    pcall(function() player:SetVisibleHandAttachMesh(true) end)
-    pcall(function() player:SetLocalHiddenForCutscene(false) end)
-    
+    -- Restore player skeletal mesh scale to normal (automatically restores weapons/glider/accessories visibility)
     if player.Mesh and player.Mesh:IsValid() then
-        pcall(function() player.Mesh:SetHiddenInGame(false, false) end)
+        pcall(function() player.Mesh:SetRelativeScale3D({X = 1.0, Y = 1.0, Z = 1.0}) end)
     end
-    
-    -- Restore original hidden state of attached actors
-    local status, err = pcall(function()
-        if originalAttachedHiddenStates then
-            local count = 0
-            for name, data in pairs(originalAttachedHiddenStates) do
-                local attached = data.actor
-                local wasHidden = data.wasHidden
-                if attached and attached:IsValid() then
-                    count = count + 1
-                    attached:SetActorHiddenInGame(wasHidden)
-                end
-            end
-            print(string.format("[FreeCam Debug] Restored original hidden state of %d attached actors.", count))
-        end
-    end)
-    if not status then
-        print("[FreeCam Error] Error in attached actors restoring loop: " .. tostring(err))
-    end
-    
-    pcall(function()
-        local shooter = player.ShooterComponent
-        if shooter and shooter:IsValid() then
-            local weapon = shooter:GetHasWeapon()
-            if weapon and weapon:IsValid() then
-                weapon:SetActorHiddenInGame(false)
-            end
-        end
-    end)
-    
-    originalAttachedHiddenStates = nil
 end
 
--- Teleport player collision shell to aim location and re-enforce hidden states (anti-flicker)
+-- Teleport player collision shell to aim location
 function player_manager.UpdateLocation(player, aimLoc)
     if not player or not player:IsValid() then return end
     
     player:K2_SetActorLocation(aimLoc, false, {}, true)
     
-    -- Re-enforce hidden state (prevents engine overrides while hologram building)
-    player:SetActorHiddenInGame(true)
+    -- Re-enforce microscopic scale to prevent any engine resets
     if player.Mesh and player.Mesh:IsValid() then
-        player.Mesh:SetHiddenInGame(true, false)
-    end
-    
-    local shooter = player.ShooterComponent
-    if shooter and shooter:IsValid() then
-        local weapon = shooter:GetHasWeapon()
-        if weapon and weapon:IsValid() then
-            weapon:SetActorHiddenInGame(true)
-        end
+        pcall(function() player.Mesh:SetRelativeScale3D({X = 0.001, Y = 0.001, Z = 0.001}) end)
     end
 end
 
+-- Retrieve captured starting coordinates
+function player_manager.GetOriginalPlayerLocation()
+    return originalPlayerLocation
+end
+
 return player_manager
+
