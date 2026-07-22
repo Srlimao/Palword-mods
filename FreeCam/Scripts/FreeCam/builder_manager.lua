@@ -76,8 +76,10 @@ function builder_manager.Update(player, pc, cameraRotation, aimLocation, aimDist
         print(string.format("[FreeCam Debug] Builder Mode Changed: mode = %d (0=None, 1=Building, 2=Dismantling, 3=Painting)", modeNum))
     end
     
-    local success, isSnap = pcall(SafeCheckIsSnapMode, builder)
-    isSnap = success and isSnap
+    local isSnap = false
+    if builder.IsSnapMode then
+        isSnap = builder:IsSnapMode()
+    end
     
     local isDismantle = (modeNum == 2)
     if isSnap or isDismantle then
@@ -92,7 +94,7 @@ function builder_manager.Update(player, pc, cameraRotation, aimLocation, aimDist
         
         -- Clear previous dismantle visual outline if target changed
         if lastDismantleTarget and lastDismantleTarget:IsValid() and lastDismantleTarget ~= hitActor then
-            pcall(SafeSetDismantleVisual, lastDismantleTarget, false)
+            SafeSetDismantleVisual(lastDismantleTarget, false)
             lastDismantleTarget.bDismantleTargetInLocal = false
             lastDismantleTarget = nil
         end
@@ -101,7 +103,7 @@ function builder_manager.Update(player, pc, cameraRotation, aimLocation, aimDist
             if checker and checker:IsValid() then
                 checker.TargetBuildObject = hitActor
             end
-            pcall(SafeSetDismantleVisual, hitActor, true)
+            SafeSetDismantleVisual(hitActor, true)
             hitActor.bDismantleTargetInLocal = true
             lastDismantleTarget = hitActor
         end
@@ -118,7 +120,7 @@ function builder_manager.Update(player, pc, cameraRotation, aimLocation, aimDist
         end
     else
         if lastDismantleTarget and lastDismantleTarget:IsValid() then
-            pcall(SafeSetDismantleVisual, lastDismantleTarget, false)
+            SafeSetDismantleVisual(lastDismantleTarget, false)
             lastDismantleTarget.bDismantleTargetInLocal = false
             lastDismantleTarget = nil
         end

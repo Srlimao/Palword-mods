@@ -17,6 +17,14 @@ local currentCameraRotation = {Pitch = 0.0, Yaw = 0.0, Roll = 0.0}
 -- Cache active PC and Player character during spectating
 local activePC = nil
 local activePlayer = nil
+local cachedPC = nil
+
+local function GetPCCached()
+    if not cachedPC or not cachedPC:IsValid() then
+        cachedPC = UEHelpers.GetPlayerController()
+    end
+    return cachedPC
+end
 
 -- Pre-allocated vector variables to prevent allocations in per-frame ticks
 local moveDir = {X = 0.0, Y = 0.0, Z = 0.0}
@@ -111,8 +119,8 @@ function camera.UpdateCameraMovement()
     -- Gamepad shortcut handler (Only queried if gamepad is active input mode)
     local inputMode = config.CONFIG.InputMode or "Keyboard"
     if inputMode == "Gamepad" then
-        local pc = activePC or UEHelpers.GetPlayerController()
-        if input.IsToggleShortcutPressed(pc) then
+        local pc = activePC or GetPCCached()
+        if pc and pc:IsValid() and input.IsToggleShortcutPressed(pc) then
             print("[FreeCam] Gamepad toggle shortcut detected!")
             camera.ToggleFreeCam()
         end
