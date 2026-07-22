@@ -3,6 +3,7 @@ local json = require("FreeCam.json")
 local M = {}
 
 M.CONFIG = {
+    Debug = false,
     InputMode = "Keyboard",
     DefaultSpeed = 15.0,
     KeyBinds = {
@@ -81,6 +82,7 @@ function M.LoadConfig()
         local outFile = io.open(writePath, "w")
         if outFile then
             local defaultJson = [[{
+  "Debug": false,
   "InputMode": "Keyboard",
   "DefaultSpeed": 15.0,
   "KeyBinds": {
@@ -112,6 +114,7 @@ function M.LoadConfig()
     
     local parsed = json.parse(content)
     if parsed then
+        if parsed.Debug ~= nil then M.CONFIG.Debug = parsed.Debug end
         if parsed.InputMode ~= nil then M.CONFIG.InputMode = parsed.InputMode end
         if parsed.DefaultSpeed ~= nil then M.CONFIG.DefaultSpeed = parsed.DefaultSpeed end
         if parsed.KeyBinds then

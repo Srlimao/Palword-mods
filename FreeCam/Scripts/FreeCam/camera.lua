@@ -66,6 +66,13 @@ function camera.ToggleFreeCam()
     local builder = localPlayer.BuilderComponent
     if not builder or not builder:IsValid() then return end
     
+    if not isSpectating then
+        if not helpers.IsPlayerInBaseCamp(localPlayer) then
+            print("[FreeCam] Cannot enable FreeCam: Player is not within Base Camp boundaries.")
+            return
+        end
+    end
+    
     isSpectating = not isSpectating
     
     if isSpectating then

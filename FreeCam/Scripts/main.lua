@@ -44,13 +44,15 @@ local statUnitExecuted = false
 local function OnReceiveDrawHUD(self, SizeX, SizeY)
     if not statUnitExecuted then
         statUnitExecuted = true
-        local KismetSystemLibrary = StaticFindObject("/Script/Engine.Default__KismetSystemLibrary")
-        local world = FindFirstOf("World")
-        if KismetSystemLibrary and world and world:IsValid() then
-            pcall(function()
-                KismetSystemLibrary:ExecuteConsoleCommand(world, "stat unit", nil)
-            end)
-            print("[FreeCam] Executed console command 'stat unit' for performance diagnostics.")
+        if config.CONFIG.Debug then
+            local KismetSystemLibrary = StaticFindObject("/Script/Engine.Default__KismetSystemLibrary")
+            local world = FindFirstOf("World")
+            if KismetSystemLibrary and world and world:IsValid() then
+                pcall(function()
+                    KismetSystemLibrary:ExecuteConsoleCommand(world, "stat unit", nil)
+                end)
+                print("[FreeCam] Executed console command 'stat unit' for performance diagnostics.")
+            end
         end
     end
     camera.UpdateCameraMovement()
