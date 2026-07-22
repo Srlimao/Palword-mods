@@ -1300,6 +1300,11 @@
     "modName": "FreeCam",
     "version": "1.0.1",
     "schema": {
+      "Debug": {
+        "type": "boolean",
+        "description": "Configuration for Debug.",
+        "default": false
+      },
       "InputMode": {
         "type": "enum",
         "description": "Select the active control device for FreeCam (Keyboard or Gamepad).",
