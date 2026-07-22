@@ -1,5 +1,5 @@
 {
     "publishedfileid":  "3768635785",
-    "changenote":  "Added ModConfigurator integration, full Gamepad flight \u0026 toggle controls, customizable keybinds, smooth camera speed adjustment, and pause menu navigation fixes.",
-    "last_published_version":  "1.1.0"
+    "changenote":  "⚡ Modular code refactor, improved character hiding stability, and fixed gamepad integration bugs.",
+    "last_published_version":  "1.2.0"
 }
