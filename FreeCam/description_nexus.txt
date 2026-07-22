@@ -14,6 +14,8 @@ A client-side mod for Palworld that detaches the camera component from the playe
 [*] [b]Adjustable Flight Speed[/b]: Change camera flight speed on the fly using [b]Page Up[/b] / [b]Page Down[/b] keys.
 [*] [b]Extended Dismantle & Snap Range[/b]: Snapping and dismantling distances are increased by 15x while in FreeCam, allowing you to remodel your base easily from high above.
 [*] [b]Dynamic Reticle Placement[/b]: Construction objects and dismantle targets can be placed/selected precisely at the reticle instead of locking onto the player character.
+[*] [b]Base-Camp Restricted Activation[/b]: Activation is restricted to base camps only to prevent accidental out-of-bounds spectator triggers.
+[*] [b]Horizontal Boundary Limits[/b]: Restricts flight movement to a horizontal 1.5x base camp radius cylinder centered on your character to prevent getting lost, with infinite vertical height limits.
 [*] [b]Optimized Performance[/b]: Zero runtime table allocations in the tick loop, ensuring zero frame stutters or garbage collection lag during camera movement.
 [/list]
 
