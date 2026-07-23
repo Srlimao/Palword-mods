@@ -78,8 +78,10 @@ function M.ScanRelics(playerPos, maxDistSq)
             pcall(function()
                 local ueRelicPos = relic:K2_GetActorLocation()
                 if ueRelicPos then
-                    local relicPos = { X = ueRelicPos.X, Y = ueRelicPos.Y, Z = ueRelicPos.Z }
-                    if utils.GetDistanceSq(relicPos, playerPos) <= maxDistSq then
+                    local rX, rY, rZ = ueRelicPos.X, ueRelicPos.Y, ueRelicPos.Z
+                    local dx, dy, dz = rX - playerPos.X, rY - playerPos.Y, rZ - playerPos.Z
+                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
+                        local relicPos = { X = rX, Y = rY, Z = rZ }
                         local name = nil
                         local statusType, relicType = pcall(function() return relic:GetRelicType() end)
                         if not statusType or not relicType then
@@ -113,8 +115,10 @@ function M.ScanChests(playerPos, maxDistSq)
             pcall(function()
                 local ueChestPos = chest:K2_GetActorLocation()
                 if ueChestPos then
-                    local chestPos = { X = ueChestPos.X, Y = ueChestPos.Y, Z = ueChestPos.Z }
-                    if utils.GetDistanceSq(chestPos, playerPos) <= maxDistSq then
+                    local cX, cY, cZ = ueChestPos.X, ueChestPos.Y, ueChestPos.Z
+                    local dx, dy, dz = cX - playerPos.X, cY - playerPos.Y, cZ - playerPos.Z
+                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
+                        local chestPos = { X = cX, Y = cY, Z = cZ }
                         local name = configMod.GetTranslation("Chest", "Chest")
                         local isJunk = false
                         local gradeVal = nil
@@ -189,8 +193,10 @@ function M.ScanEggs(playerPos, maxDistSq, eggFilter, debug)
             pcall(function()
                 local ueEggPos = egg:K2_GetActorLocation()
                 if ueEggPos then
-                    local eggPos = { X = ueEggPos.X, Y = ueEggPos.Y, Z = ueEggPos.Z }
-                    if utils.GetDistanceSq(eggPos, playerPos) <= maxDistSq then
+                    local eX, eY, eZ = ueEggPos.X, ueEggPos.Y, ueEggPos.Z
+                    local dx, dy, dz = eX - playerPos.X, eY - playerPos.Y, eZ - playerPos.Z
+                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
+                        local eggPos = { X = eX, Y = eY, Z = eZ }
                         local sizeStr = ""
                         local statusScale, scale = pcall(function() return egg.Scale end)
                         
@@ -275,13 +281,15 @@ function M.ScanCaves(playerPos, maxDistSq)
             local status, err = pcall(function()
                 local ueCavePos = cave:K2_GetActorLocation()
                 if ueCavePos then
-                    local cavePos = { X = ueCavePos.X, Y = ueCavePos.Y, Z = ueCavePos.Z }
+                    local cX, cY, cZ = ueCavePos.X, ueCavePos.Y, ueCavePos.Z
                     successCount = successCount + 1
-                    local distSq = utils.GetDistanceSq(cavePos, playerPos)
+                    local dx, dy, dz = cX - playerPos.X, cY - playerPos.Y, cZ - playerPos.Z
+                    local distSq = dx*dx + dy*dy + dz*dz
                     if distSq < closestDistSq then
                         closestDistSq = distSq
                     end
                     if distSq <= maxDistSq then
+                        local cavePos = { X = cX, Y = cY, Z = cZ }
                         local level, state = utils.GetDungeonDetails(cave)
                         local dungeonName = nil
                         pcall(function()
@@ -425,8 +433,10 @@ function M.ScanLoot(playerPos, maxDistSq, filters)
             pcall(function()
                 local ueLootPos = actor:K2_GetActorLocation()
                 if ueLootPos then
-                    local lootPos = { X = ueLootPos.X, Y = ueLootPos.Y, Z = ueLootPos.Z }
-                    if utils.GetDistanceSq(lootPos, playerPos) <= maxDistSq then
+                    local lX, lY, lZ = ueLootPos.X, ueLootPos.Y, ueLootPos.Z
+                    local dx, dy, dz = lX - playerPos.X, lY - playerPos.Y, lZ - playerPos.Z
+                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
+                        local lootPos = { X = lX, Y = lY, Z = lZ }
                         local name, itemIdStr = GetItemDetails(actor)
                         if name and name ~= "" then
                             local shouldAdd = true
@@ -469,8 +479,10 @@ function M.ScanNotes(playerPos, maxDistSq)
             pcall(function()
                 local ueNotePos = note:K2_GetActorLocation()
                 if ueNotePos then
-                    local notePos = { X = ueNotePos.X, Y = ueNotePos.Y, Z = ueNotePos.Z }
-                    if utils.GetDistanceSq(notePos, playerPos) <= maxDistSq then
+                    local nX, nY, nZ = ueNotePos.X, ueNotePos.Y, ueNotePos.Z
+                    local dx, dy, dz = nX - playerPos.X, nY - playerPos.Y, nZ - playerPos.Z
+                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
+                        local notePos = { X = nX, Y = nY, Z = nZ }
                         local name = nil
                         local statusName, noteKey = pcall(function() return note.NoteRowName.Key end)
                         if statusName and noteKey then
