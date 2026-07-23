@@ -267,18 +267,26 @@ function M.Scan()
                     configMod.DebugPrint("Accessory slot " .. uiIdx .. " was manually re-equipped: " .. staticId)
                     M.disabledAccessorySlots[uiIdx] = nil
                     SaveDisabledStates()
+                    local accName = GetAccessoryName(staticId)
+                    local transType, transBuff = utils.ResolveTranslatedNames(staticId, accName)
                     M.equippedAccessories[uiIdx] = {
                         staticId = staticId,
-                        name = GetAccessoryName(staticId),
+                        name = accName,
+                        transType = transType,
+                        transBuff = transBuff,
                         iconPath = "",
                         disabled = false
                     }
                 end
             else
                 -- Accessory is active and working
+                local accName = GetAccessoryName(staticId)
+                local transType, transBuff = utils.ResolveTranslatedNames(staticId, accName)
                 M.equippedAccessories[uiIdx] = {
                     staticId = staticId,
-                    name = GetAccessoryName(staticId),
+                    name = accName,
+                    transType = transType,
+                    transBuff = transBuff,
                     iconPath = "",
                     disabled = false
                 }
@@ -292,9 +300,13 @@ function M.Scan()
                 if itemSlot then
                     foundCount = foundCount + 1
                     -- Show as disabled in UI
+                    local accName = GetAccessoryName(savedStaticId)
+                    local transType, transBuff = utils.ResolveTranslatedNames(savedStaticId, accName)
                     M.equippedAccessories[uiIdx] = {
                         staticId = savedStaticId,
-                        name = GetAccessoryName(savedStaticId),
+                        name = accName,
+                        transType = transType,
+                        transBuff = transBuff,
                         iconPath = "",
                         disabled = true
                     }

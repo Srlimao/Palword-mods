@@ -202,19 +202,6 @@ function camera.UpdateCameraMovement()
     -- Calculate reticle aim intersection location
     local aimDist, hitActor = helpers.GetAimDistanceAndLocation(activePlayer, camComp, currentCameraLocation, aimLocCache)
     
-    -- Position mismatch check
-    local timeNow = os.clock()
-    if hasLastSetAimLoc and activePlayer and activePlayer:IsValid() then
-        local currentLoc = activePlayer:K2_GetActorLocation()
-        local curX, curY, curZ = currentLoc.X, currentLoc.Y, currentLoc.Z
-        if type(curX) == "userdata" and curX.get then curX = curX:get() curY = curY:get() curZ = curZ:get() end
-        local distDiff = math.sqrt((curX - lastSetAimLoc.X)^2 + (curY - lastSetAimLoc.Y)^2 + (curZ - lastSetAimLoc.Z)^2)
-        if distDiff > 1.0 and (timeNow - lastLogTime) > 1.0 then
-            lastLogTime = timeNow
-            print(string.format("[FreeCam Debug] Pos mismatch! Diff = %.2f. Expected: (%.1f, %.1f, %.1f), Got: (%.1f, %.1f, %.1f)", distDiff, lastSetAimLoc.X, lastSetAimLoc.Y, lastSetAimLoc.Z, curX, curY, curZ))
-        end
-    end
-    
     -- Update building/dismantling snap ranges and visual outlines
     builder_m.Update(activePlayer, activePC, currentCameraRotation, aimLocCache, aimDist, hitActor)
     

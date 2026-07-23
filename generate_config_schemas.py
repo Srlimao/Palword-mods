@@ -114,6 +114,13 @@ METADATA_ACCESSORY_TOGGLER = {
         "type": "enum",
         "options": ["system", "en", "es", "ja", "zh-Hans", "zh-Hant", "fr", "it", "de", "ko", "pt-BR", "ru", "th", "vi", "id", "tr", "pl", "es-MX"]
     },
+    "SlotsToShow": {
+        "description": "Number of accessory slots to display on the HUD (1 to 4).",
+        "type": "number",
+        "min": 1,
+        "max": 4,
+        "step": 1
+    },
     "HUDX": {
         "description": "Manual horizontal coordinate of the display HUD widget as a percentage of screen width (0 to 100). Leave null for auto/drag-and-drop position.",
         "type": "number",
@@ -163,6 +170,7 @@ METADATA_ACCESSORY_TOGGLER = {
     "KeyBinds.ToggleSlot2": { "description": "Hotkey to toggle Slot 2 accessory.", "type": "keybind" },
     "KeyBinds.ToggleSlot3": { "description": "Hotkey to toggle Slot 3 accessory.", "type": "keybind" },
     "KeyBinds.ToggleSlot4": { "description": "Hotkey to toggle Slot 4 accessory.", "type": "keybind" },
+    "KeyBinds.ToggleUI": { "description": "Hotkey to toggle HUD visibility.", "type": "keybind" },
     "KeyBinds.ToggleEditMode": { "description": "Hotkey to toggle screen-drag UI editor mode.", "type": "keybind" },
     "KeyBinds.ResetCoords": { "description": "Hotkey to reset HUD coordinates back to default position in edit mode.", "type": "keybind" }
 }
@@ -453,7 +461,7 @@ def main():
             "name": "AccessoryToggler",
             "lua_path": "AccessoryToggler/Scripts/AccessoryToggler/config.lua",
             "metadata": METADATA_ACCESSORY_TOGGLER,
-            "version": "1.4.0"
+            "version": "2.4.0"
         },
         {
             "name": "HoldToFire",

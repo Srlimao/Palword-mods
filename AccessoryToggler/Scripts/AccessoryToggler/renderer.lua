@@ -4,44 +4,24 @@ local utils = require("AccessoryToggler.utils")
 
 local M = {}
 
--- Helper to split accessory ID into Category Type and Buff name
-local function GetAccessoryLabelParts(staticId)
-    if not staticId or staticId == "" then return "GEAR", "-" end
-    local idLower = staticId:lower()
-    
-    if idLower:find("nonkilling") then
-        return "RING", "MERCY"
-    elseif idLower:find("talentchecker") then
-        return "GLASSES", "ABILITY"
-    elseif idLower:find("hp") then
-        local lvl = idLower:match("_(%d)$") or ""
-        local suffix = lvl ~= "" and ("+" .. lvl) or ""
-        return "PENDANT", "LIFE" .. suffix
-    elseif idLower:find("attack") then
-        local lvl = idLower:match("_(%d)$") or ""
-        local suffix = lvl ~= "" and ("+" .. lvl) or ""
-        return "PENDANT", "ATTACK" .. suffix
-    elseif idLower:find("defense") then
-        local lvl = idLower:match("_(%d)$") or ""
-        local suffix = lvl ~= "" and ("+" .. lvl) or ""
-        return "PENDANT", "DEFENSE" .. suffix
-    elseif idLower:find("heatresist") then
-        local lvl = idLower:match("_(%d)$") or ""
-        local suffix = lvl ~= "" and ("+" .. lvl) or ""
-        return "SHIRT", "HEAT" .. suffix
-    elseif idLower:find("coldresist") then
-        local lvl = idLower:match("_(%d)$") or ""
-        local suffix = lvl ~= "" and ("+" .. lvl) or ""
-        return "SHIRT", "COLD" .. suffix
-    elseif idLower:find("heatandcoldresist") then
-        local lvl = idLower:match("_(%d)$") or ""
-        local suffix = lvl ~= "" and ("+" .. lvl) or ""
-        return "SHIRT", "THERMAL" .. suffix
-    end
-    
-    -- Generic split fallback
-    return "GEAR", staticId:sub(1, 6):upper()
-end
+-- Pre-allocated static structures for color tables to avoid per-frame GC allocations
+local emptyBg = { R = 0.0, G = 0.0, B = 0.0, A = 0.3 }
+local emptyBorder = { R = 0.25, G = 0.25, B = 0.3, A = 0.4 }
+
+local editBorderColor = { R = 0.0, G = 0.5, B = 1.0, A = 0.8 }
+local editBgColor = { R = 0.0, G = 0.1, B = 0.2, A = 0.4 }
+local bannerBgColor = { R = 0.02, G = 0.05, B = 0.12, A = 0.9 }
+
+local editBannerTextCol1 = { R = 0.0, G = 1.0, B = 0.8, A = 1.0 }
+local editBannerTextCol2 = { R = 0.9, G = 0.9, B = 0.9, A = 0.9 }
+
+local slotTextDisabled = { R = 0.5, G = 0.5, B = 0.5, A = 0.8 }
+local slotTextEnabled = { R = 1.0, G = 1.0, B = 1.0, A = 1.0 }
+
+local slotTypeDisabled = { R = 0.7, G = 0.7, B = 0.7, A = 0.4 }
+local slotTypeEnabled = { R = 0.7, G = 0.7, B = 0.7, A = 0.8 }
+
+local emptyTextCol = { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }
 
 local function GetShortKeyLabel(keyStr, defaultLabel)
     if not keyStr or keyStr == "" then return defaultLabel end
@@ -69,7 +49,7 @@ local function DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisable
         hud:DrawRect(emptyBg, slotX + 1.5, y + 1.5, size - 3.0, size - 3.0)
 
         -- Key number
-        utils.DrawText(hud, keyLabel, { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + 5.0 * scale, y + 4.0 * scale, 0.65 * scale, false)
+        utils.DrawText(hud, keyLabel, emptyTextCol, slotX + 5.0 * scale, y + 4.0 * scale, 0.65 * scale, false)
 
         -- Dash indicator
         local textW = utils.GetTextSize(hud, "-", 0.8 * scale)
@@ -77,11 +57,11 @@ local function DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisable
             local font, scaleMult = utils.GetFontAndScale()
             textW = 6.0 * scale * scaleMult
         end
-        utils.DrawText(hud, "-", { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }, slotX + (size / 2.0) - (textW / 2.0), y + (size / 2.0) - (9.0 * scale), 0.8 * scale, false)
+        utils.DrawText(hud, "-", emptyTextCol, slotX + (size / 2.0) - (textW / 2.0), y + (size / 2.0) - (9.0 * scale), 0.8 * scale, false)
     else
         -- Choose slot colors based on enabled/disabled state
         local borderColor = acc.disabled and textColorDisabled or textColorEnabled
-        local textMainColor = acc.disabled and { R = 0.5, G = 0.5, B = 0.5, A = 0.8 } or { R = 1.0, G = 1.0, B = 1.0, A = 1.0 }
+        local textMainColor = acc.disabled and slotTextDisabled or slotTextEnabled
 
         -- Draw Active/Disabled Slot Box
         hud:DrawRect(borderColor, slotX, y, size, size)
@@ -90,50 +70,8 @@ local function DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisable
         -- Draw Key label
         utils.DrawText(hud, keyLabel, textColorLabel, slotX + 5.0 * scale, y + 4.0 * scale, 0.65 * scale, false)
 
-        -- Split accessory static ID into Category Type and Buff name
-        local typeText, buffText = GetAccessoryLabelParts(acc.staticId)
-        
-        local transType = configMod.GetTranslation("Label_" .. typeText, typeText)
-        local transBuff = nil
-        
-        if acc.name and acc.name ~= "" then
-            local buffName = acc.name
-            
-            -- Try to strip prefixes
-            local prefix = configMod.GetTranslation("Prefix_" .. typeText, "")
-            if prefix ~= "" then
-                local escaped = prefix:gsub("[%-%^%$%*%+%?.%(%)%[%]%%]", "%%%1")
-                buffName = buffName:gsub("^" .. escaped, "")
-            end
-            
-            -- Try to strip suffixes
-            local suffixPattern = configMod.GetTranslation("Suffix_" .. typeText, "")
-            if suffixPattern ~= "" then
-                for pattern in string.gmatch(suffixPattern, "[^,]+") do
-                    local trimmed = pattern:match("^%s*(.-)%s*$")
-                    local escaped = trimmed:gsub("[%-%^%$%*%+%?.%(%)%[%]%%]", "%%%1")
-                    -- Handle potential +3 suffix by matching it and keeping it
-                    local plusMinus = buffName:match("([%+%-]%d+)$") or ""
-                    if plusMinus ~= "" then
-                        buffName = buffName:gsub("%s*[%+%-]%d+%s*$", "")
-                    end
-                    buffName = buffName:gsub("%s*" .. escaped .. "%s*$", "")
-                    if plusMinus ~= "" then
-                        buffName = buffName .. " " .. plusMinus
-                    end
-                end
-            end
-            
-            if buffName ~= "" and buffName ~= acc.name then
-                transBuff = buffName:match("^%s*(.-)%s*$")
-            end
-        end
-        
-        if not transBuff or transBuff == "" then
-            local baseBuff = buffText:match("^([%a]+)") or buffText
-            local suffix = buffText:match("([%+%-]%d+)$") or ""
-            transBuff = configMod.GetTranslation("Label_" .. baseBuff, baseBuff) .. suffix
-        end
+        local transType = acc.transType or "GEAR"
+        local transBuff = acc.transBuff or "-"
         
         -- Draw Type Text (Top Line)
         local typeScale = 0.45 * scale
@@ -144,7 +82,7 @@ local function DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisable
         end
         local typeX = slotX + (size / 2.0) - (typeW / 2.0)
         local typeY = y + (size * 0.25) - (4.0 * scale)
-        utils.DrawText(hud, transType, { R = 0.7, G = 0.7, B = 0.7, A = acc.disabled and 0.4 or 0.8 }, typeX, typeY, typeScale, false)
+        utils.DrawText(hud, transType, acc.disabled and slotTypeDisabled or slotTypeEnabled, typeX, typeY, typeScale, false)
 
         -- Draw Buff Text (Bottom Line)
         local buffScale = 0.55 * scale
@@ -175,17 +113,8 @@ function M.Draw(hud, SizeX, SizeY)
     end
     if not hasAny and not configMod.EditModeActive then return end
 
-    -- Unwrap SizeX/SizeY safely
-    local sx = SizeX
-    if type(sx) == "userdata" or type(sx) == "table" then
-        local status, val = pcall(function() return sx:get() end)
-        if status then sx = val end
-    end
-    local sy = SizeY
-    if type(sy) == "userdata" or type(sy) == "table" then
-        local status, val = pcall(function() return sy:get() end)
-        if status then sy = val end
-    end
+    local sx = utils.SafeUnwrap(SizeX)
+    local sy = utils.SafeUnwrap(SizeY)
 
     local screenW = (type(sx) == "number" and sx > 0) and sx or 1920.0
     local screenH = (type(sy) == "number" and sy > 0) and sy or 1080.0
@@ -194,7 +123,9 @@ function M.Draw(hud, SizeX, SizeY)
     local scale = configMod.CONFIG.HUDScale or 1.0
     local size = 56.0 * scale
     local gap = 12.0 * scale
-    local totalW = (4.0 * size) + (3.0 * gap)
+    local slotsToShow = configMod.CONFIG.SlotsToShow or 4
+    slotsToShow = math.max(1, math.min(4, math.floor(tonumber(slotsToShow) or 4)))
+    local totalW = (slotsToShow * size) + ((slotsToShow - 1) * gap)
 
     local maxScrollX = screenW - totalW
     if maxScrollX <= 0 then maxScrollX = 1 end
@@ -255,9 +186,6 @@ function M.Draw(hud, SizeX, SizeY)
     local textColorLabel = configMod.CONFIG.TextColorLabel
     local textColorEnabled = configMod.CONFIG.TextColorEnabled
     local textColorDisabled = configMod.CONFIG.TextColorDisabled
-    
-    local emptyBg = { R = 0.0, G = 0.0, B = 0.0, A = 0.3 }
-    local emptyBorder = { R = 0.25, G = 0.25, B = 0.3, A = 0.4 }
 
     if configMod.EditModeActive then
         local borderPadding = 10.0 * scale
@@ -266,8 +194,6 @@ function M.Draw(hud, SizeX, SizeY)
         local boxW = totalW + borderPadding * 2.0
         local boxH = size + borderPadding * 2.0
         
-        local editBorderColor = { R = 0.0, G = 0.5, B = 1.0, A = 0.8 }
-        local editBgColor = { R = 0.0, G = 0.1, B = 0.2, A = 0.4 }
         hud:DrawRect(editBorderColor, boxX, boxY, boxW, boxH)
         hud:DrawRect(editBgColor, boxX + 1.5, boxY + 1.5, boxW - 3.0, boxH - 3.0)
         
@@ -303,13 +229,13 @@ function M.Draw(hud, SizeX, SizeY)
         local bannerY = y - bannerH - 12.0 * scale
         
         hud:DrawRect(editBorderColor, bannerX, bannerY, maxW, bannerH)
-        hud:DrawRect({ R = 0.02, G = 0.05, B = 0.12, A = 0.9 }, bannerX + 1.5, bannerY + 1.5, maxW - 3.0, bannerH - 3.0)
+        hud:DrawRect(bannerBgColor, bannerX + 1.5, bannerY + 1.5, maxW - 3.0, bannerH - 3.0)
         
-        utils.DrawText(hud, textLine1, { R = 0.0, G = 1.0, B = 0.8, A = 1.0 }, bannerX + (maxW / 2.0) - (textW1 / 2.0), bannerY + 5.0 * scale, textScale1, false)
-        utils.DrawText(hud, textLine2, { R = 0.9, G = 0.9, B = 0.9, A = 0.9 }, bannerX + (maxW / 2.0) - (textW2 / 2.0), bannerY + bannerH - 17.0 * scale, textScale2, false)
+        utils.DrawText(hud, textLine1, editBannerTextCol1, bannerX + (maxW / 2.0) - (textW1 / 2.0), bannerY + 5.0 * scale, textScale1, false)
+        utils.DrawText(hud, textLine2, editBannerTextCol2, bannerX + (maxW / 2.0) - (textW2 / 2.0), bannerY + bannerH - 17.0 * scale, textScale2, false)
     end
 
-    for uiIdx = 1, 4 do
+    for uiIdx = 1, slotsToShow do
         local slotX = x + (uiIdx - 1) * (size + gap)
         local acc = toggler.equippedAccessories[uiIdx]
         DrawSlot(hud, slotX, y, size, scale, acc, uiIdx, textColorDisabled, textColorEnabled, textColorLabel, cardBg, emptyBorder, emptyBg)

@@ -161,3 +161,37 @@ pcall(function()
     RegisterHook("/Script/Pal.PalBuilderComponent:IsEnableDismantle", OnIsEnableDismantle)
     print("[FreeCam] Hooked PalBuilderComponent:IsEnableDismantle successfully.")
 end)
+
+local function OnNewUIBuildingModel(self)
+    if camera.IsSpectating() then
+        pcall(function()
+            local builder_m = require("FreeCam.builder_manager")
+            builder_m.ResetSnapModeState()
+            print("[FreeCam] New UIBuildingModel constructed. Reset snap tracking state.")
+        end)
+    end
+end
+
+-- Notify on new PalUIBuildingModel object creation to reset snap tracking when items change
+NotifyOnNewObject("/Script/Pal.PalUIBuildingModel", OnNewUIBuildingModel)
+
+local function OnUIBuildingModelRotateTarget(self, bRight)
+    if camera.IsSpectating() then
+        pcall(function()
+            local isRight = false
+            if type(bRight) == "boolean" then
+                isRight = bRight
+            elseif type(bRight) == "userdata" and bRight.get then
+                isRight = bRight:get()
+            end
+            local builder_m = require("FreeCam.builder_manager")
+            builder_m.RotateTarget(isRight)
+        end)
+    end
+end
+
+-- Hook PalUIBuildingModel:RotateTarget to capture rotation input when grid-snapped
+pcall(function()
+    RegisterHook("/Script/Pal.PalUIBuildingModel:RotateTarget", OnUIBuildingModelRotateTarget)
+    print("[FreeCam] Hooked PalUIBuildingModel:RotateTarget successfully.")
+end)

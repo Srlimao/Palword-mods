@@ -27,6 +27,7 @@ M.AccessoryNames = {
 M.CONFIG = {
     Enabled = true,
     Language = "system",
+    SlotsToShow = 4,
     HUDX = nil,
     HUDY = nil,
     HUDScale = 1.5,
@@ -45,7 +46,8 @@ M.CONFIG = {
         ToggleSlot3 = "SEVEN",
         ToggleSlot4 = "EIGHT",
         ToggleEditMode = "F7",
-        ResetCoords = "R"
+        ResetCoords = "R",
+        ToggleUI = "H"
     }
 }
 

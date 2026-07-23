@@ -3,6 +3,18 @@ local configMod = require("AccessoryToggler.config")
 
 local M = {}
 
+local function SafeGet(val)
+    return val:get()
+end
+
+function M.SafeUnwrap(param)
+    if type(param) == "userdata" or type(param) == "table" then
+        local success, val = pcall(SafeGet, param)
+        if success then return val end
+    end
+    return param
+end
+
 M.CachedFont = nil
 M.FontScaleMultiplier = 0.7
 local lastFontScanTime = 0
@@ -93,6 +105,92 @@ function M.GetTextSize(hud, text, baseScale)
     end
     
     return width
+end
+
+-- Split accessory ID into Category Type and Buff name
+function M.GetAccessoryLabelParts(staticId)
+    if not staticId or staticId == "" then return "GEAR", "-" end
+    local idLower = staticId:lower()
+    
+    if idLower:find("nonkilling") then
+        return "RING", "MERCY"
+    elseif idLower:find("talentchecker") then
+        return "GLASSES", "ABILITY"
+    elseif idLower:find("hp") then
+        local lvl = idLower:match("_(%d)$") or ""
+        local suffix = lvl ~= "" and ("+" .. lvl) or ""
+        return "PENDANT", "LIFE" .. suffix
+    elseif idLower:find("attack") then
+        local lvl = idLower:match("_(%d)$") or ""
+        local suffix = lvl ~= "" and ("+" .. lvl) or ""
+        return "PENDANT", "ATTACK" .. suffix
+    elseif idLower:find("defense") then
+        local lvl = idLower:match("_(%d)$") or ""
+        local suffix = lvl ~= "" and ("+" .. lvl) or ""
+        return "PENDANT", "DEFENSE" .. suffix
+    elseif idLower:find("heatresist") then
+        local lvl = idLower:match("_(%d)$") or ""
+        local suffix = lvl ~= "" and ("+" .. lvl) or ""
+        return "SHIRT", "HEAT" .. suffix
+    elseif idLower:find("coldresist") then
+        local lvl = idLower:match("_(%d)$") or ""
+        local suffix = lvl ~= "" and ("+" .. lvl) or ""
+        return "SHIRT", "COLD" .. suffix
+    elseif idLower:find("heatandcoldresist") then
+        local lvl = idLower:match("_(%d)$") or ""
+        local suffix = lvl ~= "" and ("+" .. lvl) or ""
+        return "SHIRT", "THERMAL" .. suffix
+    end
+    
+    -- Generic split fallback
+    return "GEAR", staticId:sub(1, 6):upper()
+end
+
+-- Resolve translated category and buff names for an accessory
+function M.ResolveTranslatedNames(staticId, accName)
+    local typeText, buffText = M.GetAccessoryLabelParts(staticId)
+    local transType = configMod.GetTranslation("Label_" .. typeText, typeText)
+    local transBuff = nil
+    
+    if accName and accName ~= "" then
+        local buffName = accName
+        
+        -- Try to strip prefixes
+        local prefix = configMod.GetTranslation("Prefix_" .. typeText, "")
+        if prefix ~= "" then
+            local escaped = prefix:gsub("[%-%^%$%*%+%?.%(%)%[%]%%]", "%%%1")
+            buffName = buffName:gsub("^" .. escaped, "")
+        end
+        
+        -- Try to strip suffixes
+        local suffixPattern = configMod.GetTranslation("Suffix_" .. typeText, "")
+        if suffixPattern ~= "" then
+            for pattern in string.gmatch(suffixPattern, "[^,]+") do
+                local trimmed = pattern:match("^%s*(.-)%s*$")
+                local escaped = trimmed:gsub("[%-%^%$%*%+%?.%(%)%[%]%%]", "%%%1")
+                local plusMinus = buffName:match("([%+%-]%d+)$") or ""
+                if plusMinus ~= "" then
+                    buffName = buffName:gsub("%s*[%+%-]%d+%s*$", "")
+                end
+                buffName = buffName:gsub("%s*" .. escaped .. "%s*$", "")
+                if plusMinus ~= "" then
+                    buffName = buffName .. " " .. plusMinus
+                end
+            end
+        end
+        
+        if buffName ~= "" and buffName ~= accName then
+            transBuff = buffName:match("^%s*(.-)%s*$")
+        end
+    end
+    
+    if not transBuff or transBuff == "" then
+        local baseBuff = buffText:match("^([%a]+)") or buffText
+        local suffix = buffText:match("([%+%-]%d+)$") or ""
+        transBuff = configMod.GetTranslation("Label_" .. baseBuff, baseBuff) .. suffix
+    end
+    
+    return transType, transBuff
 end
 
 return M

@@ -1059,7 +1059,7 @@
   },
   "AccessoryToggler": {
     "modName": "AccessoryToggler",
-    "version": "1.4.0",
+    "version": "2.4.0",
     "schema": {
       "Enabled": {
         "type": "boolean",
@@ -1090,6 +1090,14 @@
           "pl",
           "es-MX"
         ]
+      },
+      "SlotsToShow": {
+        "type": "number",
+        "description": "Number of accessory slots to display on the HUD (1 to 4).",
+        "default": 4,
+        "min": 1,
+        "max": 4,
+        "step": 1
       },
       "HUDX": {
         "type": "number",
@@ -1221,6 +1229,11 @@
             "type": "keybind",
             "description": "Hotkey to reset HUD coordinates back to default position in edit mode.",
             "default": "R"
+          },
+          "ToggleUI": {
+            "type": "keybind",
+            "description": "Hotkey to toggle HUD visibility.",
+            "default": "H"
           }
         }
       }

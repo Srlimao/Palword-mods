@@ -7,6 +7,7 @@ local configMod = require("AccessoryToggler.config")
 local toggler = require("AccessoryToggler.toggler")
 local renderer = require("AccessoryToggler.renderer")
 local popup = require("AccessoryToggler.popup")
+local utils = require("AccessoryToggler.utils")
 
 local CONFIG = configMod.CONFIG
 local DebugPrint = configMod.DebugPrint
@@ -17,6 +18,73 @@ DebugPrint("Initializing Accessory Toggler Mod...")
 
 
 local holdFrames = 0
+
+-- Pre-allocated static FKey wrappers for edit mode to avoid per-frame GC spikes
+local KeyLeft = { KeyName = FName("Left") }
+local KeyRight = { KeyName = FName("Right") }
+local KeyUp = { KeyName = FName("Up") }
+local KeyDown = { KeyName = FName("Down") }
+
+local KeyEquals = { KeyName = FName("Equals") }
+local KeyAdd = { KeyName = FName("Add") }
+local KeyRightBracket = { KeyName = FName("RightBracket") }
+local KeyLeftBracket = { KeyName = FName("LeftBracket") }
+local KeyBackslash = { KeyName = FName("Backslash") }
+
+local KeyHyphen = { KeyName = FName("Hyphen") }
+local KeySubtract = { KeyName = FName("Subtract") }
+local KeySlash = { KeyName = FName("Slash") }
+local KeyPeriod = { KeyName = FName("Period") }
+
+-- Protected helper to adjust coordinates without anonymous closures
+local function UpdateEditCoordinates(sx, sy, dx, dy, dScale, moveAmount, scaleAmount)
+    local screenW = (type(sx) == "number" and sx > 0) and sx or 1920.0
+    local screenH = (type(sy) == "number" and sy > 0) and sy or 1080.0
+
+    local scale = configMod.CONFIG.HUDScale or 1.0
+    local size = 56.0 * scale
+    local gap = 12.0 * scale
+    local slotsToShow = configMod.CONFIG.SlotsToShow or 4
+    slotsToShow = math.max(1, math.min(4, math.floor(tonumber(slotsToShow) or 4)))
+    local totalW = (slotsToShow * size) + ((slotsToShow - 1) * gap)
+
+    local maxScrollX = screenW - totalW
+    if maxScrollX <= 0 then maxScrollX = 1 end
+    local maxScrollY = screenH - size
+    if maxScrollY <= 0 then maxScrollY = 1 end
+
+    if not configMod.CONFIG.HUDX then
+        configMod.CONFIG.HUDX = 50.0
+    end
+    if not configMod.CONFIG.HUDY then
+        local defaultY = screenH - size - 130.0
+        configMod.CONFIG.HUDY = tonumber(string.format("%.1f", (defaultY / maxScrollY) * 100.0))
+    end
+
+    -- Ensure they are converted to percentage if they were absolute pixels
+    if configMod.CONFIG.HUDX > 100.0 then
+        configMod.CONFIG.HUDX = tonumber(string.format("%.1f", (configMod.CONFIG.HUDX / maxScrollX) * 100.0))
+    end
+    if configMod.CONFIG.HUDY > 100.0 then
+        configMod.CONFIG.HUDY = tonumber(string.format("%.1f", (configMod.CONFIG.HUDY / maxScrollY) * 100.0))
+    end
+
+    local pctDx = (dx * moveAmount) / maxScrollX * 100.0
+    local pctDy = (dy * moveAmount) / maxScrollY * 100.0
+
+    configMod.CONFIG.HUDX = math.max(0.0, math.min(100.0, configMod.CONFIG.HUDX + pctDx))
+    configMod.CONFIG.HUDY = math.max(0.0, math.min(100.0, configMod.CONFIG.HUDY + pctDy))
+    
+    -- Round to 1 decimal place
+    configMod.CONFIG.HUDX = tonumber(string.format("%.1f", configMod.CONFIG.HUDX))
+    configMod.CONFIG.HUDY = tonumber(string.format("%.1f", configMod.CONFIG.HUDY))
+    
+    if dScale ~= 0 then
+        local currentScale = configMod.CONFIG.HUDScale or 1.0
+        local newScale = math.max(0.5, math.min(3.0, currentScale + (dScale * scaleAmount)))
+        configMod.CONFIG.HUDScale = tonumber(string.format("%.3f", newScale))
+    end
+end
 
 -- Helper to safely adjust HUD coordinates and scale continuously
 local function HandleEditModeHolding(SizeX, SizeY)
@@ -33,14 +101,22 @@ local function HandleEditModeHolding(SizeX, SizeY)
     local dScale = 0
     local isAnyHeld = false
     
-    -- Read real-time key states directly from APlayerController
-    local isLeft = pc:IsInputKeyDown({ KeyName = FName("Left") })
-    local isRight = pc:IsInputKeyDown({ KeyName = FName("Right") })
-    local isUp = pc:IsInputKeyDown({ KeyName = FName("Up") })
-    local isDown = pc:IsInputKeyDown({ KeyName = FName("Down") })
+    -- Read real-time key states directly from APlayerController using pre-allocated wrappers
+    local isLeft = pc:IsInputKeyDown(KeyLeft)
+    local isRight = pc:IsInputKeyDown(KeyRight)
+    local isUp = pc:IsInputKeyDown(KeyUp)
+    local isDown = pc:IsInputKeyDown(KeyDown)
     
-    local isEquals = pc:IsInputKeyDown({ KeyName = FName("Equals") }) or pc:IsInputKeyDown({ KeyName = FName("Add") })
-    local isHyphen = pc:IsInputKeyDown({ KeyName = FName("Hyphen") }) or pc:IsInputKeyDown({ KeyName = FName("Subtract") })
+    local isEquals = pc:IsInputKeyDown(KeyEquals) 
+                  or pc:IsInputKeyDown(KeyAdd) 
+                  or pc:IsInputKeyDown(KeyRightBracket) 
+                  or pc:IsInputKeyDown(KeyLeftBracket) 
+                  or pc:IsInputKeyDown(KeyBackslash)
+
+    local isHyphen = pc:IsInputKeyDown(KeyHyphen) 
+                  or pc:IsInputKeyDown(KeySubtract) 
+                  or pc:IsInputKeyDown(KeySlash) 
+                  or pc:IsInputKeyDown(KeyPeriod)
     
     if isLeft then dx = dx - 1; isAnyHeld = true end
     if isRight then dx = dx + 1; isAnyHeld = true end
@@ -69,63 +145,10 @@ local function HandleEditModeHolding(SizeX, SizeY)
     local moveAmount = 1.5 * speedMultiplier
     local scaleAmount = 0.005 * speedMultiplier
     
-    pcall(function()
-        local sx = SizeX
-        if type(sx) == "userdata" or type(sx) == "table" then
-            local status, val = pcall(function() return sx:get() end)
-            if status then sx = val end
-        end
-        local sy = SizeY
-        if type(sy) == "userdata" or type(sy) == "table" then
-            local status, val = pcall(function() return sy:get() end)
-            if status then sy = val end
-        end
-
-        local screenW = (type(sx) == "number" and sx > 0) and sx or 1920.0
-        local screenH = (type(sy) == "number" and sy > 0) and sy or 1080.0
-
-        local scale = configMod.CONFIG.HUDScale or 1.0
-        local size = 56.0 * scale
-        local gap = 12.0 * scale
-        local totalW = (4.0 * size) + (3.0 * gap)
-
-        local maxScrollX = screenW - totalW
-        if maxScrollX <= 0 then maxScrollX = 1 end
-        local maxScrollY = screenH - size
-        if maxScrollY <= 0 then maxScrollY = 1 end
-
-        if not configMod.CONFIG.HUDX then
-            configMod.CONFIG.HUDX = 50.0
-        end
-        if not configMod.CONFIG.HUDY then
-            local defaultY = screenH - size - 130.0
-            configMod.CONFIG.HUDY = tonumber(string.format("%.1f", (defaultY / maxScrollY) * 100.0))
-        end
-
-        -- Ensure they are converted to percentage if they were absolute pixels
-        if configMod.CONFIG.HUDX > 100.0 then
-            configMod.CONFIG.HUDX = tonumber(string.format("%.1f", (configMod.CONFIG.HUDX / maxScrollX) * 100.0))
-        end
-        if configMod.CONFIG.HUDY > 100.0 then
-            configMod.CONFIG.HUDY = tonumber(string.format("%.1f", (configMod.CONFIG.HUDY / maxScrollY) * 100.0))
-        end
-
-        local pctDx = (dx * moveAmount) / maxScrollX * 100.0
-        local pctDy = (dy * moveAmount) / maxScrollY * 100.0
-
-        configMod.CONFIG.HUDX = math.max(0.0, math.min(100.0, configMod.CONFIG.HUDX + pctDx))
-        configMod.CONFIG.HUDY = math.max(0.0, math.min(100.0, configMod.CONFIG.HUDY + pctDy))
-        
-        -- Round to 1 decimal place
-        configMod.CONFIG.HUDX = tonumber(string.format("%.1f", configMod.CONFIG.HUDX))
-        configMod.CONFIG.HUDY = tonumber(string.format("%.1f", configMod.CONFIG.HUDY))
-        
-        if dScale ~= 0 then
-            local currentScale = configMod.CONFIG.HUDScale or 1.0
-            local newScale = math.max(0.5, math.min(3.0, currentScale + (dScale * scaleAmount)))
-            configMod.CONFIG.HUDScale = tonumber(string.format("%.3f", newScale))
-        end
-    end)
+    local sx = utils.SafeUnwrap(SizeX)
+    local sy = utils.SafeUnwrap(SizeY)
+    
+    pcall(UpdateEditCoordinates, sx, sy, dx, dy, dScale, moveAmount, scaleAmount)
 end
 
 -- Hook into HUD Draw frame tick (ReceiveDrawHUD)
@@ -134,6 +157,12 @@ local hasLoggedDraw = false
 local hasLoggedHookFailure = false
 
 local lastScanTime = 0
+
+-- Static helper for ReceiveDrawHUD to avoid per-frame closure allocations
+local function DrawHUDProtected(hud, SizeX, SizeY)
+    renderer.Draw(hud, SizeX, SizeY)
+    popup.Draw(hud, SizeX, SizeY)
+end
 
 local function RegisterHUDHook()
     if isHUDHooked then return end
@@ -153,10 +182,7 @@ local function RegisterHUDHook()
             -- Apply continuous holding checks in edit mode
             HandleEditModeHolding(SizeX, SizeY)
             
-            local drawStatus, drawErr = pcall(function()
-                renderer.Draw(hud, SizeX, SizeY)
-                popup.Draw(hud, SizeX, SizeY)
-            end)
+            local drawStatus, drawErr = pcall(DrawHUDProtected, hud, SizeX, SizeY)
             if not drawStatus then
                 print("[AccessoryToggler] ERROR in ReceiveDrawHUD draw: " .. tostring(drawErr))
             end
@@ -258,6 +284,27 @@ if keyF7 then
     end)
 else
     configMod.DebugPrint("WARNING: Failed to resolve Key.F7")
+end
+
+local keyH = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ToggleUI, Key.H)
+
+-- Alt+H toggles UI visibility
+if keyH then
+    RegisterKeyBind(keyH, { ModifierKey.ALT }, function()
+        pcall(function()
+            CONFIG.Enabled = not CONFIG.Enabled
+            configMod.SaveConfig()
+            if CONFIG.Enabled then
+                local shownText = configMod.GetTranslation("Popup_HUDShown", "HUD Shown")
+                popup.Show(shownText, 120, { R = 0.0, G = 0.96, B = 0.83, A = 1.0 })
+            else
+                local hiddenText = configMod.GetTranslation("Popup_HUDHidden", "HUD Hidden")
+                popup.Show(hiddenText, 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
+            end
+        end)
+    end)
+else
+    configMod.DebugPrint("WARNING: Failed to resolve Key.H")
 end
 
 local keyR = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ResetCoords, Key.R)

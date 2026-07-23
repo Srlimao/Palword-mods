@@ -118,11 +118,40 @@ function player_manager.Teardown(player, pc)
     end
 end
 
--- Teleport player collision shell to aim location
+-- Keeps/maintains player character stationary at original starting location during flight,
+-- only rotating their Yaw horizontally to face the aim location.
 function player_manager.UpdateLocation(player, aimLoc)
-    if not player or not player:IsValid() then return end
+    if not player or not player:IsValid() or not originalPlayerLocation then return end
     
-    player:K2_SetActorLocation(aimLoc, false, {}, true)
+    local currentLoc = player:K2_GetActorLocation()
+    local curX, curY, curZ = currentLoc.X, currentLoc.Y, currentLoc.Z
+    if type(curX) == "userdata" and curX.get then curX = curX:get() curY = curY:get() curZ = curZ:get() end
+    
+    local dx = originalPlayerLocation.X - curX
+    local dy = originalPlayerLocation.Y - curY
+    local dz = originalPlayerLocation.Z - curZ
+    local distSq = dx*dx + dy*dy + dz*dz
+    
+    -- Calculate look-at Yaw rotation from character to aimLoc, or use TargetSnapYaw if snap-building
+    local targetRot = player:K2_GetActorRotation()
+    local builder_m = require("FreeCam.builder_manager")
+    if builder_m and builder_m.TargetSnapYaw then
+        targetRot = {Pitch = 0.0, Yaw = builder_m.TargetSnapYaw, Roll = 0.0}
+    elseif aimLoc then
+        local deltaX = aimLoc.X - originalPlayerLocation.X
+        local deltaY = aimLoc.Y - originalPlayerLocation.Y
+        if type(deltaX) == "userdata" and deltaX.get then deltaX = deltaX:get() end
+        if type(deltaY) == "userdata" and deltaY.get then deltaY = deltaY:get() end
+        local yaw = math.deg(math.atan(deltaY, deltaX))
+        targetRot = {Pitch = 0.0, Yaw = yaw, Roll = 0.0}
+    end
+    
+    -- Teleport back to original starting coordinates only if player drifts/falls
+    if distSq > 4.0 then
+        player:K2_TeleportTo(originalPlayerLocation, targetRot)
+    else
+        player:K2_SetActorRotation(targetRot, false)
+    end
     
     -- Re-enforce microscopic scale to prevent any engine resets
     if player.Mesh and player.Mesh:IsValid() then
