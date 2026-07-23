@@ -14,6 +14,7 @@ M.CONFIG = {
         FontScale = 1.0,
         Debug = false,
         KeyBinds = {
+            Modifier = "ALT",
             ToggleMenu = "F6",
             MenuUp = "UP_ARROW",
             MenuDown = "DOWN_ARROW",
@@ -384,12 +385,15 @@ local function IsArray(t)
 end
 
 local function MergeConfig(target, source)
-    if not source then return end
-    for k, v in pairs(source) do
-        if type(v) == "table" and type(target[k]) == "table" and not IsArray(v) then
-            MergeConfig(target[k], v)
-        else
-            target[k] = v
+    if not source or type(source) ~= "table" then return end
+    for k, defaultVal in pairs(target) do
+        local sourceVal = source[k]
+        if sourceVal ~= nil then
+            if type(defaultVal) == "table" and type(sourceVal) == "table" and not IsArray(defaultVal) then
+                MergeConfig(defaultVal, sourceVal)
+            else
+                target[k] = sourceVal
+            end
         end
     end
 end
@@ -421,6 +425,8 @@ function M.LoadConfig()
             print("[HUDLocator] Configuration loaded from central path: " .. newConfigPath)
             centralLoaded = true
             M.ConfigLoadedOnce = true
+            -- Save back immediately to prune invalid keys and add missing keys
+            M.SaveConfig()
         end
     end
     

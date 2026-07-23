@@ -243,6 +243,24 @@ local function GetKey(keyStr, fallbackKey)
     return Key[keyStr] or fallbackKey
 end
 
+local function ResolveModifier(modStr)
+    if not modStr then return { ModifierKey.ALT } end
+    local upper = string.upper(modStr)
+    if upper == "ALT" then
+        return { ModifierKey.ALT }
+    elseif upper == "CTRL" or upper == "CONTROL" then
+        return { ModifierKey.CTRL }
+    elseif upper == "SHIFT" then
+        return { ModifierKey.SHIFT }
+    elseif upper == "NONE" or upper == "" then
+        return {}
+    else
+        return { ModifierKey.ALT }
+    end
+end
+
+local utilityModifier = ResolveModifier(CONFIG.KeyBinds and CONFIG.KeyBinds.Modifier or "ALT")
+
 -- Safely resolve key bindings for different engine versions/mappings
 local key1 = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ToggleSlot1, Key.FIVE or Key.NUM_5 or Key.N5 or Key["5"])
 local key2 = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ToggleSlot2, Key.SIX or Key.NUM_6 or Key.N6 or Key["6"])
@@ -289,9 +307,9 @@ end
 -- ----------------------------------------------------
 local keyF7 = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ToggleEditMode, Key.F7)
 
--- Alt+F7 toggles edit mode
+-- Modifier+F7 toggles edit mode
 if keyF7 then
-    RegisterKeyBind(keyF7, { ModifierKey.ALT }, function()
+    RegisterKeyBind(keyF7, utilityModifier, function()
         pcall(function() 
             configMod.ToggleEditMode() 
             if not configMod.EditModeActive then
@@ -305,9 +323,9 @@ end
 
 local keyH = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ToggleUI, Key.H)
 
--- Alt+H toggles UI visibility
+-- Modifier+H toggles UI visibility
 if keyH then
-    RegisterKeyBind(keyH, { ModifierKey.ALT }, function()
+    RegisterKeyBind(keyH, utilityModifier, function()
         pcall(function()
             CONFIG.Enabled = not CONFIG.Enabled
             configMod.SaveConfig()
@@ -326,15 +344,15 @@ end
 
 local keyR = GetKey(CONFIG.KeyBinds and CONFIG.KeyBinds.ResetCoords, Key.R)
 
--- Alt+R resets coordinates to default while in edit mode, or reloads config when not in edit mode
+-- Modifier+R resets coordinates to default while in edit mode, or reloads config when not in edit mode
 if keyR then
-    RegisterKeyBind(keyR, { ModifierKey.ALT }, function()
+    RegisterKeyBind(keyR, utilityModifier, function()
         pcall(function()
             if configMod.EditModeActive then
                 configMod.CONFIG.HUDX = nil
                 configMod.CONFIG.HUDY = nil
                 configMod.CONFIG.HUDScale = 1.0
-                configMod.DebugPrint("HUD coordinates and scale reset to default via Alt+R!")
+                configMod.DebugPrint("HUD coordinates and scale reset to default via modifier+R!")
             else
                 local status, err = pcall(function()
                     configMod.LoadConfig()

@@ -30,13 +30,19 @@
       "properties": {
         "ToggleFreeCam": {
           "type": "keybind",
-          "description": "Hotkey to manually toggle FreeCam mode.",
+          "description": "Hotkey to manually toggle FreeCam mode (requires the configured Modifier).",
           "default": "F8"
         },
-        "UseAltModifier": {
-          "type": "boolean",
-          "description": "Require holding the ALT key along with the toggle hotkey.",
-          "default": true
+        "Modifier": {
+          "type": "enum",
+          "description": "Modifier key required for the keyboard toggle shortcut.",
+          "default": "ALT",
+          "options": [
+            "ALT",
+            "CTRL",
+            "SHIFT",
+            "NONE"
+          ]
         },
         "FlyUp": {
           "type": "keybind",

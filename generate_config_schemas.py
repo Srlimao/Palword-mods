@@ -31,8 +31,13 @@ METADATA_HUD_LOCATOR = {
     "Global.KeyBinds": {
         "description": "Keybindings for navigating the in-game configuration menu."
     },
+    "Global.KeyBinds.Modifier": {
+        "description": "Modifier key required for utility shortcuts (ToggleMenu, ResetCoords).",
+        "type": "enum",
+        "options": ["ALT", "CTRL", "SHIFT", "NONE"]
+    },
     "Global.KeyBinds.ToggleMenu": {
-        "description": "Hotkey to toggle the configuration menu overlay.",
+        "description": "Hotkey to toggle the configuration menu overlay (requires the configured Modifier).",
         "type": "keybind"
     },
     "Global.KeyBinds.MenuUp": {
@@ -166,13 +171,18 @@ METADATA_ACCESSORY_TOGGLER = {
     "KeyBinds": {
         "description": "Keybindings for toggling accessory slots and editor mode."
     },
+    "KeyBinds.Modifier": {
+        "description": "Modifier key required for utility shortcuts (ToggleEditMode, ResetCoords, ToggleUI).",
+        "type": "enum",
+        "options": ["ALT", "CTRL", "SHIFT", "NONE"]
+    },
     "KeyBinds.ToggleSlot1": { "description": "Hotkey to toggle Slot 1 accessory.", "type": "keybind" },
     "KeyBinds.ToggleSlot2": { "description": "Hotkey to toggle Slot 2 accessory.", "type": "keybind" },
     "KeyBinds.ToggleSlot3": { "description": "Hotkey to toggle Slot 3 accessory.", "type": "keybind" },
     "KeyBinds.ToggleSlot4": { "description": "Hotkey to toggle Slot 4 accessory.", "type": "keybind" },
-    "KeyBinds.ToggleUI": { "description": "Hotkey to toggle HUD visibility.", "type": "keybind" },
-    "KeyBinds.ToggleEditMode": { "description": "Hotkey to toggle screen-drag UI editor mode.", "type": "keybind" },
-    "KeyBinds.ResetCoords": { "description": "Hotkey to reset HUD coordinates back to default position in edit mode.", "type": "keybind" }
+    "KeyBinds.ToggleUI": { "description": "Hotkey to toggle HUD visibility (requires the configured Modifier).", "type": "keybind" },
+    "KeyBinds.ToggleEditMode": { "description": "Hotkey to toggle screen-drag UI editor mode (requires the configured Modifier).", "type": "keybind" },
+    "KeyBinds.ResetCoords": { "description": "Hotkey to reset HUD coordinates back to default position in edit mode (requires the configured Modifier).", "type": "keybind" }
 }
 
 METADATA_HOLD_TO_FIRE = {
@@ -225,12 +235,13 @@ METADATA_FREECAM = {
         "description": "Keybindings for controlling the FreeCam mod."
     },
     "KeyBinds.ToggleFreeCam": {
-        "description": "Hotkey to manually toggle FreeCam mode.",
+        "description": "Hotkey to manually toggle FreeCam mode (requires the configured Modifier).",
         "type": "keybind"
     },
-    "KeyBinds.UseAltModifier": {
-        "description": "Require holding the ALT key along with the toggle hotkey.",
-        "type": "boolean"
+    "KeyBinds.Modifier": {
+        "description": "Modifier key required for the keyboard toggle shortcut.",
+        "type": "enum",
+        "options": ["ALT", "CTRL", "SHIFT", "NONE"]
     },
     "KeyBinds.FlyUp": {
         "description": "Hotkey to fly upwards.",

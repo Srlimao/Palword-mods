@@ -59,9 +59,20 @@
             "type": "group",
             "description": "Keybindings for navigating the in-game configuration menu.",
             "properties": {
+              "Modifier": {
+                "type": "enum",
+                "description": "Modifier key required for utility shortcuts (ToggleMenu, ResetCoords).",
+                "default": "ALT",
+                "options": [
+                  "ALT",
+                  "CTRL",
+                  "SHIFT",
+                  "NONE"
+                ]
+              },
               "ToggleMenu": {
                 "type": "keybind",
-                "description": "Hotkey to toggle the configuration menu overlay.",
+                "description": "Hotkey to toggle the configuration menu overlay (requires the configured Modifier).",
                 "default": "F6"
               },
               "MenuUp": {
@@ -1200,6 +1211,17 @@
         "type": "section",
         "description": "Keybindings for toggling accessory slots and editor mode.",
         "properties": {
+          "Modifier": {
+            "type": "enum",
+            "description": "Modifier key required for utility shortcuts (ToggleEditMode, ResetCoords, ToggleUI).",
+            "default": "ALT",
+            "options": [
+              "ALT",
+              "CTRL",
+              "SHIFT",
+              "NONE"
+            ]
+          },
           "ToggleSlot1": {
             "type": "keybind",
             "description": "Hotkey to toggle Slot 1 accessory.",
@@ -1222,17 +1244,17 @@
           },
           "ToggleEditMode": {
             "type": "keybind",
-            "description": "Hotkey to toggle screen-drag UI editor mode.",
+            "description": "Hotkey to toggle screen-drag UI editor mode (requires the configured Modifier).",
             "default": "F7"
           },
           "ResetCoords": {
             "type": "keybind",
-            "description": "Hotkey to reset HUD coordinates back to default position in edit mode.",
+            "description": "Hotkey to reset HUD coordinates back to default position in edit mode (requires the configured Modifier).",
             "default": "R"
           },
           "ToggleUI": {
             "type": "keybind",
-            "description": "Hotkey to toggle HUD visibility.",
+            "description": "Hotkey to toggle HUD visibility (requires the configured Modifier).",
             "default": "H"
           }
         }
@@ -1341,13 +1363,19 @@
         "properties": {
           "ToggleFreeCam": {
             "type": "keybind",
-            "description": "Hotkey to manually toggle FreeCam mode.",
+            "description": "Hotkey to manually toggle FreeCam mode (requires the configured Modifier).",
             "default": "F8"
           },
-          "UseAltModifier": {
-            "type": "boolean",
-            "description": "Require holding the ALT key along with the toggle hotkey.",
-            "default": true
+          "Modifier": {
+            "type": "enum",
+            "description": "Modifier key required for the keyboard toggle shortcut.",
+            "default": "ALT",
+            "options": [
+              "ALT",
+              "CTRL",
+              "SHIFT",
+              "NONE"
+            ]
           },
           "FlyUp": {
             "type": "keybind",

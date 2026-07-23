@@ -58,9 +58,20 @@
           "type": "group",
           "description": "Keybindings for navigating the in-game configuration menu.",
           "properties": {
+            "Modifier": {
+              "type": "enum",
+              "description": "Modifier key required for utility shortcuts (ToggleMenu, ResetCoords).",
+              "default": "ALT",
+              "options": [
+                "ALT",
+                "CTRL",
+                "SHIFT",
+                "NONE"
+              ]
+            },
             "ToggleMenu": {
               "type": "keybind",
-              "description": "Hotkey to toggle the configuration menu overlay.",
+              "description": "Hotkey to toggle the configuration menu overlay (requires the configured Modifier).",
               "default": "F6"
             },
             "MenuUp": {

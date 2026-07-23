@@ -8,7 +8,7 @@ M.CONFIG = {
     DefaultSpeed = 15.0,
     KeyBinds = {
         ToggleFreeCam = "F8",
-        UseAltModifier = true,
+        Modifier = "ALT",
         FlyUp = "SpaceBar",
         FlyDown = "LeftShift",
         SpeedUp = "PAGE_UP",
@@ -94,7 +94,7 @@ function M.LoadConfig()
   "DefaultSpeed": 15.0,
   "KeyBinds": {
     "ToggleFreeCam": "F8",
-    "UseAltModifier": true,
+    "Modifier": "ALT",
     "FlyUp": "SpaceBar",
     "FlyDown": "LeftShift",
     "SpeedUp": "PAGE_UP",
@@ -138,7 +138,11 @@ function M.LoadConfig()
         if parsed.DefaultSpeed ~= nil then M.CONFIG.DefaultSpeed = parsed.DefaultSpeed end
         if parsed.KeyBinds then
             if parsed.KeyBinds.ToggleFreeCam ~= nil then M.CONFIG.KeyBinds.ToggleFreeCam = parsed.KeyBinds.ToggleFreeCam end
-            if parsed.KeyBinds.UseAltModifier ~= nil then M.CONFIG.KeyBinds.UseAltModifier = parsed.KeyBinds.UseAltModifier end
+            if parsed.KeyBinds.Modifier ~= nil then
+                M.CONFIG.KeyBinds.Modifier = parsed.KeyBinds.Modifier
+            elseif parsed.KeyBinds.UseAltModifier ~= nil then
+                M.CONFIG.KeyBinds.Modifier = parsed.KeyBinds.UseAltModifier and "ALT" or "NONE"
+            end
             if parsed.KeyBinds.FlyUp ~= nil then M.CONFIG.KeyBinds.FlyUp = parsed.KeyBinds.FlyUp end
             if parsed.KeyBinds.FlyDown ~= nil then M.CONFIG.KeyBinds.FlyDown = parsed.KeyBinds.FlyDown end
             if parsed.KeyBinds.SpeedUp ~= nil then M.CONFIG.KeyBinds.SpeedUp = parsed.KeyBinds.SpeedUp end
@@ -151,8 +155,21 @@ function M.LoadConfig()
             if parsed.Gamepad.FlyDownButton ~= nil then M.CONFIG.Gamepad.FlyDownButton = parsed.Gamepad.FlyDownButton end
         end
         M.DebugPrint("Config loaded successfully from JSON!")
+        -- Save back immediately to prune invalid keys and add missing keys
+        pcall(M.SaveConfig)
     else
         M.DebugPrint("Failed to parse config.json, using defaults.")
+    end
+end
+
+function M.SaveConfig()
+    local configPath = GetNewConfigFilePath()
+    local outFile = io.open(configPath, "w")
+    if outFile then
+        local str = json.stringify(M.CONFIG)
+        outFile:write(str)
+        outFile:close()
+        M.DebugPrint("Configuration saved successfully to central path: " .. configPath)
     end
 end
 

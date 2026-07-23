@@ -1,5 +1,5 @@
 {
     "publishedfileid":  "3768635785",
-    "changenote":  "🔧 Fixed config.json initialization/generation in the AppData directory on first run.",
-    "last_published_version":  "1.3.1"
+    "changenote":  "v1.4.0 - Added configurable keyboard modifier settings (ALT, CTRL, SHIFT, NONE), backward-compatible config loading, and configuration normalization",
+    "last_published_version":  "1.4.0"
 }

@@ -92,8 +92,26 @@ local function GetKey(keyStr, fallbackKey)
     return Key[keyStr] or fallbackKey
 end
 
+local function ResolveModifier(modStr)
+    if not modStr then return { ModifierKey.ALT } end
+    local upper = string.upper(modStr)
+    if upper == "ALT" then
+        return { ModifierKey.ALT }
+    elseif upper == "CTRL" or upper == "CONTROL" then
+        return { ModifierKey.CTRL }
+    elseif upper == "SHIFT" then
+        return { ModifierKey.SHIFT }
+    elseif upper == "NONE" or upper == "" then
+        return {}
+    else
+        return { ModifierKey.ALT }
+    end
+end
+
+local utilityModifier = ResolveModifier(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.Modifier or "ALT")
+
 -- 5. HUD Config Menu Toggle (Alt + F6)
-RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.ToggleMenu, Key.F6), {ModifierKey.ALT}, function()
+RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.ToggleMenu, Key.F6), utilityModifier, function()
     menu.Toggle()
 end)
 
@@ -115,7 +133,7 @@ RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.MenuRig
 end)
 
 -- Alt+R: Manual Config Reload from file
-RegisterKeyBind(Key.R, {ModifierKey.ALT}, function()
+RegisterKeyBind(Key.R, utilityModifier, function()
     if menu.isOpen then return end
     
     local status, err = pcall(function()

@@ -41,6 +41,7 @@ M.CONFIG = {
     TextColorDisabled = { R = 1.0, G = 0.35, B = 0.37, A = 1.0 },  -- Neon Red/Orange
     TextColorLabel = { R = 0.9, G = 0.9, B = 0.95, A = 1.0 },       -- Sleek White/Gray
     KeyBinds = {
+        Modifier = "ALT",
         ToggleSlot1 = "FIVE",
         ToggleSlot2 = "SIX",
         ToggleSlot3 = "SEVEN",
@@ -233,13 +234,26 @@ local function GetConfigFilePath()
     return "Mods/AccessoryToggler/config.json"
 end
 
+local function IsArray(t)
+    if type(t) ~= "table" then return false end
+    local i = 1
+    for _ in pairs(t) do
+        if t[i] == nil then return false end
+        i = i + 1
+    end
+    return true
+end
+
 local function MergeConfig(target, source)
-    if not source then return end
-    for k, v in pairs(source) do
-        if type(v) == "table" and type(target[k]) == "table" then
-            MergeConfig(target[k], v)
-        else
-            target[k] = v
+    if not source or type(source) ~= "table" then return end
+    for k, defaultVal in pairs(target) do
+        local sourceVal = source[k]
+        if sourceVal ~= nil then
+            if type(defaultVal) == "table" and type(sourceVal) == "table" and not IsArray(defaultVal) then
+                MergeConfig(defaultVal, sourceVal)
+            else
+                target[k] = sourceVal
+            end
         end
     end
 end
@@ -271,6 +285,8 @@ function M.LoadConfig()
             print("[AccessoryToggler] Configuration loaded from central path: " .. newConfigPath)
             centralLoaded = true
             M.ConfigLoadedOnce = true
+            -- Save back immediately to prune invalid keys and add missing keys
+            M.SaveConfig()
         end
     end
     

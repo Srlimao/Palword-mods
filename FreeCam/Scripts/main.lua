@@ -22,8 +22,24 @@ if inputMode == "Keyboard" then
     local keySpeedUp = GetKey(config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.SpeedUp, Key.PAGE_UP)
     local keySpeedDown = GetKey(config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.SpeedDown, Key.PAGE_DOWN)
 
-    local useAlt = config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.UseAltModifier
-    local toggleModifiers = (useAlt == false) and {} or {ModifierKey.ALT}
+    local function ResolveModifier(modStr)
+        if not modStr then return { ModifierKey.ALT } end
+        local upper = string.upper(modStr)
+        if upper == "ALT" then
+            return { ModifierKey.ALT }
+        elseif upper == "CTRL" or upper == "CONTROL" then
+            return { ModifierKey.CTRL }
+        elseif upper == "SHIFT" then
+            return { ModifierKey.SHIFT }
+        elseif upper == "NONE" or upper == "" then
+            return {}
+        else
+            return { ModifierKey.ALT }
+        end
+    end
+
+    local modifier = config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.Modifier or "ALT"
+    local toggleModifiers = ResolveModifier(modifier)
 
     RegisterKeyBind(keyToggle, toggleModifiers, function()
         camera.ToggleFreeCam()
