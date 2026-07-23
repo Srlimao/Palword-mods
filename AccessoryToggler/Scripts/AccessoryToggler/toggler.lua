@@ -169,6 +169,38 @@ end
 -- Scan the inventory bag to find a slot containing a specific static item ID
 local function FindItemSlotInInventory(inventory, staticId)
     if not inventory or not inventory:IsValid() then return nil end
+    
+    -- Optimize search by looking up the container natively first
+    local out = {}
+    local success = false
+    pcall(function()
+        success = inventory:TryGetContainerFromStaticItemID(FName(staticId), out)
+    end)
+    
+    local container = out.OutContainer
+    if success and container and container:IsValid() then
+        local slotArray = nil
+        pcall(function() slotArray = container.ItemSlotArray end)
+        if slotArray then
+            local numSlots = GetArrayLength(slotArray)
+            for j = 1, numSlots do
+                local slot = GetArrayElement(slotArray, j)
+                if slot and slot:IsValid() and not IsSlotEmpty(slot) then
+                    -- Ensure it is NOT an equipment slot
+                    local isEquip = false
+                    pcall(function() isEquip = inventory:IsEquipSlot(slot) end)
+                    if not isEquip then
+                        local sId = GetSlotStaticId(slot)
+                        if sId == staticId then
+                            return slot
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Fallback: Full recursive scan if the native lookup did not succeed
     local multiHelper = nil
     pcall(function() multiHelper = inventory.InventoryMultiHelper end)
     if not multiHelper or not multiHelper:IsValid() then return nil end
@@ -187,7 +219,6 @@ local function FindItemSlotInInventory(inventory, staticId)
                 for j = 1, numSlots do
                     local slot = GetArrayElement(slotArray, j)
                     if slot and slot:IsValid() and not IsSlotEmpty(slot) then
-                        -- Ensure it is NOT an equipment slot
                         local isEquip = false
                         pcall(function() isEquip = inventory:IsEquipSlot(slot) end)
                         if not isEquip then
@@ -295,9 +326,12 @@ function M.Scan()
             -- Slot is currently empty
             local savedStaticId = M.disabledAccessorySlots[uiIdx]
             if savedStaticId then
-                -- Check if the disabled accessory is still in the inventory bag
-                local itemSlot = FindItemSlotInInventory(inventory, savedStaticId)
-                if itemSlot then
+                -- Native C++ count query avoids slow Lua iteration over all bags during Scan tick
+                local hasItem = false
+                pcall(function()
+                    hasItem = inventory:CountItemNum(FName(savedStaticId)) > 0
+                end)
+                if hasItem then
                     foundCount = foundCount + 1
                     -- Show as disabled in UI
                     local accName = GetAccessoryName(savedStaticId)

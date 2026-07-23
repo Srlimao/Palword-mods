@@ -103,16 +103,6 @@ end
 function M.Draw(hud, SizeX, SizeY)
     if not configMod.CONFIG.Enabled and not configMod.EditModeActive then return end
 
-    -- Only draw the hotbar if player has at least one accessory equipped or tracked, or edit mode is active
-    local hasAny = false
-    for i = 1, 4 do
-        if toggler.equippedAccessories[i] then
-            hasAny = true
-            break
-        end
-    end
-    if not hasAny and not configMod.EditModeActive then return end
-
     local sx = utils.SafeUnwrap(SizeX)
     local sy = utils.SafeUnwrap(SizeY)
 
