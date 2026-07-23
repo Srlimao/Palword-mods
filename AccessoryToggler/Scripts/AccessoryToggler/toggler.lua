@@ -51,27 +51,11 @@ local ACCESSORY_SLOTS = {
     [4] = 7, -- Accessory4 (enum value 7)
 }
 
--- Load previously disabled slots from config
+-- Disabled states are kept in memory only per session (not saved to config)
 local function LoadSavedDisabledStates()
-    if configMod.CONFIG.DisabledSlots then
-        for k, v in pairs(configMod.CONFIG.DisabledSlots) do
-            local idx = tonumber(k)
-            if idx and type(v) == "string" and v ~= "" then
-                M.disabledAccessorySlots[idx] = v
-            end
-        end
-    else
-        configMod.CONFIG.DisabledSlots = {}
-    end
 end
-pcall(LoadSavedDisabledStates)
 
 local function SaveDisabledStates()
-    configMod.CONFIG.DisabledSlots = {}
-    for k, v in pairs(M.disabledAccessorySlots) do
-        configMod.CONFIG.DisabledSlots[tostring(k)] = v
-    end
-    pcall(configMod.SaveConfig)
 end
 
 -- Helper to safely get size of native TArray

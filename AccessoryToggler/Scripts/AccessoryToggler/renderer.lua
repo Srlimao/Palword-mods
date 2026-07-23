@@ -23,6 +23,9 @@ local slotTypeEnabled = { R = 0.7, G = 0.7, B = 0.7, A = 0.8 }
 
 local emptyTextCol = { R = 0.4, G = 0.4, B = 0.4, A = 0.5 }
 
+local cachedEditBanner1 = nil
+local cachedEditBanner2 = nil
+
 local function GetShortKeyLabel(keyStr, defaultLabel)
     if not keyStr or keyStr == "" then return defaultLabel end
     local k = string.upper(tostring(keyStr))
@@ -188,15 +191,23 @@ function M.Draw(hud, SizeX, SizeY)
         hud:DrawRect(editBgColor, boxX + 1.5, boxY + 1.5, boxW - 3.0, boxH - 3.0)
         
         -- Text Banner
-        local textLine1 = configMod.GetTranslation("EditModeActive", "EDIT MODE ACTIVE")
-        local rawEditKey = configMod.CONFIG.KeyBinds and configMod.CONFIG.KeyBinds.ToggleEditMode
-        local rawResetKey = configMod.CONFIG.KeyBinds and configMod.CONFIG.KeyBinds.ResetCoords
-        local editKeyStr = GetShortKeyLabel(rawEditKey, "F7")
-        local resetKeyStr = GetShortKeyLabel(rawResetKey, "R")
+        if not cachedEditBanner1 then
+            local textLine1 = configMod.GetTranslation("EditModeActive", "EDIT MODE ACTIVE")
+            local rawEditKey = configMod.CONFIG.KeyBinds and configMod.CONFIG.KeyBinds.ToggleEditMode
+            local rawResetKey = configMod.CONFIG.KeyBinds and configMod.CONFIG.KeyBinds.ResetCoords
+            local editKeyStr = GetShortKeyLabel(rawEditKey, "F7")
+            local resetKeyStr = GetShortKeyLabel(rawResetKey, "R")
+            
+            local textLine2 = configMod.GetTranslation("EditModeInstructions", "ARROWS: MOVE | +/-: SCALE | ALT+R: RESET | ALT+F7: SAVE")
+            textLine2 = textLine2:gsub("ALT%+F7", "ALT+" .. editKeyStr)
+            textLine2 = textLine2:gsub("ALT%+R", "ALT+" .. resetKeyStr)
+            
+            cachedEditBanner1 = textLine1
+            cachedEditBanner2 = textLine2
+        end
         
-        local textLine2 = configMod.GetTranslation("EditModeInstructions", "ARROWS: MOVE | +/-: SCALE | ALT+R: RESET | ALT+F7: SAVE")
-        textLine2 = textLine2:gsub("ALT%+F7", "ALT+" .. editKeyStr)
-        textLine2 = textLine2:gsub("ALT%+R", "ALT+" .. resetKeyStr)
+        local textLine1 = cachedEditBanner1
+        local textLine2 = cachedEditBanner2
         
         local textScale1 = 0.6 * scale
         local textScale2 = 0.45 * scale
@@ -223,6 +234,9 @@ function M.Draw(hud, SizeX, SizeY)
         
         utils.DrawText(hud, textLine1, editBannerTextCol1, bannerX + (maxW / 2.0) - (textW1 / 2.0), bannerY + 5.0 * scale, textScale1, false)
         utils.DrawText(hud, textLine2, editBannerTextCol2, bannerX + (maxW / 2.0) - (textW2 / 2.0), bannerY + bannerH - 17.0 * scale, textScale2, false)
+    else
+        cachedEditBanner1 = nil
+        cachedEditBanner2 = nil
     end
 
     for uiIdx = 1, slotsToShow do

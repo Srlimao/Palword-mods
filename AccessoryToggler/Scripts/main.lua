@@ -86,6 +86,12 @@ local function UpdateEditCoordinates(sx, sy, dx, dy, dScale, moveAmount, scaleAm
     end
 end
 
+local lastInputCheckTime = 0
+local cachedDx = 0
+local cachedDy = 0
+local cachedDScale = 0
+local cachedIsAnyHeld = false
+
 -- Helper to safely adjust HUD coordinates and scale continuously
 local function HandleEditModeHolding(SizeX, SizeY)
     if not configMod.EditModeActive then 
@@ -93,40 +99,51 @@ local function HandleEditModeHolding(SizeX, SizeY)
         return 
     end
     
-    local pc = UEHelpers.GetPlayerController()
-    if not pc or not pc:IsValid() then return end
-    
-    local dx = 0
-    local dy = 0
-    local dScale = 0
-    local isAnyHeld = false
-    
-    -- Read real-time key states directly from APlayerController using pre-allocated wrappers
-    local isLeft = pc:IsInputKeyDown(KeyLeft)
-    local isRight = pc:IsInputKeyDown(KeyRight)
-    local isUp = pc:IsInputKeyDown(KeyUp)
-    local isDown = pc:IsInputKeyDown(KeyDown)
-    
-    local isEquals = pc:IsInputKeyDown(KeyEquals) 
-                  or pc:IsInputKeyDown(KeyAdd) 
-                  or pc:IsInputKeyDown(KeyRightBracket) 
-                  or pc:IsInputKeyDown(KeyLeftBracket) 
-                  or pc:IsInputKeyDown(KeyBackslash)
+    local now = os.clock()
+    -- Throttle key state polling to 50Hz (every 20ms) to drastically reduce C++ reflection call overhead
+    if now - lastInputCheckTime >= 0.02 then
+        lastInputCheckTime = now
+        
+        local pc = UEHelpers.GetPlayerController()
+        if not pc or not pc:IsValid() then return end
+        
+        local dx = 0
+        local dy = 0
+        local dScale = 0
+        local isAnyHeld = false
+        
+        -- Read real-time key states directly from APlayerController using pre-allocated wrappers
+        local isLeft = pc:IsInputKeyDown(KeyLeft)
+        local isRight = pc:IsInputKeyDown(KeyRight)
+        local isUp = pc:IsInputKeyDown(KeyUp)
+        local isDown = pc:IsInputKeyDown(KeyDown)
+        
+        local isEquals = pc:IsInputKeyDown(KeyEquals) 
+                      or pc:IsInputKeyDown(KeyAdd) 
+                      or pc:IsInputKeyDown(KeyRightBracket) 
+                      or pc:IsInputKeyDown(KeyLeftBracket) 
+                      or pc:IsInputKeyDown(KeyBackslash)
 
-    local isHyphen = pc:IsInputKeyDown(KeyHyphen) 
-                  or pc:IsInputKeyDown(KeySubtract) 
-                  or pc:IsInputKeyDown(KeySlash) 
-                  or pc:IsInputKeyDown(KeyPeriod)
+        local isHyphen = pc:IsInputKeyDown(KeyHyphen) 
+                      or pc:IsInputKeyDown(KeySubtract) 
+                      or pc:IsInputKeyDown(KeySlash) 
+                      or pc:IsInputKeyDown(KeyPeriod)
+        
+        if isLeft then dx = dx - 1; isAnyHeld = true end
+        if isRight then dx = dx + 1; isAnyHeld = true end
+        if isUp then dy = dy - 1; isAnyHeld = true end
+        if isDown then dy = dy + 1; isAnyHeld = true end
+        
+        if isEquals then dScale = dScale + 1; isAnyHeld = true end
+        if isHyphen then dScale = dScale - 1; isAnyHeld = true end
+        
+        cachedDx = dx
+        cachedDy = dy
+        cachedDScale = dScale
+        cachedIsAnyHeld = isAnyHeld
+    end
     
-    if isLeft then dx = dx - 1; isAnyHeld = true end
-    if isRight then dx = dx + 1; isAnyHeld = true end
-    if isUp then dy = dy - 1; isAnyHeld = true end
-    if isDown then dy = dy + 1; isAnyHeld = true end
-    
-    if isEquals then dScale = dScale + 1; isAnyHeld = true end
-    if isHyphen then dScale = dScale - 1; isAnyHeld = true end
-    
-    if isAnyHeld then
+    if cachedIsAnyHeld then
         holdFrames = holdFrames + 1
     else
         holdFrames = 0
@@ -148,7 +165,7 @@ local function HandleEditModeHolding(SizeX, SizeY)
     local sx = utils.SafeUnwrap(SizeX)
     local sy = utils.SafeUnwrap(SizeY)
     
-    pcall(UpdateEditCoordinates, sx, sy, dx, dy, dScale, moveAmount, scaleAmount)
+    pcall(UpdateEditCoordinates, sx, sy, cachedDx, cachedDy, cachedDScale, moveAmount, scaleAmount)
 end
 
 -- Hook into HUD Draw frame tick (ReceiveDrawHUD)
