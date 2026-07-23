@@ -1,5 +1,5 @@
 {
     "publishedfileid":  "3768635785",
-    "changenote":  "v1.4.0 - Added configurable keyboard modifier settings (ALT, CTRL, SHIFT, NONE), backward-compatible config loading, and configuration normalization",
+    "changenote":  "Title updated to include version",
     "last_published_version":  "1.4.0"
 }

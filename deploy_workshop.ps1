@@ -131,6 +131,8 @@ if (Test-Path $DescriptionFile) {
     $DescriptionEsc = $DescriptionContent.Replace('\', '\\').Replace('"', '\"')
     Write-Host "Found description_steam.txt. Including description in upload VDF." -ForegroundColor Cyan
 }
+$Title = "$($Info.ModName) v$Version"
+$TitleEsc = $Title.Replace('"', '\"')
 
 $VdfContent = @"
 "workshopitem"
@@ -140,6 +142,7 @@ $VdfContent = @"
   "contentfolder" "$ContentFolderEsc"
   "previewfile" "$PreviewFileEsc"
   "changenote" "$ChangeNote"
+  "title" "$TitleEsc"
 "@
 
 if ($DescriptionEsc -ne "") {
