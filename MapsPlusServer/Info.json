@@ -1,0 +1,15 @@
+{
+  "ModName": "MapsPlusServer",
+  "PackageName": "MapsPlusServer",
+  "Thumbnail": "",
+  "Version": "1.0.0",
+  "DebugMode": false,
+  "Dependencies": ["UE4SS", "MapsPlus"],
+  "Tags": ["UE4SS", "Server", "Sync", "Utilities"],
+  "InstallRule": [
+    {
+      "Type": "Lua",
+      "Targets": ["./Scripts"]
+    }
+  ]
+}
