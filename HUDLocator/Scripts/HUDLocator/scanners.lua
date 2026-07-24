@@ -78,8 +78,10 @@ function M.ScanRelics(playerPos, maxDistSq)
             pcall(function()
                 local ueRelicPos = relic:K2_GetActorLocation()
                 if ueRelicPos then
-                    local relicPos = { X = ueRelicPos.X, Y = ueRelicPos.Y, Z = ueRelicPos.Z }
-                    if utils.GetDistanceSq(relicPos, playerPos) <= maxDistSq then
+                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
+                    local rx, ry, rz = ueRelicPos.X, ueRelicPos.Y, ueRelicPos.Z
+                    local dx, dy, dz = rx - playerPos.X, ry - playerPos.Y, rz - playerPos.Z
+                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
                         local name = nil
                         local statusType, relicType = pcall(function() return relic:GetRelicType() end)
                         if not statusType or not relicType then
@@ -92,7 +94,7 @@ function M.ScanRelics(playerPos, maxDistSq)
                         else
                             name = configMod.GetTranslation("Relic", "Relic")
                         end
-                        table.insert(newRelics, { X = relicPos.X, Y = relicPos.Y, Z = relicPos.Z, Name = name })
+                        table.insert(newRelics, { X = rx, Y = ry, Z = rz, Name = name })
                     end
                 end
             end)
@@ -113,8 +115,10 @@ function M.ScanChests(playerPos, maxDistSq)
             pcall(function()
                 local ueChestPos = chest:K2_GetActorLocation()
                 if ueChestPos then
-                    local chestPos = { X = ueChestPos.X, Y = ueChestPos.Y, Z = ueChestPos.Z }
-                    if utils.GetDistanceSq(chestPos, playerPos) <= maxDistSq then
+                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
+                    local cx, cy, cz = ueChestPos.X, ueChestPos.Y, ueChestPos.Z
+                    local dx, dy, dz = cx - playerPos.X, cy - playerPos.Y, cz - playerPos.Z
+                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
                         local name = configMod.GetTranslation("Chest", "Chest")
                         local isJunk = false
                         local gradeVal = nil
@@ -166,7 +170,7 @@ function M.ScanChests(playerPos, maxDistSq)
                         end
 
                         if shouldAdd then
-                            table.insert(newChests, { X = chestPos.X, Y = chestPos.Y, Z = chestPos.Z, Name = name })
+                            table.insert(newChests, { X = cx, Y = cy, Z = cz, Name = name })
                         end
                     end
                 end
@@ -189,8 +193,10 @@ function M.ScanEggs(playerPos, maxDistSq, eggFilter, debug)
             pcall(function()
                 local ueEggPos = egg:K2_GetActorLocation()
                 if ueEggPos then
-                    local eggPos = { X = ueEggPos.X, Y = ueEggPos.Y, Z = ueEggPos.Z }
-                    if utils.GetDistanceSq(eggPos, playerPos) <= maxDistSq then
+                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
+                    local ex, ey, ez = ueEggPos.X, ueEggPos.Y, ueEggPos.Z
+                    local dx, dy, dz = ex - playerPos.X, ey - playerPos.Y, ez - playerPos.Z
+                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
                         local sizeStr = ""
                         local statusScale, scale = pcall(function() return egg.Scale end)
                         
@@ -246,7 +252,7 @@ function M.ScanEggs(playerPos, maxDistSq, eggFilter, debug)
                                 transSize = configMod.GetTranslation(sizeStr, sizeStr) .. " "
                             end
                             
-                            table.insert(newEggs, { X = eggPos.X, Y = eggPos.Y, Z = eggPos.Z, SizePrefix = transSize, Name = name })
+                            table.insert(newEggs, { X = ex, Y = ey, Z = ez, SizePrefix = transSize, Name = name })
                         end
                     end
                 end
@@ -275,9 +281,11 @@ function M.ScanCaves(playerPos, maxDistSq)
             local status, err = pcall(function()
                 local ueCavePos = cave:K2_GetActorLocation()
                 if ueCavePos then
-                    local cavePos = { X = ueCavePos.X, Y = ueCavePos.Y, Z = ueCavePos.Z }
+                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
+                    local cx, cy, cz = ueCavePos.X, ueCavePos.Y, ueCavePos.Z
                     successCount = successCount + 1
-                    local distSq = utils.GetDistanceSq(cavePos, playerPos)
+                    local dx, dy, dz = cx - playerPos.X, cy - playerPos.Y, cz - playerPos.Z
+                    local distSq = dx*dx + dy*dy + dz*dz
                     if distSq < closestDistSq then
                         closestDistSq = distSq
                     end
@@ -301,9 +309,9 @@ function M.ScanCaves(playerPos, maxDistSq)
                             dungeonName = configMod.GetTranslation("Cave", "Cave")
                         end
                         table.insert(M.tempCaves[cls], { 
-                            X = cavePos.X, 
-                            Y = cavePos.Y, 
-                            Z = cavePos.Z,
+                            X = cx,
+                            Y = cy,
+                            Z = cz,
                             Level = level,
                             State = state,
                             Name = dungeonName
@@ -425,8 +433,10 @@ function M.ScanLoot(playerPos, maxDistSq, filters)
             pcall(function()
                 local ueLootPos = actor:K2_GetActorLocation()
                 if ueLootPos then
-                    local lootPos = { X = ueLootPos.X, Y = ueLootPos.Y, Z = ueLootPos.Z }
-                    if utils.GetDistanceSq(lootPos, playerPos) <= maxDistSq then
+                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
+                    local lx, ly, lz = ueLootPos.X, ueLootPos.Y, ueLootPos.Z
+                    local dx, dy, dz = lx - playerPos.X, ly - playerPos.Y, lz - playerPos.Z
+                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
                         local name, itemIdStr = GetItemDetails(actor)
                         if name and name ~= "" then
                             local shouldAdd = true
@@ -444,7 +454,7 @@ function M.ScanLoot(playerPos, maxDistSq, filters)
                             end
                             
                             if shouldAdd then
-                                table.insert(newLoot, { X = lootPos.X, Y = lootPos.Y, Z = lootPos.Z, Name = name })
+                                table.insert(newLoot, { X = lx, Y = ly, Z = lz, Name = name })
                             end
                         end
                     end
@@ -469,8 +479,10 @@ function M.ScanNotes(playerPos, maxDistSq)
             pcall(function()
                 local ueNotePos = note:K2_GetActorLocation()
                 if ueNotePos then
-                    local notePos = { X = ueNotePos.X, Y = ueNotePos.Y, Z = ueNotePos.Z }
-                    if utils.GetDistanceSq(notePos, playerPos) <= maxDistSq then
+                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
+                    local nx, ny, nz = ueNotePos.X, ueNotePos.Y, ueNotePos.Z
+                    local dx, dy, dz = nx - playerPos.X, ny - playerPos.Y, nz - playerPos.Z
+                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
                         local name = nil
                         local statusName, noteKey = pcall(function() return note.NoteRowName.Key end)
                         if statusName and noteKey then
@@ -483,7 +495,7 @@ function M.ScanNotes(playerPos, maxDistSq)
                         else
                             name = configMod.GetTranslation("Note", "Journal")
                         end
-                        table.insert(newNotes, { X = notePos.X, Y = notePos.Y, Z = notePos.Z, Name = name })
+                        table.insert(newNotes, { X = nx, Y = ny, Z = nz, Name = name })
                     end
                 end
             end)
