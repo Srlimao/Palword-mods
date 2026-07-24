@@ -1,6 +1,7 @@
 -- server.lua
 local M = {}
 local json = require("json")
+local urpc = require("urpc")
 
 -- State persistence directory
 local function GetSaveDirectory()
@@ -98,52 +99,46 @@ local function GuidToString(guid)
     return string.format("%08X-%08X-%08X-%08X", a, b, c, d)
 end
 
+local function CleanGuid(str)
+    if not str then return "" end
+    return string.gsub(string.upper(tostring(str)), "[^%w]", "")
+end
+
 -- Resolve base camp model by string ID
 local function FindBaseCampModel(world, guid_str)
+    local targetClean = CleanGuid(guid_str)
+    if targetClean == "" then return nil end
+
     local palUtility = StaticFindObject("/Script/Pal.Default__PalUtility")
     if not palUtility then return nil end
     local baseCampManager = palUtility:GetBaseCampManager(world)
     if not baseCampManager then return nil end
 
     local ids = {}
-    baseCampManager:GetBaseCampIds(ids)
+    pcall(function() baseCampManager:GetBaseCampIds(ids) end)
     local idTable = TArrayToTable(ids)
 
-    print("[MapsPlusServer] Searching base camp model for target GUID='" .. tostring(guid_str) .. "'. Server registered camps count=" .. tostring(#idTable))
+    print("[MapsPlusServer] Searching base camp model for target GUID='" .. tostring(guid_str) .. "' (Clean=" .. targetClean .. "). Server registered camps count=" .. tostring(#idTable))
 
     for _, id in ipairs(idTable) do
-        local current_str = GuidToString(id)
-        print(string.format("[MapsPlusServer] Candidate Base Camp GUID: %s (Match=%s)", tostring(current_str), tostring(current_str and string.upper(current_str) == string.upper(guid_str))))
+        local current_str = nil
+        pcall(function() current_str = GuidToString(id) end)
+        local currentClean = CleanGuid(current_str)
 
-        if current_str and string.upper(current_str) == string.upper(guid_str) then
-            local success, model = baseCampManager:TryGetModel(id)
-            if success and model and model:IsValid() then
+        print(string.format("[MapsPlusServer] Candidate Base Camp GUID: %s (Clean=%s | Match=%s)", tostring(current_str), currentClean, tostring(currentClean == targetClean)))
+
+        if currentClean ~= "" and currentClean == targetClean then
+            local model = nil
+            pcall(function()
+                local success, res = baseCampManager:TryGetModel(id)
+                if success and res and res:IsValid() then
+                    model = res
+                end
+            end)
+            if model then
                 return model
             end
         end
-    end
-    return nil
-end
-
-local function GetStringFromProp(prop)
-    if not prop then return nil end
-    if type(prop) == "string" then return prop end
-    if type(prop) == "userdata" then
-        local str = nil
-        pcall(function() str = prop:ToString() end)
-        if str and type(str) == "string" and str ~= "" then return str end
-
-        pcall(function()
-            if prop.get then
-                local g = prop:get()
-                if type(g) == "string" and g ~= "" then
-                    str = g
-                elseif type(g) == "userdata" and g.ToString then
-                    str = g:ToString()
-                end
-            end
-        end)
-        if str and type(str) == "string" and str ~= "" then return str end
     end
     return nil
 end
@@ -175,60 +170,32 @@ function M.Initialize()
         end)
     end)
 
-    -- 2. Secret payload receiver via Chat RPC (APalPlayerState:EnterChat & APalPlayerController:EnterChat_Receive)
-    local function HandleChatPayload(message)
-        local msgStr = GetStringFromProp(message)
-        if not msgStr and type(message) == "userdata" and message.get then
-            pcall(function() msgStr = message:get():ToString() end)
-        end
+    -- 2. Register RPC handler via UniversalRPCBus
+    urpc.RegisterServerHandler("MapsPlusServer", "RenameBase", function(senderPC, data)
+        if not data or type(data) ~= "table" then return end
+        local guid_str = data.guid
+        local new_name = data.name
 
-        print("[MapsPlusServer] Server: Chat hook received msg = " .. tostring(msgStr))
-
-        if msgStr and type(msgStr) == "string" then
-            local cleanMsg = msgStr
-            if cleanMsg:sub(1, 1) == "\x02" then
-                cleanMsg = cleanMsg:sub(2)
-            end
-
-            if cleanMsg:sub(1, 11) == "renamebase:" then
-                print("[MapsPlusServer] Intercepted Base Rename Payload: " .. cleanMsg)
-                local parts = {}
-                for part in string.gmatch(cleanMsg:sub(12), "[^:]+") do
-                    table.insert(parts, part)
-                end
-
-                local guid_str = parts[1]
-                local new_name = parts[2]
-
-                if guid_str and new_name then
-                    local world = FindFirstOf("World")
-                    if world and world:IsValid() then
-                        local model = FindBaseCampModel(world, guid_str)
-                        if model then
-                            print("[MapsPlusServer] Server: Successfully renamed base GUID " .. guid_str .. " -> '" .. new_name .. "'")
-                            model.BaseCampName = new_name
-                            base_names[guid_str] = new_name
-                            SaveServerNames()
-                        else
-                            print("[MapsPlusServer] Server Error: Base camp model not found for GUID=" .. guid_str)
-                        end
-                    end
+        if guid_str and new_name then
+            local world = FindFirstOf("World")
+            if world and world:IsValid() then
+                local model = FindBaseCampModel(world, guid_str)
+                if model then
+                    print("[MapsPlusServer] Server: Successfully renamed base GUID " .. tostring(guid_str) .. " -> '" .. tostring(new_name) .. "'")
+                    model.BaseCampName = new_name
+                    base_names[guid_str] = new_name
+                    SaveServerNames()
                 else
-                    print("[MapsPlusServer] Server Error: Failed to parse payload parts from " .. cleanMsg)
+                    print("[MapsPlusServer] Server Error: Base camp model not found for GUID=" .. tostring(guid_str))
                 end
-
-                return true -- Block chat execution so message is never saved, broadcasted, or shown!
             end
+        else
+            print("[MapsPlusServer] Server Error: Failed to process RenameBase payload (missing guid or name).")
         end
-    end
-
-    RegisterHook("/Script/Pal.PalPlayerState:EnterChat", function(self, message, category)
-        return HandleChatPayload(message)
     end)
-
-    RegisterHook("/Script/Pal.PalPlayerController:EnterChat_Receive", function(self, message, category)
-        return HandleChatPayload(message)
-    end)
+    print("[MapsPlusServer] Server: UniversalRPCBus handler registered successfully for 'RenameBase'.")
 end
 
 return M
+
+

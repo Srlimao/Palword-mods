@@ -194,4 +194,7 @@ function M.Decode(text)
     return value, nil
 end
 
+M.encode = M.Encode
+M.decode = M.Decode
+
 return M

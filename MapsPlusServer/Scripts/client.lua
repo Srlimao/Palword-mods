@@ -1,5 +1,6 @@
 -- client.lua
 local M = {}
+local urpc = require("urpc")
 local active_base_camp_guid = nil
 local palUtility = nil
 
@@ -36,28 +37,6 @@ local function GuidToString(guid)
     local d = GetGuidPart(guid.D)
     return string.format("%08X-%08X-%08X-%08X", a, b, c, d)
 end
-
--- Client-side suppression hook: Hide payload chat messages from local UI chat window
-RegisterHook("/Script/Pal.PalPlayerState:EnterChat", function(self, message, category)
-    local msgStr = nil
-    pcall(function()
-        if message then
-            if type(message) == "string" then msgStr = message
-            elseif message.ToString then msgStr = message:ToString()
-            elseif message.get then
-                local g = message:get()
-                if type(g) == "string" then msgStr = g
-                elseif g and g.ToString then msgStr = g:ToString() end
-            end
-        end
-    end)
-    if msgStr and type(msgStr) == "string" then
-        if msgStr:sub(1, 1) == "\x02" then msgStr = msgStr:sub(2) end
-        if msgStr:sub(1, 11) == "renamebase:" then
-            return true -- Block chat message locally on client UI!
-        end
-    end
-end)
 
 local function start_registration_retry()
     -- Hook 1: Hover tooltip to capture base camp ID and display server name
@@ -121,41 +100,15 @@ local function start_registration_retry()
             
             local guidStr = GuidToString(active_base_camp_guid)
             print("[MapsPlusServer] Preparing rename. Base GUID: " .. tostring(guidStr) .. " | New Name: '" .. tostring(newName) .. "'")
-            
             if guidStr and newName ~= "" then
-                local playerControllers = FindAllOf("PalPlayerController")
-                if not playerControllers or #playerControllers == 0 then
-                    print("[MapsPlusServer] Client Error: FindAllOf('PalPlayerController') returned empty or nil!")
-                    return
-                end
-                
-                local sent = false
-                for idx, pc in ipairs(playerControllers) do
-                    if pc and pc:IsValid() and pc:IsLocalPlayerController() then
-                        if pc.PlayerState and pc.PlayerState:IsValid() then
-                            local payload = "\x02renamebase:" .. guidStr .. ":" .. newName
-                            print("[MapsPlusServer] Client Sending EnterChat RPC with payload: " .. payload)
-                            
-                            local kismetText = StaticFindObject("/Script/Engine.Default__KismetTextLibrary")
-                            local msgText = nil
-                            if kismetText and kismetText:IsValid() then
-                                pcall(function() msgText = kismetText:Conv_StringToText(payload) end)
-                            end
-                            
-                            if msgText then
-                                pc.PlayerState:EnterChat(msgText, 0)
-                            end
-                            
-                            sent = true
-                            break
-                        else
-                            print("[MapsPlusServer] PlayerState for local controller is nil or invalid.")
-                        end
-                    end
-                end
-                
-                if not sent then
-                    print("[MapsPlusServer] Client Error: Could not find valid local PlayerController to transmit message.")
+                local sent = urpc.SendToServer("MapsPlusServer", "RenameBase", {
+                    guid = guidStr,
+                    name = newName
+                })
+                if sent then
+                    print(string.format("[MapsPlusServer] Client: Sent RenameBase RPC via UniversalRPCBus (GUID=%s, Name='%s')", guidStr, newName))
+                else
+                    print("[MapsPlusServer] Client Error: urpc.SendToServer returned false.")
                 end
             else
                 print("[MapsPlusServer] Rename aborted. GUID or New Name is empty.")
