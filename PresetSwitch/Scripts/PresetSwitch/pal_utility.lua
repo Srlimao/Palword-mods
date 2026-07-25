@@ -108,4 +108,50 @@ function M.GetNetworkCharacterComponent()
     return nil
 end
 
+-- Retrieve PalStorage (UPalPlayerDataPalStorage)
+function M.GetPalStorageData()
+    local util = M.GetPalUtility()
+    if util then
+        local status, storage = pcall(function() return util:GetLocalPalStorageData(nil) end)
+        if status and storage and storage:IsValid() then
+            return storage
+        end
+    end
+    local playerState = M.GetPlayerState()
+    if playerState and playerState:IsValid() then
+        local status, storage = pcall(function() return unwrap(playerState:GetPalStorage()) end)
+        if status and storage and storage:IsValid() then
+            return storage
+        end
+    end
+    return nil
+end
+
+-- Force pre-loading & replication of Pal Box container under the hood
+function M.EnsurePalBoxLoaded()
+    pcall(function()
+        local palStorage = M.GetPalStorageData()
+        if palStorage and palStorage:IsValid() then
+            pcall(function() palStorage.bIsForceSyncAllSlot = true end)
+            
+            local container = unwrap(palStorage.TargetContainer)
+            if container and container:IsValid() then
+                local slots = {}
+                pcall(function() container:GetSlots(slots) end)
+            end
+
+            local pageNum = 0
+            pcall(function() pageNum = palStorage:GetPageNum() end)
+            if type(pageNum) == "number" and pageNum > 0 then
+                for pageIdx = 0, math.min(pageNum - 1, 10) do
+                    pcall(function()
+                        local pageSlots = {}
+                        palStorage:GetSlotsInPage(pageIdx, pageSlots)
+                    end)
+                end
+            end
+        end
+    end)
+end
+
 return M

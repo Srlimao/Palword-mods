@@ -4,6 +4,35 @@ local palUtil = require("PresetSwitch.pal_utility")
 local popup = require("PresetSwitch.popup")
 local configMod = require("PresetSwitch.config")
 
+-- Helper function to safely extract FPalInstanceID from reflected struct wrappers
+local function ExtractPalInstanceID(elem)
+    if not elem then return nil end
+    local uElem = palUtil.unwrap(elem) or elem
+
+    -- 1. Try accessing PalInstanceID property
+    local id = nil
+    pcall(function() id = uElem.PalInstanceID end)
+    if not id then
+        pcall(function() id = uElem["PalInstanceID"] end)
+    end
+
+    if id then
+        local uId = palUtil.unwrap(id) or id
+        return uId
+    end
+
+    -- 2. Check if uElem itself is FPalInstanceID (contains InstanceId or PlayerUId)
+    local isInst = false
+    pcall(function()
+        isInst = (uElem.InstanceId ~= nil or uElem.PlayerUId ~= nil)
+    end)
+    if isInst then
+        return uElem
+    end
+
+    return nil
+end
+
 function M.SwitchPreset(presetIndex)
     configMod.DebugPrint("===========================================")
     configMod.DebugPrint(string.format("PRESET SWITCH TRIGGERED: Preset %d", presetIndex))
@@ -15,6 +44,9 @@ function M.SwitchPreset(presetIndex)
         configMod.DebugPrint("BP_PalHUD_InGame_C invalid (on title or loading screen). Aborting.")
         return
     end
+
+    -- Force pre-loading of Pal Box container under the hood
+    palUtil.EnsurePalBoxLoaded()
 
     local zeroBasedIndex = presetIndex - 1
 
@@ -124,13 +156,21 @@ function M.SwitchPreset(presetIndex)
                 local rawElements = targetPreset.LoadoutPals
                 local elementsTable = palUtil.TArrayToTable(rawElements)
                 for _, elem in ipairs(elementsTable) do
-                    if elem and elem.PalInstanceID then
-                        table.insert(loadoutPalIds, elem.PalInstanceID)
+                    local palId = ExtractPalInstanceID(elem)
+                    if palId then
+                        table.insert(loadoutPalIds, palId)
                     end
                 end
             end)
 
-            configMod.DebugPrint(string.format("Found Preset %d ('%s') with %d Pal IDs.", presetIndex, presetName, #loadoutPalIds))
+            configMod.DebugPrint(string.format("Found Preset %d ('%s') with %d valid Pal IDs.", presetIndex, presetName, #loadoutPalIds))
+
+            -- MANDATORY CRASH GUARD: Do NOT invoke RPC if loadoutPalIds is empty!
+            if #loadoutPalIds == 0 then
+                configMod.DebugPrint(string.format("Preset Slot %d has 0 valid Pal IDs. Aborting RPC to prevent server crash.", presetIndex))
+                popup.Show(string.format("Preset Slot %d is empty!", presetIndex), 120, { R = 1.0, G = 0.75, B = 0.0, A = 1.0 })
+                return
+            end
 
             if netComp and netComp:IsValid() and playerUId then
                 configMod.DebugPrint(string.format("Invoking RequestApplyPalLoadoutData_ToServer for %d Pals...", #loadoutPalIds))
