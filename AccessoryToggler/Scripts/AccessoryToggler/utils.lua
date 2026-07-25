@@ -44,12 +44,13 @@ function M.FindAndCacheFont()
     pcall(function()
         local fonts = FindAllOf("Font")
         if fonts then
+            configMod.DebugPrint(string.format("[FindAndCacheFont] Background font scan starting. Loaded Font count: %d", #fonts))
             for _, f in ipairs(fonts) do
                 if f:IsValid() then
                     local name = f:GetFullName()
                     if string.find(name:lower(), "/game/") then
                         M.CachedFont = f
-                        print("[AccessoryToggler] Successfully matched and cached game UI font: " .. name)
+                        configMod.DebugPrint("[FindAndCacheFont] Successfully matched and cached game UI font: " .. name)
                         return f
                     end
                 end
@@ -79,12 +80,20 @@ function M.DrawText(hud, text, color, x, y, baseScale, scalePosition)
     hud:DrawText(text, color, x, y, font, finalScale, scalePosition or false)
 end
 
+local TextSizeCache = {}
+
 -- Safely measure text width using UCanvas:K2_TextSize
 function M.GetTextSize(hud, text, baseScale)
+    if not text or text == "" then return 0 end
     local font, scaleMult = M.GetFontAndScale()
     local finalScale = (baseScale or 1.0) * scaleMult
-    local width = 0
     
+    local cacheKey = text .. "_" .. string.format("%.3f", finalScale)
+    if TextSizeCache[cacheKey] then
+        return TextSizeCache[cacheKey]
+    end
+    
+    local width = 0
     if font then
         local success, err = pcall(function()
             local canvas = hud.Canvas
@@ -97,6 +106,7 @@ function M.GetTextSize(hud, text, baseScale)
         end)
         
         if success and width and width > 0 then
+            TextSizeCache[cacheKey] = width
             LogOnce("text_size_success", string.format("GetTextSize successfully measuring font sizes via UCanvas. Example: text='%s', scale=%.2f -> width=%.2f", tostring(text), finalScale, width))
         else
             local errMsg = err or (not hud.Canvas and "hud.Canvas is nil" or "K2_TextSize returned nil size")

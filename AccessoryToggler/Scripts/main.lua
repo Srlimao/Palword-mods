@@ -166,6 +166,11 @@ local function HandleEditModeHolding(SizeX, SizeY)
     local sy = utils.SafeUnwrap(SizeY)
     
     pcall(UpdateEditCoordinates, sx, sy, cachedDx, cachedDy, cachedDScale, moveAmount, scaleAmount)
+
+    if holdFrames % 15 == 1 then
+        configMod.DebugPrint(string.format("[HandleEditModeHolding] HoldFrames=%d, SpeedMult=%.1f, dx=%d, dy=%d, dScale=%d, HUDX=%.1f%%, HUDY=%.1f%%, HUDScale=%.3f",
+            holdFrames, speedMultiplier, cachedDx, cachedDy, cachedDScale, configMod.CONFIG.HUDX or 0.0, configMod.CONFIG.HUDY or 0.0, configMod.CONFIG.HUDScale or 1.0))
+    end
 end
 
 -- Hook into HUD Draw frame tick (ReceiveDrawHUD)
@@ -203,16 +208,6 @@ local function RegisterHUDHook()
             if not drawStatus then
                 print("[AccessoryToggler] ERROR in ReceiveDrawHUD draw: " .. tostring(drawErr))
             end
-
-            -- Periodically run the accessory scan on the draw tick (prevents reload crashes)
-            local now = os.clock()
-            if now - lastScanTime >= ((CONFIG.ScanIntervalMs or 1500) / 1000.0) then
-                lastScanTime = now
-                local scanStatus, scanErr = pcall(toggler.Scan)
-                if not scanStatus then
-                    print("[AccessoryToggler] ERROR in Scan tick: " .. tostring(scanErr))
-                end
-            end
         end)
     end)
     
@@ -236,7 +231,20 @@ NotifyOnNewObject("/Game/Pal/Blueprint/UI/BP_PalHUD_InGame.BP_PalHUD_InGame_C", 
     RegisterHUDHook()
 end)
 
--- Periodic scan loop is now handled directly inside ReceiveDrawHUD tick
+-- Dedicated background scan loop off the render thread
+local function StartPeriodicScan()
+    local function loop()
+        local scanInterval = CONFIG.ScanIntervalMs or 1500
+        local scanStatus, scanErr = pcall(toggler.Scan)
+        if not scanStatus then
+            print("[AccessoryToggler] ERROR in Scan loop: " .. tostring(scanErr))
+        end
+        ExecuteWithDelay(scanInterval, loop)
+    end
+    ExecuteWithDelay(CONFIG.ScanIntervalMs or 1500, loop)
+end
+
+StartPeriodicScan()
 
 local function GetKey(keyStr, fallbackKey)
     if not keyStr then return fallbackKey end

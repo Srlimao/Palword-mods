@@ -121,25 +121,54 @@ local function GetAccessoryName(staticId)
     return clean
 end
 
+local cachedPlayer = nil
+local cachedInventory = nil
 local hasLoggedInventorySuccess = false
+
 local function GetInventory()
+    if cachedPlayer and cachedPlayer:IsValid() and cachedInventory and cachedInventory:IsValid() then
+        local multiHelper = nil
+        pcall(function() multiHelper = cachedInventory.InventoryMultiHelper end)
+        if multiHelper and multiHelper:IsValid() then
+            return cachedInventory
+        end
+    end
+    
     local player = UEHelpers.GetPlayer()
-    if not player or not player:IsValid() then return nil end
+    if not player or not player:IsValid() then
+        cachedPlayer = nil
+        cachedInventory = nil
+        return nil
+    end
     
     local playerState = player.PlayerState
     if not playerState or not playerState:IsValid() then return nil end
     
     local inventory = playerState.InventoryData
     if inventory and inventory:IsValid() then
+        -- Inventory Subsystem Load Protection: Ensure InventoryMultiHelper is ready before returning
+        local multiHelper = nil
+        pcall(function() multiHelper = inventory.InventoryMultiHelper end)
+        if not multiHelper or not multiHelper:IsValid() then return nil end
+
+        cachedPlayer = player
+        cachedInventory = inventory
         if not hasLoggedInventorySuccess then
             hasLoggedInventorySuccess = true
-            print("[AccessoryToggler] Successfully resolved player inventory data!")
+            print("[AccessoryToggler] Successfully resolved and cached player inventory data!")
         end
         return inventory
     end
     return nil
 end
 
+local FNameCache = {}
+local function GetCachedFName(str)
+    if not FNameCache[str] then
+        FNameCache[str] = FName(str)
+    end
+    return FNameCache[str]
+end
 
 -- Check if there is at least one free slot in the Common inventory bag
 local function HasFreeInventorySlot(inventory)
@@ -153,12 +182,14 @@ end
 -- Scan the inventory bag to find a slot containing a specific static item ID
 local function FindItemSlotInInventory(inventory, staticId)
     if not inventory or not inventory:IsValid() then return nil end
+    local startTime = os.clock()
+    configMod.DebugPrint(string.format("[FindItemSlotInInventory] Searching for item staticId: '%s'", tostring(staticId)))
     
     -- Optimize search by looking up the container natively first
     local out = {}
     local success = false
     pcall(function()
-        success = inventory:TryGetContainerFromStaticItemID(FName(staticId), out)
+        success = inventory:TryGetContainerFromStaticItemID(GetCachedFName(staticId), out)
     end)
     
     local container = out.OutContainer
@@ -167,6 +198,7 @@ local function FindItemSlotInInventory(inventory, staticId)
         pcall(function() slotArray = container.ItemSlotArray end)
         if slotArray then
             local numSlots = GetArrayLength(slotArray)
+            configMod.DebugPrint(string.format("[FindItemSlotInInventory] Native Container match! Scanning %d slots...", numSlots))
             for j = 1, numSlots do
                 local slot = GetArrayElement(slotArray, j)
                 if slot and slot:IsValid() and not IsSlotEmpty(slot) then
@@ -176,6 +208,8 @@ local function FindItemSlotInInventory(inventory, staticId)
                     if not isEquip then
                         local sId = GetSlotStaticId(slot)
                         if sId == staticId then
+                            local elapsedMs = (os.clock() - startTime) * 1000.0
+                            configMod.DebugPrint(string.format("[FindItemSlotInInventory] SUCCESS: Found '%s' in Native Container slot index %d (took %.2fms)", staticId, j, elapsedMs))
                             return slot
                         end
                     end
@@ -185,6 +219,7 @@ local function FindItemSlotInInventory(inventory, staticId)
     end
     
     -- Fallback: Full recursive scan if the native lookup did not succeed
+    configMod.DebugPrint(string.format("[FindItemSlotInInventory] Native lookup miss for '%s'. Initiating fallback container traversal...", tostring(staticId)))
     local multiHelper = nil
     pcall(function() multiHelper = inventory.InventoryMultiHelper end)
     if not multiHelper or not multiHelper:IsValid() then return nil end
@@ -193,6 +228,7 @@ local function FindItemSlotInInventory(inventory, staticId)
     if not containers then return nil end
     
     local numContainers = GetArrayLength(containers)
+    configMod.DebugPrint(string.format("[FindItemSlotInInventory] Traversing across %d inventory containers...", numContainers))
     for i = 1, numContainers do
         local container = GetArrayElement(containers, i)
         if container and container:IsValid() then
@@ -208,6 +244,8 @@ local function FindItemSlotInInventory(inventory, staticId)
                         if not isEquip then
                             local sId = GetSlotStaticId(slot)
                             if sId == staticId then
+                                local elapsedMs = (os.clock() - startTime) * 1000.0
+                                configMod.DebugPrint(string.format("[FindItemSlotInInventory] SUCCESS: Found '%s' in Fallback Container %d slot index %d (took %.2fms)", staticId, i, j, elapsedMs))
                                 return slot
                             end
                         end
@@ -216,6 +254,9 @@ local function FindItemSlotInInventory(inventory, staticId)
             end
         end
     end
+    
+    local elapsedMs = (os.clock() - startTime) * 1000.0
+    configMod.DebugPrint(string.format("[FindItemSlotInInventory] FAILED: Item '%s' not found in any inventory bags (search duration: %.2fms)", tostring(staticId), elapsedMs))
     return nil
 end
 
@@ -228,6 +269,7 @@ local hasLoggedEquipScan = false
 
 -- Main scan loop called periodically
 function M.Scan()
+    local scanStartTime = os.clock()
     utils.FindAndCacheFont()
     local inventory = GetInventory()
     if not inventory or not inventory:IsValid() then return end
@@ -236,6 +278,10 @@ function M.Scan()
     if not M.scanCount then M.scanCount = 0 end
     M.scanCount = M.scanCount + 1
     local shouldLog = (M.scanCount % 5 == 1)
+
+    if shouldLog then
+        configMod.DebugPrint(string.format("[M.Scan] --- Scan Cycle #%d Start ---", M.scanCount))
+    end
 
     for uiIdx = 1, 4 do
         local slotType = ACCESSORY_SLOTS[uiIdx]
@@ -250,51 +296,20 @@ function M.Scan()
         local isEmpty = IsSlotEmpty(slot)
         local staticId = GetSlotStaticId(slot) or "None"
 
-        if shouldLog then
-            configMod.DebugPrint(string.format("UI Slot %d (EquipType %d): success=%s, valid=%s, empty=%s, item=%s", 
-                uiIdx, slotType, tostring(success), tostring(isSlotValid), tostring(isEmpty), staticId))
-        end
-
         local isEquipped = success and isSlotValid and not isEmpty
 
         if isEquipped then
             foundCount = foundCount + 1
             
-            -- If this accessory is equipped but is marked in config/state as disabled:
+            -- Read-Only Background Scan Directive: Do not mutate inventory or call TryRemoveEquipment in M.Scan
             if M.disabledAccessorySlots[uiIdx] == staticId then
-                if not hasAttemptedInitialUnequip then
-                    -- Try to automatically unequip it on start/load
-                    if HasFreeInventorySlot(inventory) then
-                        local removed = false
-                        pcall(function()
-                            removed = inventory:TryRemoveEquipment(slot)
-                        end)
-                        if removed then
-                            configMod.DebugPrint("Auto-unequipped accessory in slot " .. uiIdx .. " on scan: " .. staticId)
-                        end
-                    else
-                        -- No inventory space to unequip: clear disabled state so it remains active
-                        M.disabledAccessorySlots[uiIdx] = nil
-                        SaveDisabledStates()
-                    end
-                else
-                    -- During active gameplay, if they manually equipped it, we clear the disabled state
-                    configMod.DebugPrint("Accessory slot " .. uiIdx .. " was manually re-equipped: " .. staticId)
-                    M.disabledAccessorySlots[uiIdx] = nil
-                    SaveDisabledStates()
-                    local accName = GetAccessoryName(staticId)
-                    local transType, transBuff = utils.ResolveTranslatedNames(staticId, accName)
-                    M.equippedAccessories[uiIdx] = {
-                        staticId = staticId,
-                        name = accName,
-                        transType = transType,
-                        transBuff = transBuff,
-                        iconPath = "",
-                        disabled = false
-                    }
-                end
-            else
-                -- Accessory is active and working
+                configMod.DebugPrint(string.format("[M.Scan] UI Slot %d: Accessory '%s' was manually re-equipped. Clearing disabled state.", uiIdx, staticId))
+                M.disabledAccessorySlots[uiIdx] = nil
+                SaveDisabledStates()
+            end
+            
+            local existing = M.equippedAccessories[uiIdx]
+            if not existing or existing.staticId ~= staticId or existing.disabled ~= false then
                 local accName = GetAccessoryName(staticId)
                 local transType, transBuff = utils.ResolveTranslatedNames(staticId, accName)
                 M.equippedAccessories[uiIdx] = {
@@ -306,6 +321,11 @@ function M.Scan()
                     disabled = false
                 }
             end
+            if shouldLog then
+                local acc = M.equippedAccessories[uiIdx]
+                configMod.DebugPrint(string.format("[M.Scan] UI Slot %d [EquipType %d]: EQUIPPED item='%s' ('%s'), type='%s', buff='%s'", 
+                    uiIdx, slotType, staticId, acc.name, acc.transType, acc.transBuff))
+            end
         else
             -- Slot is currently empty
             local savedStaticId = M.disabledAccessorySlots[uiIdx]
@@ -313,30 +333,40 @@ function M.Scan()
                 -- Native C++ count query avoids slow Lua iteration over all bags during Scan tick
                 local hasItem = false
                 pcall(function()
-                    hasItem = inventory:CountItemNum(FName(savedStaticId)) > 0
+                    hasItem = inventory:CountItemNum(GetCachedFName(savedStaticId)) > 0
                 end)
                 if hasItem then
                     foundCount = foundCount + 1
-                    -- Show as disabled in UI
-                    local accName = GetAccessoryName(savedStaticId)
-                    local transType, transBuff = utils.ResolveTranslatedNames(savedStaticId, accName)
-                    M.equippedAccessories[uiIdx] = {
-                        staticId = savedStaticId,
-                        name = accName,
-                        transType = transType,
-                        transBuff = transBuff,
-                        iconPath = "",
-                        disabled = true
-                    }
+                    local existing = M.equippedAccessories[uiIdx]
+                    if not existing or existing.staticId ~= savedStaticId or existing.disabled ~= true then
+                        local accName = GetAccessoryName(savedStaticId)
+                        local transType, transBuff = utils.ResolveTranslatedNames(savedStaticId, accName)
+                        M.equippedAccessories[uiIdx] = {
+                            staticId = savedStaticId,
+                            name = accName,
+                            transType = transType,
+                            transBuff = transBuff,
+                            iconPath = "",
+                            disabled = true
+                        }
+                    end
+                    if shouldLog then
+                        local acc = M.equippedAccessories[uiIdx]
+                        configMod.DebugPrint(string.format("[M.Scan] UI Slot %d [EquipType %d]: TRACKED DISABLED item='%s' ('%s') in bags", 
+                            uiIdx, slotType, savedStaticId, acc.name))
+                    end
                 else
                     -- Accessory is no longer in the inventory: clear state
-                    configMod.DebugPrint("Disabled accessory " .. savedStaticId .. " in slot " .. uiIdx .. " is no longer in inventory. Clearing state.")
+                    configMod.DebugPrint(string.format("[M.Scan] UI Slot %d: Tracked item '%s' is no longer in inventory. Clearing state.", uiIdx, savedStaticId))
                     M.disabledAccessorySlots[uiIdx] = nil
                     M.equippedAccessories[uiIdx] = nil
                     SaveDisabledStates()
                 end
             else
                 M.equippedAccessories[uiIdx] = nil
+                if shouldLog then
+                    configMod.DebugPrint(string.format("[M.Scan] UI Slot %d [EquipType %d]: EMPTY", uiIdx, slotType))
+                end
             end
         end
     end
@@ -344,24 +374,29 @@ function M.Scan()
     -- Mark that we have completed the initial startup unequip check
     hasAttemptedInitialUnequip = true
 
-    if foundCount > 0 and not hasLoggedEquipScan then
-        hasLoggedEquipScan = true
-        configMod.DebugPrint("Scan discovered " .. foundCount .. " active or tracked accessories.")
-    elseif foundCount == 0 then
-        hasLoggedEquipScan = false
+    if shouldLog then
+        local scanDurationMs = (os.clock() - scanStartTime) * 1000.0
+        configMod.DebugPrint(string.format("[M.Scan] --- Scan Cycle #%d Complete (Discovered %d active/tracked items, Duration: %.2fms) ---", M.scanCount, foundCount, scanDurationMs))
     end
 end
 
 -- Toggle the accessory at UI index 1..4 (Alt + 1..4)
 function M.ToggleSlot(uiSlotIndex)
+    local toggleStartTime = os.clock()
+    configMod.DebugPrint(string.format("[M.ToggleSlot] --- Hotkey Triggered for UI Slot %d ---", uiSlotIndex))
+    
     local inventory = GetInventory()
     if not inventory or not inventory:IsValid() then
+        configMod.DebugPrint(string.format("[M.ToggleSlot] ERROR: Inventory data not ready for UI Slot %d", uiSlotIndex))
         popup.Show(configMod.GetTranslation("Popup_InventoryNotReady", "Inventory not ready"), 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
         return
     end
 
     local slotType = ACCESSORY_SLOTS[uiSlotIndex]
-    if not slotType then return end
+    if not slotType then
+        configMod.DebugPrint(string.format("[M.ToggleSlot] ERROR: Invalid slotType mapping for UI Slot %d", uiSlotIndex))
+        return
+    end
 
     local out = {}
     local success = false
@@ -371,17 +406,24 @@ function M.ToggleSlot(uiSlotIndex)
     local slot = out.OutSlot
     local isEquipped = success and slot and slot:IsValid() and not IsSlotEmpty(slot)
 
+    configMod.DebugPrint(string.format("[M.ToggleSlot] UI Slot %d (EquipType %d): IsEquipped=%s", uiSlotIndex, slotType, tostring(isEquipped)))
+
     if isEquipped then
-        -- Check for free inventory space first (User request!)
+        -- Check for free inventory space first
         if not HasFreeInventorySlot(inventory) then
+            configMod.DebugPrint(string.format("[M.ToggleSlot] ABORT: Inventory bag is FULL! Cannot unequip slot %d", uiSlotIndex))
             popup.Show(configMod.GetTranslation("Popup_InventoryFull", "Inventory Full! Cannot disable accessory."), 180, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
             return
         end
 
         local staticId = GetSlotStaticId(slot)
-        if not staticId then return end
+        if not staticId then
+            configMod.DebugPrint(string.format("[M.ToggleSlot] ERROR: Failed to resolve staticId from equipped slot %d", uiSlotIndex))
+            return
+        end
         local displayName = GetAccessoryName(staticId)
 
+        configMod.DebugPrint(string.format("[M.ToggleSlot] Unequipping '%s' (%s) from slot %d...", displayName, staticId, uiSlotIndex))
         -- Perform unequip
         local removed = false
         pcall(function()
@@ -390,8 +432,11 @@ function M.ToggleSlot(uiSlotIndex)
         if removed then
             M.disabledAccessorySlots[uiSlotIndex] = staticId
             SaveDisabledStates()
+            local elapsedMs = (os.clock() - toggleStartTime) * 1000.0
+            configMod.DebugPrint(string.format("[M.ToggleSlot] SUCCESS: Disabled '%s' in %.2fms", displayName, elapsedMs))
             popup.Show(string.format(configMod.GetTranslation("Popup_Disabled", "%s Disabled"), displayName), 120, { R = 1.0, G = 0.5, B = 0.0, A = 1.0 })
         else
+            configMod.DebugPrint(string.format("[M.ToggleSlot] FAILED: TryRemoveEquipment failed for '%s' in slot %d", displayName, uiSlotIndex))
             popup.Show(string.format(configMod.GetTranslation("Popup_FailedDisable", "Failed to disable %s"), displayName), 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
         end
     else
@@ -399,6 +444,7 @@ function M.ToggleSlot(uiSlotIndex)
         local staticId = M.disabledAccessorySlots[uiSlotIndex]
         if staticId then
             local displayName = GetAccessoryName(staticId)
+            configMod.DebugPrint(string.format("[M.ToggleSlot] Attempting to re-equip tracked disabled accessory '%s' (%s) into slot %d...", displayName, staticId, uiSlotIndex))
             local bagSlot = FindItemSlotInInventory(inventory, staticId)
             if bagSlot then
                 local equipped = false
@@ -408,15 +454,21 @@ function M.ToggleSlot(uiSlotIndex)
                 if equipped then
                     M.disabledAccessorySlots[uiSlotIndex] = nil
                     SaveDisabledStates()
+                    local elapsedMs = (os.clock() - toggleStartTime) * 1000.0
+                    configMod.DebugPrint(string.format("[M.ToggleSlot] SUCCESS: Re-enabled '%s' in %.2fms", displayName, elapsedMs))
                     popup.Show(string.format(configMod.GetTranslation("Popup_Enabled", "%s Enabled"), displayName), 120, { R = 0.0, G = 0.96, B = 0.83, A = 1.0 })
                 else
+                    configMod.DebugPrint(string.format("[M.ToggleSlot] FAILED: TryEquipSlot failed for '%s' in slot %d", displayName, uiSlotIndex))
                     popup.Show(string.format(configMod.GetTranslation("Popup_FailedEnable", "Failed to enable %s"), displayName), 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
                 end
             else
                 M.disabledAccessorySlots[uiSlotIndex] = nil
                 SaveDisabledStates()
+                configMod.DebugPrint(string.format("[M.ToggleSlot] NOT FOUND: '%s' not present in player inventory bags for slot %d", displayName, uiSlotIndex))
                 popup.Show(string.format(configMod.GetTranslation("Popup_NotFound", "%s not found in bags"), displayName), 120, { R = 1.0, G = 0.35, B = 0.37, A = 1.0 })
             end
+        else
+            configMod.DebugPrint(string.format("[M.ToggleSlot] UI Slot %d is empty and no disabled accessory is tracked.", uiSlotIndex))
         end
     end
 end
