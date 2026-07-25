@@ -48,7 +48,7 @@ local function DrawCaveBeacon(hud, pos, color)
 end
 
 -- Render tracker label (either box style or simple text style)
-local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW, screenH)
+local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW, screenH, subStr, nameColorOverride)
     textWorldPosBuffer.X = worldPos.X
     textWorldPosBuffer.Y = worldPos.Y
     textWorldPosBuffer.Z = worldPos.Z + style.TextOffsetZ
@@ -68,6 +68,7 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW,
         local font, scaleMult = utils.GetFontAndScale()
         local fontScale = style.FontScale * scaleMult
         local smallFontScale = style.SmallFontScale * scaleMult
+        local nameColor = nameColorOverride or style.NameColor
         
         local charW = style.FontCharW
         local lineH = style.FontLineH
@@ -75,6 +76,9 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW,
             charW = charW * 1.6
             lineH = lineH * 2.8
         end
+
+        local subH = (subStr and subStr ~= "") and (lineH * smallFontScale) or 0
+        local lineGap = font and 6.0 or 4.0
 
         if style.DrawBox then
             local nameW = utils.GetTextSize(hud, nameStr, style.FontScale)
@@ -89,10 +93,17 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW,
                     distW = utils.GetStringLength(distStr) * charW * smallFontScale
                 end
             end
+
+            local subW = 0
+            if subStr and subStr ~= "" then
+                subW = utils.GetTextSize(hud, subStr, style.SmallFontScale)
+                if not subW or subW == 0 then
+                    subW = utils.GetStringLength(subStr) * charW * smallFontScale
+                end
+            end
             
             local nameH  = lineH * fontScale
             local distH  = distStr and (lineH * smallFontScale) or 0
-            local lineGap = font and 6.0 or 4.0
             local bw     = style.BorderWidth
             
             local padX = style.BoxPadX
@@ -102,8 +113,8 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW,
                 padY = padY + 2.0
             end
             
-            local contentW = math.max(nameW, distW)
-            local contentH = nameH + (distStr and (lineGap + distH) or 0)
+            local contentW = math.max(nameW, distW, subW)
+            local contentH = nameH + (distStr and (lineGap + distH) or 0) + (subH > 0 and (lineGap + subH) or 0)
             local boxW = contentW + padX * 2
             local boxH = contentH + padY * 2
             
@@ -119,15 +130,21 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW,
             local nameX = textScreenX - nameW * 0.5
             local nameY = boxY + padY
             
-            utils.DrawText(hud, nameStr, style.NameColor, nameX, nameY, style.FontScale, false)
+            utils.DrawText(hud, nameStr, nameColor, nameX, nameY, style.FontScale, false)
             
+            local nextY = nameY + nameH + lineGap
+            if subStr and subStr ~= "" then
+                local subX = textScreenX - subW * 0.5
+                utils.DrawText(hud, subStr, nameColor, subX, nextY, style.SmallFontScale, false)
+                nextY = nextY + subH + lineGap
+            end
+
             if distStr then
                 local distX = textScreenX - distW * 0.5
-                local distY = nameY + nameH + lineGap
-                utils.DrawText(hud, distStr, style.DistColor, distX, distY, style.SmallFontScale, false)
+                utils.DrawText(hud, distStr, style.DistColor, distX, nextY, style.SmallFontScale, false)
             end
         else
-            -- Simple text format: Name \n [Distance]
+            -- Simple text format: Name \n SubText \n [Distance]
             local nameW = utils.GetTextSize(hud, nameStr, style.FontScale)
             if not nameW or nameW == 0 then
                 nameW = utils.GetStringLength(nameStr) * charW * fontScale
@@ -141,32 +158,46 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW,
                     distPartW = utils.GetStringLength(distPartStr) * charW * smallFontScale
                 end
             end
+
+            local subW = 0
+            if subStr and subStr ~= "" then
+                subW = utils.GetTextSize(hud, subStr, style.SmallFontScale)
+                if not subW or subW == 0 then
+                    subW = utils.GetStringLength(subStr) * charW * smallFontScale
+                end
+            end
             
             local nameH = lineH * fontScale
             local distH = distStr and (lineH * smallFontScale) or 0
             local lineGap = font and 6.0 or 4.0
             
-            local contentH = nameH + (distStr and (lineGap + distH) or 0)
+            local contentH = nameH + (distStr and (lineGap + distH) or 0) + (subH > 0 and (lineGap + subH) or 0)
             
             local startX = textScreenX - nameW * 0.5
             local simpleY = textScreenY - contentH * 0.5
             
-            -- High-Performance Drop Shadow (1 offset pass instead of 4 outline passes to cut C++ reflection calls in half)
             utils.DrawText(hud, nameStr, style.BorderColor, startX + 1.0, simpleY + 1.0, style.FontScale, false)
-            utils.DrawText(hud, nameStr, style.NameColor, startX, simpleY, style.FontScale, false)
+            utils.DrawText(hud, nameStr, nameColor, startX, simpleY, style.FontScale, false)
             
+            local nextY = simpleY + nameH + lineGap
+            if subStr and subStr ~= "" then
+                local subX = textScreenX - subW * 0.5
+                utils.DrawText(hud, subStr, style.BorderColor, subX + 1.0, nextY + 1.0, style.SmallFontScale, false)
+                utils.DrawText(hud, subStr, nameColor, subX, nextY, style.SmallFontScale, false)
+                nextY = nextY + subH + lineGap
+            end
+
             if distStr then
                 local distX = textScreenX - distPartW * 0.5
-                local distY = simpleY + nameH + lineGap
-                utils.DrawText(hud, distPartStr, style.BorderColor, distX + 1.0, distY + 1.0, style.SmallFontScale, false)
-                utils.DrawText(hud, distPartStr, style.DistColor, distX, distY, style.SmallFontScale, false)
+                utils.DrawText(hud, distPartStr, style.BorderColor, distX + 1.0, nextY + 1.0, style.SmallFontScale, false)
+                utils.DrawText(hud, distPartStr, style.DistColor, distX, nextY, style.SmallFontScale, false)
             end
         end
     end
 end
 
 -- Main entry point for drawing
-function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, activeCaves, activeLoot, activeNotes, cachedLocalPlayer, SizeX, SizeY)
+function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, activeCaves, activeLoot, activeNotes, activePals, cachedLocalPlayer, SizeX, SizeY)
     -- 1. Draw Settings Menu (always allowed, even if mod is disabled)
     menu.Draw(hud, SizeX, SizeY)
     
@@ -176,7 +207,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     if not CONFIG.Global.Enabled then return end
 
     -- Early return if no active items exist to draw across all categories
-    local totalActiveCount = #activePlayers + #activeRelics + #activeChests + #activeEggs + #activeCaves + #activeLoot + #activeNotes
+    local totalActiveCount = #activePlayers + #activeRelics + #activeChests + #activeEggs + #activeCaves + #activeLoot + #activeNotes + (activePals and #activePals or 0)
     if totalActiveCount == 0 then return end
     
     if not cachedLocalPlayer or not cachedLocalPlayer:IsValid() then return end
@@ -264,6 +295,25 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
         for _, pos in ipairs(activeNotes) do
             local name = pos.Name or "Note"
             DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Notes.Style, screenW, screenH)
+        end
+    end
+
+    -- 8. Draw Pals
+    if CONFIG.Pals and CONFIG.Pals.Enabled and activePals then
+        for _, pal in ipairs(activePals) do
+            local colorOverride = nil
+            if pal.IsShiny and CONFIG.Pals.Style and CONFIG.Pals.Style.ShinyColor then
+                colorOverride = CONFIG.Pals.Style.ShinyColor
+            elseif pal.IsBoss and CONFIG.Pals.Style and CONFIG.Pals.Style.BossColor then
+                colorOverride = CONFIG.Pals.Style.BossColor
+            end
+
+            local subStr = nil
+            if pal.Passives and #pal.Passives > 0 then
+                subStr = table.concat(pal.Passives, ", ")
+            end
+
+            DrawTrackerLabel(hud, pal, pal.Name, pal.DistStr, CONFIG.Pals.Style, screenW, screenH, subStr, colorOverride)
         end
     end
 end

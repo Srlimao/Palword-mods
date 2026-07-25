@@ -43,6 +43,7 @@ local function RegisterHUDHook()
                 tracker.activeCaves,
                 tracker.activeLoot,
                 tracker.activeNotes,
+                tracker.activePals,
                 tracker.cachedLocalPlayer,
                 SizeX, SizeY
             )

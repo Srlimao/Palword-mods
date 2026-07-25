@@ -12,6 +12,7 @@ M.activeEggs = {}
 M.activeCaves = {}
 M.activeLoot = {}
 M.activeNotes = {}
+M.activePals = {}
 M.cachedLocalPlayer = nil
 
 local hasRunResolve = false
@@ -19,7 +20,7 @@ local function ResolvePaths(hud)
     if hasRunResolve then return end
     hasRunResolve = true
     
-    print("[HUDLocator] Resolving item icon paths using BP_PalUIFunctionLibrary...")
+    configMod.DebugPrint("Resolving item icon paths using BP_PalUIFunctionLibrary...")
     local lib = StaticFindObject("/Game/Pal/Blueprint/UI/BP_PalUIFunctionLibrary.Default__BP_PalUIFunctionLibrary_C")
     if not lib or not lib:IsValid() then
         local classObj = FindFirstOf("BP_PalUIFunctionLibrary_C")
@@ -31,7 +32,7 @@ local function ResolvePaths(hud)
         end
     end
     if not lib or not lib:IsValid() then
-        print("[HUDLocator] Failed to find valid BP_PalUIFunctionLibrary CDO")
+        configMod.DebugPrint("Failed to find valid BP_PalUIFunctionLibrary CDO")
         return
     end
     
@@ -49,17 +50,23 @@ local function ResolvePaths(hud)
             if success and softPtr then
                 local path = tostring(softPtr.AssetPathName)
                 file:write(item .. " -> " .. path .. "\n")
-                print("[HUDLocator] " .. item .. " resolved to: " .. path)
+                configMod.DebugPrint(item .. " resolved to: " .. path)
             else
                 file:write(item .. " -> failed: " .. tostring(softPtr) .. "\n")
-                print("[HUDLocator] " .. item .. " failed to resolve: " .. tostring(softPtr))
+                configMod.DebugPrint(item .. " failed to resolve: " .. tostring(softPtr))
             end
         end
         file:close()
-        print("[HUDLocator] Successfully wrote resolved paths to " .. filepath)
+        configMod.DebugPrint("Successfully wrote resolved paths to " .. filepath)
     else
-        print("[HUDLocator] Failed to open resolved_paths.txt for writing")
+        configMod.DebugPrint("Failed to open resolved_paths.txt for writing")
     end
+end
+
+local function GetMaxDistSq(categoryConfig)
+    local globalDist = (configMod.CONFIG.Global and configMod.CONFIG.Global.MaxDistance) or 15000.0
+    local dist = (categoryConfig and categoryConfig.MaxDistance) or globalDist
+    return dist * dist
 end
 
 -- Scan players, relics, chests, eggs, caves
@@ -72,6 +79,7 @@ function M.scan()
         M.activeCaves = {}
         M.activeLoot = {}
         M.activeNotes = {}
+        M.activePals = {}
         return
     end
 
@@ -85,6 +93,7 @@ function M.scan()
         M.activeCaves = {}
         M.activeLoot = {}
         M.activeNotes = {}
+        M.activePals = {}
         return
     end
 
@@ -108,6 +117,7 @@ function M.scan()
         M.activeCaves = {}
         M.activeLoot = {}
         M.activeNotes = {}
+        M.activePals = {}
         M.cachedLocalPlayer = nil
         scanners.tempCaves = {}
         return 
@@ -131,32 +141,28 @@ function M.scan()
 
     -- 2. Scan Relics
     if configMod.CONFIG.Relics.Enabled then
-        local maxDistSq = configMod.CONFIG.Relics.MaxDistance * configMod.CONFIG.Relics.MaxDistance
-        M.activeRelics = scanners.ScanRelics(playerPos, maxDistSq)
+        M.activeRelics = scanners.ScanRelics(playerPos, GetMaxDistSq(configMod.CONFIG.Relics))
     else
         M.activeRelics = {}
     end
 
     -- 3. Scan Chests
     if configMod.CONFIG.Chests.Enabled then
-        local maxDistSq = configMod.CONFIG.Chests.MaxDistance * configMod.CONFIG.Chests.MaxDistance
-        M.activeChests = scanners.ScanChests(playerPos, maxDistSq)
+        M.activeChests = scanners.ScanChests(playerPos, GetMaxDistSq(configMod.CONFIG.Chests))
     else
         M.activeChests = {}
     end
 
     -- 4. Scan Eggs
     if configMod.CONFIG.Eggs.Filter ~= "None" then
-        local maxDistSq = configMod.CONFIG.Eggs.MaxDistance * configMod.CONFIG.Eggs.MaxDistance
-        M.activeEggs = scanners.ScanEggs(playerPos, maxDistSq, configMod.CONFIG.Eggs.Filter, configMod.CONFIG.Global.Debug)
+        M.activeEggs = scanners.ScanEggs(playerPos, GetMaxDistSq(configMod.CONFIG.Eggs), configMod.CONFIG.Eggs.Filter, configMod.CONFIG.Global.Debug)
     else
         M.activeEggs = {}
     end
 
     -- 5. Scan Caves
     if configMod.CONFIG.Caves.Enabled then
-        local maxDistSq = configMod.CONFIG.Caves.MaxDistance * configMod.CONFIG.Caves.MaxDistance
-        M.activeCaves = scanners.ScanCaves(playerPos, maxDistSq)
+        M.activeCaves = scanners.ScanCaves(playerPos, GetMaxDistSq(configMod.CONFIG.Caves))
     else
         M.activeCaves = {}
         scanners.tempCaves = {}
@@ -164,18 +170,23 @@ function M.scan()
 
     -- 6. Scan Loot
     if configMod.CONFIG.Loot.Enabled then
-        local maxDistSq = configMod.CONFIG.Loot.MaxDistance * configMod.CONFIG.Loot.MaxDistance
-        M.activeLoot = scanners.ScanLoot(playerPos, maxDistSq, configMod.CONFIG.Loot.Filters)
+        M.activeLoot = scanners.ScanLoot(playerPos, GetMaxDistSq(configMod.CONFIG.Loot), configMod.CONFIG.Loot.Filters)
     else
         M.activeLoot = {}
     end
 
     -- 7. Scan Notes
-    if configMod.CONFIG.Notes.Enabled then
-        local maxDistSq = configMod.CONFIG.Notes.MaxDistance * configMod.CONFIG.Notes.MaxDistance
-        M.activeNotes = scanners.ScanNotes(playerPos, maxDistSq)
+    if configMod.CONFIG.Notes and configMod.CONFIG.Notes.Enabled then
+        M.activeNotes = scanners.ScanNotes(playerPos, GetMaxDistSq(configMod.CONFIG.Notes))
     else
         M.activeNotes = {}
+    end
+
+    -- 8. Scan Pals
+    if configMod.CONFIG.Pals and configMod.CONFIG.Pals.Enabled then
+        M.activePals = scanners.ScanPals(playerPos, GetMaxDistSq(configMod.CONFIG.Pals), configMod.CONFIG.Pals)
+    else
+        M.activePals = {}
     end
 end
 

@@ -11,6 +11,7 @@ M.CONFIG = {
         Enabled = true,
         Language = "system",
         ScanIntervalMs = 1500,
+        MaxDistance = 15000.0,
         FontScale = 1.0,
         Debug = false,
         KeyBinds = {
@@ -150,6 +151,59 @@ M.CONFIG = {
             NameColor = { R = 1.0, G = 0.4, B = 0.4, A = 1.0 },
             DistColor = { R = 1.0, G = 0.4, B = 0.4, A = 1.0 },
             BoxColor = { R = 1.0, G = 0.8, B = 0.8, A = 1.0 },
+            BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
+            BorderWidth = 1.5,
+            BoxPadX = 10.0,
+            BoxPadY = 6.0,
+            FontCharW = 8.0,
+            FontLineH = 12.0
+        }
+    },
+    Pals = {
+        Enabled = true,
+        MaxDistance = 15000.0,
+        FilterMode = "TrackerListOnly",
+        ShowPassives = true,
+        ShowLevel = true,
+        TrackerPals = {
+            {
+                palname = "Lamball",
+                shiny = false,
+                boss = false,
+                passive = {
+                    passives = { "Runner", "Motivational Leader" },
+                    min_passive_threshold = 1
+                }
+            },
+            {
+                palname = "Jetragon",
+                shiny = false,
+                boss = true,
+                passive = {
+                    passives = { "Legend", "Divine Dragon", "Swift", "Runner" },
+                    min_passive_threshold = 3
+                }
+            },
+            {
+                palname = "Cattiva",
+                shiny = true,
+                boss = false,
+                passive = {
+                    passives = { "Lucky", "Coward" },
+                    min_passive_threshold = 2
+                }
+            }
+        },
+        Style = {
+            DrawBox = false,
+            FontScale = 1.2,
+            SmallFontScale = 0.9,
+            TextOffsetZ = 120.0,
+            ShinyColor = { R = 1.0, G = 0.85, B = 0.1, A = 1.0 },
+            BossColor = { R = 1.0, G = 0.25, B = 0.25, A = 1.0 },
+            NameColor = { R = 0.2, G = 0.8, B = 1.0, A = 1.0 },
+            DistColor = { R = 0.2, G = 0.8, B = 1.0, A = 1.0 },
+            BoxColor = { R = 0.8, G = 0.8, B = 1.0, A = 1.0 },
             BorderColor = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 },
             BorderWidth = 1.5,
             BoxPadX = 10.0,
@@ -363,6 +417,70 @@ local defaultJSON = [[{
       "NameColor": { "R": 1.0, "G": 0.4, "B": 0.4, "A": 1.0 },
       "DistColor": { "R": 1.0, "G": 0.4, "B": 0.4, "A": 1.0 },
       "BoxColor": { "R": 1.0, "G": 0.8, "B": 0.8, "A": 1.0 },
+      "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
+      "BorderWidth": 1.5,
+      "BoxPadX": 10.0,
+      "BoxPadY": 6.0,
+      "FontCharW": 8.0,
+      "FontLineH": 12.0
+    }
+  },
+  "Pals": {
+    "Enabled": true,
+    "MaxDistance": 15000.0,
+    "FilterMode": "TrackerListOnly",
+    "ShowPassives": true,
+    "ShowLevel": true,
+    "TrackerPals": [
+      {
+        "palname": "Lamball",
+        "shiny": false,
+        "boss": false,
+        "passive": {
+          "passives": [
+            "Runner",
+            "Motivational Leader"
+          ],
+          "min_passive_threshold": 1
+        }
+      },
+      {
+        "palname": "Jetragon",
+        "shiny": false,
+        "boss": true,
+        "passive": {
+          "passives": [
+            "Legend",
+            "Divine Dragon",
+            "Swift",
+            "Runner"
+          ],
+          "min_passive_threshold": 3
+        }
+      },
+      {
+        "palname": "Cattiva",
+        "shiny": true,
+        "boss": false,
+        "passive": {
+          "passives": [
+            "Lucky",
+            "Coward"
+          ],
+          "min_passive_threshold": 2
+        }
+      }
+    ],
+    "Style": {
+      "DrawBox": false,
+      "FontScale": 1.2,
+      "SmallFontScale": 0.9,
+      "TextOffsetZ": 120.0,
+      "ShinyColor": { "R": 1.0, "G": 0.85, "B": 0.1, "A": 1.0 },
+      "BossColor": { "R": 1.0, "G": 0.25, "B": 0.25, "A": 1.0 },
+      "NameColor": { "R": 0.2, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "DistColor": { "R": 0.2, "G": 0.8, "B": 1.0, "A": 1.0 },
+      "BoxColor": { "R": 0.8, "G": 0.8, "B": 1.0, "A": 1.0 },
       "BorderColor": { "R": 0.0, "G": 0.0, "B": 0.0, "A": 1.0 },
       "BorderWidth": 1.5,
       "BoxPadX": 10.0,
@@ -655,22 +773,21 @@ local function ResolveActiveLanguage()
     if statusIntl and IntlLibrary then
         local langStatus, lang = pcall(function() return IntlLibrary:GetCurrentLanguage() end)
         if langStatus and type(lang) == "string" and lang ~= "" then
-            print("[HUDLocator] KismetInternationalizationLibrary string language: " .. tostring(lang))
+            M.DebugPrint("KismetInternationalizationLibrary string language: " .. tostring(lang))
             activeLang = lang
             langResolved = true
         elseif langStatus and type(lang) == "userdata" then
             local sStatus, s = pcall(function() return lang:ToString() end)
             if sStatus and s and s ~= "" then
-                print("[HUDLocator] KismetInternationalizationLibrary userdata language: " .. tostring(s))
+                M.DebugPrint("KismetInternationalizationLibrary userdata language: " .. tostring(s))
                 activeLang = s
                 langResolved = true
             end
         else
-            print("[HUDLocator] KismetInternationalizationLibrary returned invalid language type or empty string: " ..
-            tostring(lang))
+            M.DebugPrint("KismetInternationalizationLibrary returned invalid language type or empty string: " .. tostring(lang))
         end
     else
-        print("[HUDLocator] Could not find KismetInternationalizationLibrary")
+        M.DebugPrint("Could not find KismetInternationalizationLibrary")
     end
 
     if not langResolved then
@@ -679,30 +796,29 @@ local function ResolveActiveLanguage()
         if status and SystemLibrary then
             local langStatus, lang = pcall(function() return SystemLibrary:GetDefaultLanguage() end)
             if langStatus and type(lang) == "string" and lang ~= "" then
-                print("[HUDLocator] KismetSystemLibrary string language: " .. tostring(lang))
+                M.DebugPrint("KismetSystemLibrary string language: " .. tostring(lang))
                 activeLang = lang
                 langResolved = true
             elseif langStatus and type(lang) == "userdata" then
                 local sStatus, s = pcall(function() return lang:ToString() end)
                 if sStatus and s and s ~= "" then
-                    print("[HUDLocator] KismetSystemLibrary userdata language: " .. tostring(s))
+                    M.DebugPrint("KismetSystemLibrary userdata language: " .. tostring(s))
                     activeLang = s
                     langResolved = true
                 end
             else
-                print("[HUDLocator] KismetSystemLibrary returned invalid language type or empty string: " ..
-                tostring(lang))
+                M.DebugPrint("KismetSystemLibrary returned invalid language type or empty string: " .. tostring(lang))
             end
         else
-            print("[HUDLocator] Could not find KismetSystemLibrary")
+            M.DebugPrint("Could not find KismetSystemLibrary")
         end
     end
 
     if langResolved then
         CachedLang = activeLang
-        print("[HUDLocator] Game language locked to: " .. activeLang)
+        M.DebugPrint("Game language locked to: " .. activeLang)
     else
-        print("[HUDLocator] Failed to resolve any language, defaulting to: " .. activeLang)
+        M.DebugPrint("Failed to resolve any language, defaulting to: " .. activeLang)
     end
 
     return activeLang

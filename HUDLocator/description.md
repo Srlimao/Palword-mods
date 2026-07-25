@@ -1,73 +1,63 @@
-# HUD Locator
+# HUD Locator All in 1
 
-A client-side UI mod for Palworld that displays customizable floating 3D HUD overlays for **players**, **Lifmunk Effigies (relics)**, **treasure chests**, **Pal eggs**, **dungeons**, and **ground loot**.
+A clean, customizable on-screen 3D locator for Palworld that highlights **Pals**, **players**, **Lifmunk Effigies**, **chests**, **Pal eggs**, **dungeons**, **journals**, and **loot**.
 
-🎨 **Visual Web Configurator**: Tweak colors, sliders, padding, and fonts with a live HUD preview at [https://pal-mod-configurator.dunhas.com/](https://pal-mod-configurator.dunhas.com/) (can be opened directly from the in-game menu!).
-
----
-
-## Key Features
-
-- **Player Tracker**: Server-wide names and real-time distances.
-- **Relic Finder**: Cyan overlays for Lifmunk Effigies.
-- **Chest Finder**: Yellow/gold overlays for treasure chests.
-- **Pal Egg Finder**: Displays size/type with filters (All, Large+, HugeOnly, None).
-- **Dungeon Finder**: Purple overlays for dungeon cave entrances.
-- **Journal / Note Tracker**: Coral/salmon overlays for uncollected lore journals/memos.
-- **Ground Loot Tracker**: Green overlays for wild spheres, skill fruits, arrows, coins (Filter in `config.json`).
-- **In-Game Menu (Alt + F6)**: Toggle trackers and adjust distances on the fly.
-- **Manual Reload (Alt + R)**: Reload settings instantly from JSON config.
-- **Localization**: Automated translations (English, Chinese, Spanish, Japanese, French, German, and 10+ more).
+🎨 **Visual Web Configurator**: Easily adjust colors, sliders, and options with a live preview at [https://pal-mod-configurator.dunhas.com/](https://pal-mod-configurator.dunhas.com/) (openable directly in-game!).
 
 ---
 
-## In-Game Controls
+## Features
 
-- **Alt + F6**: Toggle settings menu.
-- **Up/Down/Left/Right**: Navigate menu and adjust values.
-- **Alt + R**: Reload configuration from settings file.
+- 🐾 **Advanced Pal Tracker**: Locate specific wild & boss Pals by species, Lucky/Shiny status, Alpha/Boss status, and level.
+- 🧬 **Passive Skill Filtering**: Filter Pals by specific passive skills (e.g., *Swift*, *Legend*, *Runner*) with customizable minimum passive match thresholds.
+- 📍 **Player Tracker**: Displays server players and real-time distances.
+- 🗿 **Lifmunk Effigies**: Highlights nearby relics.
+- 📦 **Treasure Chests**: Shows chest locations and distances.
+- 🥚 **Pal Eggs**: Displays egg type/size with filters (All, Large+, Huge Only, Off).
+- 🏰 **Dungeon Entrances**: Marks active dungeon caves.
+- 📜 **Journals & Lore Memos**: Marks uncollected journals and note pickups.
+- 💎 **Ground Loot**: Shows dropped items like spheres, skill fruits, arrows, and gold.
+- ⚙️ **In-Game Menu (Alt + F6)**: Toggle features, filter modes, and tweak distances live.
+- 🔄 **Quick Reload (Alt + R)**: Apply settings instantly without restarting.
+- 🌐 **Multi-Language**: Automatically supports English, Chinese, Spanish, German, French, Japanese, and 10+ languages.
 
 ---
 
-## Requirements
+## Controls
 
-- **UE4SS** (v3.0.0 or higher / compatible with the latest Palworld version)
-
----
-
-## Configuration Path
-
-- `%LOCALAPPDATA%\Pal\Saved\Mods\HUDLocator\config.json`
-*(Generated automatically on first load)*
+- **Alt + F6**: Open / close in-game menu.
+- **Arrow Keys**: Navigate menu and adjust options.
+- **Alt + R**: Reload config settings.
 
 ---
 
 ## Chinese Description
 
-在 3D 空间中定位玩家、翠叶鼠雕像、宝箱、帕鲁蛋、地下城和地面掉落道具。
+一款清爽且支持高度自定义的 Palworld 3D 浮动定位 Mod，全方位标记 **帕鲁**、**玩家**、**翠叶鼠雕像**、**宝箱**、**帕鲁蛋**、**地下城入口**、**日志** 和 **地面掉落物**。
 
-🎨 **网页可视化配置工具**：提供实时 HUD 预览，支持在线调整颜色、边框、距离与间距！立即访问：[https://pal-mod-configurator.dunhas.com/](https://pal-mod-configurator.dunhas.com/)。
+🎨 **网页可视化配置工具**：提供实时 preview 预览，方便在线调色与修改参数！访问 [https://pal-mod-configurator.dunhas.com/](https://pal-mod-configurator.dunhas.com/)（也可直接在游戏内菜单打开）。
 
 ---
 
 ### 主要功能
 
-- **玩家追踪**：服务器范围内的玩家名称与实时距离。
-- **翠叶鼠雕像定位**：显示青色遗物标签。
-- **宝箱追踪**：显示金色宝箱标签。
-- **帕鲁蛋定位**：显示类型与尺寸，支持过滤（全部、大型+、仅限巨大、无）。
-- **地下城追踪**：显示紫色地下城入口标签。
-- **地面掉落追踪**：显示野生帕鲁球、技能果实、箭矢、金币等（可在 `config.json` 中配置过滤器）。
-- **内置设置菜单 (Alt + F6)**：在游戏中开启/关闭追踪器、调整蛋过滤和距离。
-- **配置快速重载 (Alt + R)**：快速重新加载配置文件。
-- **多语言支持**：根据游戏语言自动切换翻译（支持英文、中文、日文、西班牙文、德文、法文等10多种语言）。
+- 🐾 **高级帕鲁追踪**：按物种、幸运/闪光、头目/Boss 状态及等级定位野外帕鲁与 Boss。
+- 🧬 **被动词条筛选**：可按具体被动词条（如*神速*、*传说*、*跑者*）及最小匹配数量精准筛选目标帕鲁。
+- 📍 **玩家定位**：实时显示服务器内玩家名字与距离。
+- 🗿 **翠叶鼠雕像**：高亮标注遗物位置。
+- 📦 **宝箱标记**：清晰标注各类宝箱位置与距离。
+- 🥚 **帕鲁蛋追踪**：显示种类与尺寸，支持筛选（全部、大型+、仅限巨大、关闭）。
+- 🏰 **地下城入口**：标注可进入的洞穴入口。
+- 📜 **日志/笔记**：标注未收集的日志与便签。
+- 💎 **地面掉落**：标注帕鲁球、技能果实、箭矢、金币等掉落物。
+- ⚙️ **内置菜单 (Alt + F6)**：游戏内随心开关功能、切换模式与实时调节距离。
+- 🔄 **一键重载 (Alt + R)**：游戏内免重启刷新配置。
+- 🌐 **多语言支持**：跟随游戏自动切换中文、英文、日文、德文、法文等10多种语言。
+
+---
 
 ### 快捷键
 
-- **Alt + F6**：开启/关闭内置设置菜单。
-- **方向键**：在菜单中选择项目并调整参数。
-- **Alt + R**：从配置文件重新加载配置。
-
-### 配置文件路径
-
-- `%LOCALAPPDATA%\Pal\Saved\Mods\HUDLocator\config.json`
+- **Alt + F6**：开启 / 关闭游戏内设置菜单。
+- **方向键**：在菜单中移动并修改参数。
+- **Alt + R**：快速重载配置文件。

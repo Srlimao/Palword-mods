@@ -154,10 +154,22 @@ function M.stringify(val, indent)
         end
         if is_array then
             local parts = {}
+            local has_complex = false
             for i = 1, max_idx do
+                if type(val[i]) == "table" then
+                    has_complex = true
+                end
                 table.insert(parts, M.stringify(val[i], indent + 1))
             end
-            return "[" .. table.concat(parts, ", ") .. "]"
+            if has_complex and max_idx > 0 then
+                local formatted = {}
+                for i = 1, max_idx do
+                    table.insert(formatted, next_indent_str .. M.stringify(val[i], indent + 1))
+                end
+                return "[\n" .. table.concat(formatted, ",\n") .. "\n" .. indent_str .. "]"
+            else
+                return "[" .. table.concat(parts, ", ") .. "]"
+            end
         else
             local parts = {}
             -- Sort keys to maintain a clean config layout

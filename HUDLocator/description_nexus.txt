@@ -1,49 +1,34 @@
-[size=5][b]HUD Locator[/b][/size]
+[size=5][b]HUD Locator All in 1[/b][/size]
 
-A client-side UI mod for Palworld that displays customizable floating 3D HUD overlays for [b]players[/b], [b]Lifmunk Effigies (relics)[/b], [b]treasure chests[/b], [b]Pal eggs[/b], [b]dungeons[/b], and [b]ground loot[/b].
+A clean, customizable on-screen 3D locator for Palworld that highlights [b]Pals[/b], [b]players[/b], [b]Lifmunk Effigies[/b], [b]chests[/b], [b]Pal eggs[/b], [b]dungeons[/b], [b]journals[/b], and [b]loot[/b].
 
-🎨 [b]Visual Web Configurator[/b]: Tweak colors, sliders, padding, and fonts with a live HUD preview at [url=https://pal-mod-configurator.dunhas.com/]https://pal-mod-configurator.dunhas.com/[/url] (can be opened directly from the in-game menu!).
+🎨 [b]Visual Web Configurator[/b]: Easily adjust colors, sliders, and options with a live preview at [url=https://pal-mod-configurator.dunhas.com/]https://pal-mod-configurator.dunhas.com/[/url] (openable directly in-game!).
 
 [hr][/hr]
 
-[size=4][b]Key Features[/b][/size]
+[size=4][b]Features[/b][/size]
 
 [list]
-[*] [b]Player Tracker[/b]: Server-wide names and real-time distances.
-[*] [b]Relic Finder[/b]: Cyan overlays for Lifmunk Effigies.
-[*] [b]Chest Finder[/b]: Yellow/gold overlays for treasure chests.
-[*] [b]Pal Egg Finder[/b]: Displays size/type with filters (All, Large+, HugeOnly, None).
-[*] [b]Dungeon Finder[/b]: Purple overlays for dungeon cave entrances.
-[*] [b]Journal / Note Tracker[/b]: Coral/salmon overlays for uncollected lore journals/memos.
-[*] [b]Ground Loot Tracker[/b]: Green overlays for wild spheres, skill fruits, arrows, coins (Filter in [b]config.json[/b]).
-[*] [b]In-Game Menu (Alt + F6)[/b]: Toggle trackers and adjust distances on the fly.
-[*] [b]Manual Reload (Alt + R)[/b]: Reload settings instantly from JSON config.
-[*] [b]Localization[/b]: Automated translations (English, Chinese, Spanish, Japanese, French, German, and 10+ more).
+[*] 🐾 [b]Advanced Pal Tracker[/b]: Locate specific wild & boss Pals by species, Lucky/Shiny status, Alpha/Boss status, and level.
+[*] 🧬 [b]Passive Skill Filtering[/b]: Filter Pals by specific passive skills (e.g., [i]Swift[/i], [i]Legend[/i], [i]Runner[/i]) with customizable minimum passive match thresholds.
+[*] 📍 [b]Player Tracker[/b]: Displays server players and real-time distances.
+[*] 🗿 [b]Lifmunk Effigies[/b]: Highlights nearby relics.
+[*] 📦 [b]Treasure Chests[/b]: Shows chest locations and distances.
+[*] 🥚 [b]Pal Eggs[/b]: Displays egg type/size with filters (All, Large+, Huge Only, Off).
+[*] 🏰 [b]Dungeon Entrances[/b]: Marks active dungeon caves.
+[*] 📜 [b]Journals & Lore Memos[/b]: Marks uncollected journals and note pickups.
+[*] 💎 [b]Ground Loot[/b]: Shows dropped items like spheres, skill fruits, arrows, and gold.
+[*] ⚙️ [b]In-Game Menu (Alt + F6)[/b]: Toggle features, filter modes, and tweak distances live.
+[*] 🔄 [b]Quick Reload (Alt + R)[/b]: Apply settings instantly without restarting.
+[*] 🌐 [b]Multi-Language[/b]: Automatically supports English, Chinese, Spanish, German, French, Japanese, and 10+ languages.
 [/list]
 
 [hr][/hr]
 
-[size=4][b]In-Game Controls[/b][/size]
+[size=4][b]Controls[/b][/size]
 
 [list]
-[*] [b]Alt + F6[/b]: Toggle settings menu.
-[*] [b]Up/Down/Left/Right[/b]: Navigate menu and adjust values.
-[*] [b]Alt + R[/b]: Reload configuration from settings file.
-[/list]
-
-[hr][/hr]
-
-[size=4][b]Requirements[/b][/size]
-
-[list]
-[*] [b]UE4SS[/b] (v3.0.0 or higher / compatible with the latest Palworld version)
-[/list]
-
-[hr][/hr]
-
-[size=4][b]Configuration Path[/b][/size]
-
-[list]
-[*] [b]%LOCALAPPDATA%\Pal\Saved\Mods\HUDLocator\config.json[/b]
-[i](Generated automatically on first load)[/i]
+[*] [b]Alt + F6[/b]: Open / close in-game menu.
+[*] [b]Arrow Keys[/b]: Navigate menu and adjust options.
+[*] [b]Alt + R[/b]: Reload config settings.
 [/list]

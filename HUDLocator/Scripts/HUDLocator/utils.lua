@@ -8,6 +8,8 @@ M.MapObjectNameCache = {}
 M.ItemNameCache = {}
 M.DungeonNameCache = {}
 M.NoteNameCache = {}
+M.PalNameCache = {}
+M.PassiveNameCache = {}
 M.LoggedTranslations = {}
 M.MasterDataUtility = nil
 M.CachedFont = nil
@@ -91,10 +93,14 @@ function M.GetTextSize(hud, text, baseScale)
     return width
 end
 
+function M.DebugPrint(msg)
+    configMod.DebugPrint(msg)
+end
+
 function M.LogOnce(key, msg)
     if not M.LoggedTranslations[key] then
         M.LoggedTranslations[key] = true
-        print("[HUDLocator] " .. msg)
+        M.DebugPrint(msg)
     end
 end
 
@@ -521,6 +527,140 @@ function M.DumpAllLoadedTextures()
     else
         logger.log("Failed to scan Texture2D: " .. tostring(textures))
     end
+end
+
+function M.TArrayToTable(arrayVal)
+    local t = {}
+    if not arrayVal then return t end
+    if type(arrayVal) == "table" then return arrayVal end
+    if type(arrayVal) == "userdata" then
+        if arrayVal.ForEach then
+            pcall(function()
+                arrayVal:ForEach(function(arg1, arg2)
+                    local val = nil
+                    if type(arg1) ~= "number" then
+                        val = arg1
+                    else
+                        val = arg2
+                    end
+                    if val then
+                        table.insert(t, val)
+                    end
+                end)
+            end)
+        else
+            for i = 0, 100 do
+                local elem = nil
+                local success = pcall(function() elem = arrayVal[i] end)
+                if not success or not elem then break end
+                table.insert(t, elem)
+            end
+        end
+    end
+    return t
+end
+
+function M.FNameToString(fn)
+    if not fn then return "" end
+    if type(fn) == "string" then return fn end
+    if type(fn) == "userdata" then
+        if fn.get then
+            local success, inner = pcall(function() return fn:get() end)
+            if success and inner then
+                fn = inner
+            end
+        end
+        if type(fn) == "string" then return fn end
+        if type(fn) == "userdata" and fn.ToString then
+            local success, str = pcall(function() return fn:ToString() end)
+            if success and str and type(str) == "string" and not string.find(str, "RemoteUnrealParam") then
+                return str
+            end
+        end
+    end
+    local s = tostring(fn)
+    if string.find(s, "RemoteUnrealParam") then
+        return ""
+    end
+    return s
+end
+
+function M.GetTranslatedPalName(masterDataId)
+    local idStr = nil
+    if type(masterDataId) == "string" then
+        idStr = masterDataId
+    elseif type(masterDataId) == "userdata" then
+        pcall(function() idStr = masterDataId:ToString() end)
+    end
+    if not idStr then idStr = tostring(masterDataId) end
+
+    local cleanId = idStr
+    if string.sub(cleanId, 1, 5) == "Boss_" then
+        cleanId = string.sub(cleanId, 6)
+    end
+
+    if M.PalNameCache[cleanId] then
+        return M.PalNameCache[cleanId]
+    end
+
+    if not M.MasterDataUtility then
+        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalMasterDataTablesUtility") end)
+        if status and util then M.MasterDataUtility = util end
+    end
+
+    local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
+    if statusWorld and world and M.MasterDataUtility then
+        local palKey = "PAL_NAME_" .. cleanId
+        local status, outText = pcall(function()
+            return M.MasterDataUtility:GetLocalizedText(world, 4, FName(palKey))
+        end)
+        if status and outText then
+            local strStatus, str = pcall(function() return outText:ToString() end)
+            if strStatus and str and str ~= "" and str ~= palKey then
+                M.PalNameCache[cleanId] = str
+                return str
+            end
+        end
+    end
+
+    M.PalNameCache[cleanId] = cleanId
+    return cleanId
+end
+
+function M.GetTranslatedPassiveName(passiveId)
+    local idStr = M.FNameToString(passiveId)
+    if not idStr or idStr == "" or idStr == "None" then return "" end
+
+    if M.PassiveNameCache[idStr] then
+        return M.PassiveNameCache[idStr]
+    end
+
+    if not M.MasterDataUtility then
+        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalMasterDataTablesUtility") end)
+        if status and util then M.MasterDataUtility = util end
+    end
+
+    local statusWorld, world = pcall(function() return UEHelpers.GetWorld() end)
+    if statusWorld and world and M.MasterDataUtility then
+        local status, outText = pcall(function()
+            return M.MasterDataUtility:GetLocalizedText(world, 16, FName(idStr))
+        end)
+        if not status or not outText or outText:ToString() == idStr then
+            status, outText = pcall(function()
+                return M.MasterDataUtility:GetLocalizedText(world, 16, FName("PASSIVE_" .. idStr))
+            end)
+        end
+        if status and outText then
+            local strStatus, str = pcall(function() return outText:ToString() end)
+            if strStatus and str and str ~= "" and str ~= idStr and str ~= ("PASSIVE_" .. idStr) then
+                M.PassiveNameCache[idStr] = str
+                return str
+            end
+        end
+    end
+
+    M.PassiveNameCache[idStr] = idStr
+    return idStr
 end
 
 return M

@@ -67,7 +67,15 @@
         "Menu_OpeningURL": "Opening Configurator...",
         "Settings_ShowNotes": "Show Journals",
         "Note": "Journal",
-        "Settings_FontScale": "Font Scale"
+        "Settings_FontScale": "Font Scale",
+        "Settings_ShowPals": "Show Pals",
+        "Settings_PalFilter": "Pal Filter",
+        "Settings_ShowPassives": "Show Passives",
+        "Settings_ShowLevel": "Show Level",
+        "Filter_TrackerListOnly": "Tracker List Only",
+        "Filter_ShinyOnly": "Shiny Only",
+        "Filter_BossOnly": "Boss Only",
+        "Filter_ShinyOrBoss": "Shiny or Boss"
     },
     "es": {
         "Cave": "Cueva",

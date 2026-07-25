@@ -67,6 +67,35 @@ local menuItems = {
         transKey = "Settings_ShowLoot"
     },
     {
+        name = "Show Pals",
+        get = function() return CONFIG.Pals and CONFIG.Pals.Enabled end,
+        set = function(v) if CONFIG.Pals then CONFIG.Pals.Enabled = v end end,
+        type = "boolean",
+        transKey = "Settings_ShowPals"
+    },
+    {
+        name = "Pal Filter",
+        get = function() return (CONFIG.Pals and CONFIG.Pals.FilterMode) or "TrackerListOnly" end,
+        set = function(v) if CONFIG.Pals then CONFIG.Pals.FilterMode = v end end,
+        type = "enum",
+        values = { "TrackerListOnly", "All", "ShinyOnly", "BossOnly", "ShinyOrBoss" },
+        transKey = "Settings_PalFilter"
+    },
+    {
+        name = "Show Passives",
+        get = function() return CONFIG.Pals and CONFIG.Pals.ShowPassives end,
+        set = function(v) if CONFIG.Pals then CONFIG.Pals.ShowPassives = v end end,
+        type = "boolean",
+        transKey = "Settings_ShowPassives"
+    },
+    {
+        name = "Show Level",
+        get = function() return CONFIG.Pals and CONFIG.Pals.ShowLevel end,
+        set = function(v) if CONFIG.Pals then CONFIG.Pals.ShowLevel = v end end,
+        type = "boolean",
+        transKey = "Settings_ShowLevel"
+    },
+    {
         name = "Egg Filter",
         get = function() return CONFIG.Eggs.Filter end,
         set = function(v) CONFIG.Eggs.Filter = v end,
@@ -92,14 +121,17 @@ local menuItems = {
     },
     {
         name = "Max Distance (All)",
-        get = function() return CONFIG.Players.MaxDistance end,
+        get = function() return (CONFIG.Global and CONFIG.Global.MaxDistance) or CONFIG.Players.MaxDistance end,
         set = function(v)
-            CONFIG.Players.MaxDistance = v
-            CONFIG.Relics.MaxDistance = v
-            CONFIG.Chests.MaxDistance = v
-            CONFIG.Eggs.MaxDistance = v
-            CONFIG.Caves.MaxDistance = v
-            CONFIG.Loot.MaxDistance = v
+            if CONFIG.Global then CONFIG.Global.MaxDistance = v end
+            if CONFIG.Players then CONFIG.Players.MaxDistance = v end
+            if CONFIG.Relics then CONFIG.Relics.MaxDistance = v end
+            if CONFIG.Chests then CONFIG.Chests.MaxDistance = v end
+            if CONFIG.Eggs then CONFIG.Eggs.MaxDistance = v end
+            if CONFIG.Caves then CONFIG.Caves.MaxDistance = v end
+            if CONFIG.Loot then CONFIG.Loot.MaxDistance = v end
+            if CONFIG.Notes then CONFIG.Notes.MaxDistance = v end
+            if CONFIG.Pals then CONFIG.Pals.MaxDistance = v end
         end,
         type = "number",
         min = 5000,

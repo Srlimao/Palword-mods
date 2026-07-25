@@ -30,6 +30,7 @@ M.hasLoggedChests = false
 M.hasLoggedEggs = false
 M.hasLoggedLoot = false
 M.hasLoggedNotes = false
+M.hasLoggedPals = false
 
 function M.ScanPlayers(localPlayerState)
     local newPlayers = {}
@@ -352,9 +353,7 @@ function M.ScanCaves(playerPos, maxDistSq)
         end
     end
     
-    if configMod.CONFIG.Global.Debug then
-        print(string.format("[HUDLocator] ScanCaves: Class %s, found %d total actors, inserted %d within max distance. Total merged caves: %d", cls, successCount, #M.tempCaves[cls], #merged))
-    end
+    configMod.DebugPrint(string.format("ScanCaves: Class %s, found %d total actors, inserted %d within max distance. Total merged caves: %d", cls, successCount, #M.tempCaves[cls], #merged))
 
     if not M.hasLoggedDungeons and successCount > 0 then
         M.hasLoggedDungeons = true
@@ -532,6 +531,233 @@ function M.ScanNotes(playerPos, maxDistSq)
         logger.log("Note Scan (Initial detection): Found " .. tostring(#newNotes) .. " journals.")
     end
     return newNotes
+end
+
+local function EvaluatePalRule(rule, palName, charIdStr, isShiny, isBoss, palPassives)
+    if not rule then return false, 0 end
+
+    if rule.palname and rule.palname ~= "" and rule.palname ~= "*" then
+        local targetName = string.lower(rule.palname)
+        local lowerPalName = string.lower(palName or "")
+        local lowerCharId = string.lower(charIdStr or "")
+        if not string.find(lowerPalName, targetName, 1, true) and not string.find(lowerCharId, targetName, 1, true) then
+            return false, 0
+        end
+    end
+
+    if rule.shiny == true and not isShiny then
+        return false, 0
+    end
+
+    if rule.boss == true and not isBoss then
+        return false, 0
+    end
+
+    local matchedPassivesCount = 0
+    local matchedPassiveNames = {}
+    if rule.passive and type(rule.passive) == "table" then
+        local requiredList = rule.passive.passives
+        local minThreshold = rule.passive.min_passive_threshold or 1
+
+        if requiredList and type(requiredList) == "table" and #requiredList > 0 then
+            local palPassiveMap = {}
+            for _, pName in ipairs(palPassives) do
+                palPassiveMap[string.lower(tostring(pName))] = true
+            end
+
+            for _, reqP in ipairs(requiredList) do
+                local lowerReq = string.lower(tostring(reqP))
+                if palPassiveMap[lowerReq] then
+                    matchedPassivesCount = matchedPassivesCount + 1
+                    table.insert(matchedPassiveNames, reqP)
+                end
+            end
+
+            if matchedPassivesCount < minThreshold then
+                return false, 0
+            end
+        end
+    end
+
+    return true, matchedPassivesCount, matchedPassiveNames
+end
+
+function M.ScanPals(playerPos, maxDistSq, palConfig)
+    local newPals = {}
+    local actors = FindAllOf("BP_MonsterBase_C") or FindAllOf("PalMonsterCharacter") or {}
+    
+    local filterMode = palConfig.FilterMode or "TrackerListOnly"
+    local rulesList = palConfig.TrackerPals or {}
+    local showPassives = palConfig.ShowPassives ~= false
+    local showLevel = palConfig.ShowLevel ~= false
+
+    for _, actor in ipairs(actors) do
+        if actor:IsValid() then
+            pcall(function()
+                local uePos = actor:K2_GetActorLocation()
+                if uePos then
+                    local px, py, pz = uePos.X, uePos.Y, uePos.Z
+                    local dx, dy, dz = px - playerPos.X, py - playerPos.Y, pz - playerPos.Z
+                    local distSq = dx*dx + dy*dy + dz*dz
+
+                    if distSq <= maxDistSq then
+                        local charParam = nil
+                        pcall(function() charParam = actor:GetCharacterParameterComponent() end)
+
+                        local staticParam = nil
+                        pcall(function() staticParam = actor.StaticCharacterParameterComponent end)
+
+                        local indivParam = nil
+                        if charParam and charParam:IsValid() then
+                            pcall(function() indivParam = charParam:GetIndividualParameter() end)
+                        end
+
+                        local isDead = false
+                        if indivParam and indivParam:IsValid() then
+                            pcall(function() isDead = indivParam:IsDead() end)
+                        end
+
+                        if not isDead then
+                            local isShiny = false
+                            if indivParam and indivParam:IsValid() then
+                                pcall(function() isShiny = indivParam:IsRarePal() end)
+                            elseif staticParam and staticParam:IsValid() then
+                                pcall(function() isShiny = staticParam:IsRarePal() end)
+                            end
+
+                            local isBoss = false
+                            if staticParam and staticParam:IsValid() then
+                                pcall(function() isBoss = staticParam.IsBoss_Database or staticParam:IsBossPal_Database() end)
+                            end
+
+                            local charIdStr = ""
+                            if indivParam and indivParam:IsValid() then
+                                pcall(function()
+                                    local cId = indivParam:GetCharacterID()
+                                    if cId then charIdStr = cId:ToString() end
+                                end)
+                            end
+
+                            if string.find(charIdStr, "Boss_") then
+                                isBoss = true
+                            end
+
+                            local palName = utils.GetTranslatedPalName(charIdStr)
+
+                            local level = nil
+                            if indivParam and indivParam:IsValid() then
+                                pcall(function() level = indivParam:GetLevel() end)
+                            elseif charParam and charParam:IsValid() then
+                                pcall(function() level = charParam:GetLevel() end)
+                            end
+
+                            local rank = 0
+                            if indivParam and indivParam:IsValid() then
+                                pcall(function() rank = indivParam:GetRank() end)
+                            end
+
+                            local rawPassives = {}
+                            if indivParam and indivParam:IsValid() then
+                                pcall(function()
+                                    local pList = indivParam:GetPassiveSkillList()
+                                    rawPassives = utils.TArrayToTable(pList)
+                                end)
+                                if #rawPassives == 0 then
+                                    pcall(function()
+                                        local pList = indivParam.PassiveSkillList
+                                        rawPassives = utils.TArrayToTable(pList)
+                                    end)
+                                end
+                            end
+
+                            local palPassivesStr = {}
+                            local translatedPassives = {}
+                            for _, pName in ipairs(rawPassives) do
+                                local strP = utils.FNameToString(pName)
+                                if strP and strP ~= "" and strP ~= "None" then
+                                    table.insert(palPassivesStr, strP)
+                                    local transP = utils.GetTranslatedPassiveName(strP)
+                                    if transP and transP ~= "" then
+                                        table.insert(translatedPassives, transP)
+                                    end
+                                end
+                            end
+
+                            local shouldTrack = false
+                            local matchedPassiveCount = 0
+
+                            if filterMode == "All" then
+                                shouldTrack = true
+                            elseif filterMode == "ShinyOnly" then
+                                shouldTrack = isShiny
+                            elseif filterMode == "BossOnly" then
+                                shouldTrack = isBoss
+                            elseif filterMode == "ShinyOrBoss" then
+                                shouldTrack = isShiny or isBoss
+                            elseif filterMode == "TrackerListOnly" then
+                                for _, rule in ipairs(rulesList) do
+                                    local pass, count = EvaluatePalRule(rule, palName, charIdStr, isShiny, isBoss, palPassivesStr)
+                                    if pass then
+                                        shouldTrack = true
+                                        if count > matchedPassiveCount then
+                                            matchedPassiveCount = count
+                                        end
+                                        break
+                                    end
+                                end
+                            end
+
+                            if shouldTrack then
+                                local labelParts = { palName }
+
+                                if showLevel and level then
+                                    table.insert(labelParts, "lv." .. tostring(level))
+                                end
+
+                                if rank and rank > 0 then
+                                    local stars = string.rep("*", rank)
+                                    table.insert(labelParts, stars)
+                                end
+
+                                if isShiny then
+                                    table.insert(labelParts, "Shiny")
+                                end
+
+                                if isBoss then
+                                    table.insert(labelParts, "Boss")
+                                end
+
+                                if matchedPassiveCount > 0 then
+                                    table.insert(labelParts, "(" .. tostring(matchedPassiveCount) .. ")")
+                                end
+
+                                local formattedLabel = table.concat(labelParts, " ")
+                                local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
+
+                                table.insert(newPals, {
+                                    X = px, Y = py, Z = pz,
+                                    Name = formattedLabel,
+                                    PalName = palName,
+                                    Level = level,
+                                    IsShiny = isShiny,
+                                    IsBoss = isBoss,
+                                    Passives = showPassives and translatedPassives or {},
+                                    DistStr = distStr
+                                })
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+
+    if not M.hasLoggedPals and #newPals > 0 then
+        M.hasLoggedPals = true
+        logger.log("Pal Scan (Initial detection): Found " .. tostring(#newPals) .. " tracked Pals.")
+    end
+
+    return newPals
 end
 
 return M
