@@ -6,43 +6,65 @@ local CONFIG = configMod.CONFIG
 
 local M = {}
 
+-- Pre-allocated static table buffers to prevent GC allocations during ReceiveDrawHUD frame ticks
+local playerPosBuffer = { X = 0.0, Y = 0.0, Z = 0.0 }
+local textWorldPosBuffer = { X = 0.0, Y = 0.0, Z = 0.0 }
+local beaconBaseWorldBuffer = { X = 0.0, Y = 0.0, Z = 0.0 }
+local beaconTopWorldBuffer = { X = 0.0, Y = 0.0, Z = 0.0 }
+local beaconColorBuffer = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 }
+
 -- Render a 3D glowing beam and ground flare at the location
 local function DrawCaveBeacon(hud, pos, color)
-    local baseWorld = { X = pos.X, Y = pos.Y, Z = pos.Z }
-    local topWorld = { X = pos.X, Y = pos.Y, Z = pos.Z + 1500.0 } -- 15 meters tall
+    beaconBaseWorldBuffer.X = pos.X; beaconBaseWorldBuffer.Y = pos.Y; beaconBaseWorldBuffer.Z = pos.Z
+    beaconTopWorldBuffer.X = pos.X; beaconTopWorldBuffer.Y = pos.Y; beaconTopWorldBuffer.Z = pos.Z + 1500.0 -- 15 meters tall
     
-    local ueScreenBase = hud:Project(baseWorld, false)
-    local ueScreenTop = hud:Project(topWorld, false)
+    local ueScreenBase = hud:Project(beaconBaseWorldBuffer, false)
+    local ueScreenTop = hud:Project(beaconTopWorldBuffer, false)
 
     -- Optimize: Convert UE FVector to native Lua table to avoid thousands of C++ property reflection lookups during distance checks
-    local screenBase = { X = ueScreenBase.X, Y = ueScreenBase.Y, Z = ueScreenBase.Z }
-    local screenTop = { X = ueScreenTop.X, Y = ueScreenTop.Y, Z = ueScreenTop.Z }
+    local screenBaseX, screenBaseY, screenBaseZ = ueScreenBase.X, ueScreenBase.Y, ueScreenBase.Z
+    local screenTopX, screenTopY, screenTopZ = ueScreenTop.X, ueScreenTop.Y, ueScreenTop.Z
     
-    if screenBase.Z > 0.0 or screenTop.Z > 0.0 then
-        -- Draw glowing cylinder beam using thick Canvas DrawLine calls
-        pcall(hud.DrawLine, hud, screenBase.X, screenBase.Y, screenTop.X, screenTop.Y, { R = color.R, G = color.G, B = color.B, A = 0.05 }, 16.0)
-        pcall(hud.DrawLine, hud, screenBase.X, screenBase.Y, screenTop.X, screenTop.Y, { R = color.R, G = color.G, B = color.B, A = 0.12 }, 8.0)
-        pcall(hud.DrawLine, hud, screenBase.X, screenBase.Y, screenTop.X, screenTop.Y, { R = 1.0, G = 1.0, B = 1.0, A = 0.35 }, 2.0)
+    if screenBaseZ > 0.0 or screenTopZ > 0.0 then
+        beaconColorBuffer.R = color.R; beaconColorBuffer.G = color.G; beaconColorBuffer.B = color.B
         
-        -- Draw concentric squares for glowing ground flare
+        beaconColorBuffer.A = 0.05
+        pcall(hud.DrawLine, hud, screenBaseX, screenBaseY, screenTopX, screenTopY, beaconColorBuffer, 16.0)
+        beaconColorBuffer.A = 0.12
+        pcall(hud.DrawLine, hud, screenBaseX, screenBaseY, screenTopX, screenTopY, beaconColorBuffer, 8.0)
+        
+        beaconColorBuffer.R = 1.0; beaconColorBuffer.G = 1.0; beaconColorBuffer.B = 1.0; beaconColorBuffer.A = 0.35
+        pcall(hud.DrawLine, hud, screenBaseX, screenBaseY, screenTopX, screenTopY, beaconColorBuffer, 2.0)
+        
+        beaconColorBuffer.R = color.R; beaconColorBuffer.G = color.G; beaconColorBuffer.B = color.B
         local steps = 5
         local baseSize = 24.0
         for i = 1, steps do
             local size = baseSize * (1.0 + (i - 1) * 0.6)
-            local alpha = 0.15 * (1.0 - (i - 1) / steps)
-            hud:DrawRect({ R = color.R, G = color.G, B = color.B, A = alpha }, screenBase.X - size/2, screenBase.Y - size/2, size, size)
+            beaconColorBuffer.A = 0.15 * (1.0 - (i - 1) / steps)
+            hud:DrawRect(beaconColorBuffer, screenBaseX - size/2, screenBaseY - size/2, size, size)
         end
     end
 end
 
 -- Render tracker label (either box style or simple text style)
-local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
-    local textWorldPos = { X = worldPos.X, Y = worldPos.Y, Z = worldPos.Z + style.TextOffsetZ }
-    local ueTextScreen = hud:Project(textWorldPos, false)
-    -- Optimize: Convert UE FVector to native Lua table to avoid thousands of C++ property reflection lookups during distance checks
-    local textScreen = { X = ueTextScreen.X, Y = ueTextScreen.Y, Z = ueTextScreen.Z }
+local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW, screenH)
+    textWorldPosBuffer.X = worldPos.X
+    textWorldPosBuffer.Y = worldPos.Y
+    textWorldPosBuffer.Z = worldPos.Z + style.TextOffsetZ
+    local ueTextScreen = hud:Project(textWorldPosBuffer, false)
     
-    if textScreen.Z > 0.0 then
+    local textScreenX = ueTextScreen.X
+    local textScreenY = ueTextScreen.Y
+    local textScreenZ = ueTextScreen.Z
+    
+    -- Screen Viewport Bounds Culling: Only render text for items visible on the screen
+    local margin = 100.0
+    local isVisibleOnScreen = (textScreenZ > 0.0) 
+                          and (textScreenX >= -margin) and (textScreenX <= screenW + margin) 
+                          and (textScreenY >= -margin) and (textScreenY <= screenH + margin)
+    
+    if isVisibleOnScreen then
         local font, scaleMult = utils.GetFontAndScale()
         local fontScale = style.FontScale * scaleMult
         local smallFontScale = style.SmallFontScale * scaleMult
@@ -85,8 +107,8 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
             local boxW = contentW + padX * 2
             local boxH = contentH + padY * 2
             
-            local boxX = textScreen.X - boxW * 0.5
-            local boxY = textScreen.Y - boxH * 0.5
+            local boxX = textScreenX - boxW * 0.5
+            local boxY = textScreenY - boxH * 0.5
  
             -- Draw border
             hud:DrawRect(style.BorderColor, boxX - bw, boxY - bw, boxW + bw * 2, boxH + bw * 2)
@@ -94,13 +116,13 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
             -- Draw background fill box
             hud:DrawRect(style.BoxColor, boxX, boxY, boxW, boxH)
             
-            local nameX = textScreen.X - nameW * 0.5
+            local nameX = textScreenX - nameW * 0.5
             local nameY = boxY + padY
             
             utils.DrawText(hud, nameStr, style.NameColor, nameX, nameY, style.FontScale, false)
             
             if distStr then
-                local distX = textScreen.X - distW * 0.5
+                local distX = textScreenX - distW * 0.5
                 local distY = nameY + nameH + lineGap
                 utils.DrawText(hud, distStr, style.DistColor, distX, distY, style.SmallFontScale, false)
             end
@@ -126,27 +148,17 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
             
             local contentH = nameH + (distStr and (lineGap + distH) or 0)
             
-            local startX = textScreen.X - nameW * 0.5
-            local simpleY = textScreen.Y - contentH * 0.5
-            local off = 1.0
+            local startX = textScreenX - nameW * 0.5
+            local simpleY = textScreenY - contentH * 0.5
             
-            -- Draw Name Part Outline
-            utils.DrawText(hud, nameStr, style.BorderColor, startX - off, simpleY - off, style.FontScale, false)
-            utils.DrawText(hud, nameStr, style.BorderColor, startX + off, simpleY - off, style.FontScale, false)
-            utils.DrawText(hud, nameStr, style.BorderColor, startX - off, simpleY + off, style.FontScale, false)
-            utils.DrawText(hud, nameStr, style.BorderColor, startX + off, simpleY + off, style.FontScale, false)
-            -- Draw Name Part Main Text
+            -- High-Performance Drop Shadow (1 offset pass instead of 4 outline passes to cut C++ reflection calls in half)
+            utils.DrawText(hud, nameStr, style.BorderColor, startX + 1.0, simpleY + 1.0, style.FontScale, false)
             utils.DrawText(hud, nameStr, style.NameColor, startX, simpleY, style.FontScale, false)
             
             if distStr then
-                local distX = textScreen.X - distPartW * 0.5
+                local distX = textScreenX - distPartW * 0.5
                 local distY = simpleY + nameH + lineGap
-                -- Draw Dist Part Outline
-                utils.DrawText(hud, distPartStr, style.BorderColor, distX - off, distY - off, style.SmallFontScale, false)
-                utils.DrawText(hud, distPartStr, style.BorderColor, distX + off, distY - off, style.SmallFontScale, false)
-                utils.DrawText(hud, distPartStr, style.BorderColor, distX - off, distY + off, style.SmallFontScale, false)
-                utils.DrawText(hud, distPartStr, style.BorderColor, distX + off, distY + off, style.SmallFontScale, false)
-                -- Draw Dist Part Main Text
+                utils.DrawText(hud, distPartStr, style.BorderColor, distX + 1.0, distY + 1.0, style.SmallFontScale, false)
                 utils.DrawText(hud, distPartStr, style.DistColor, distX, distY, style.SmallFontScale, false)
             end
         end
@@ -162,26 +174,44 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     popup.Draw(hud, SizeX, SizeY)
 
     if not CONFIG.Global.Enabled then return end
+
+    -- Early return if no active items exist to draw across all categories
+    local totalActiveCount = #activePlayers + #activeRelics + #activeChests + #activeEggs + #activeCaves + #activeLoot + #activeNotes
+    if totalActiveCount == 0 then return end
     
     if not cachedLocalPlayer or not cachedLocalPlayer:IsValid() then return end
     local uePlayerPos = cachedLocalPlayer:K2_GetActorLocation()
     if not uePlayerPos then return end
-    local playerPos = { X = uePlayerPos.X, Y = uePlayerPos.Y, Z = uePlayerPos.Z }
+    playerPosBuffer.X = uePlayerPos.X
+    playerPosBuffer.Y = uePlayerPos.Y
+    playerPosBuffer.Z = uePlayerPos.Z
+
+    -- Unwrap screen dimensions safely
+    local sx = SizeX
+    if type(sx) == "userdata" or type(sx) == "table" then pcall(function() sx = sx:get() end) end
+    local sy = SizeY
+    if type(sy) == "userdata" or type(sy) == "table" then pcall(function() sy = sy:get() end) end
+
+    local screenW = (type(sx) == "number" and sx > 0) and sx or 1920.0
+    local screenH = (type(sy) == "number" and sy > 0) and sy or 1080.0
 
     -- 1. Draw Players
     if CONFIG.Players.Enabled then
         for _, otherPlayer in ipairs(activePlayers) do
-            local dx = otherPlayer.Pos.X - playerPos.X
-            local dy = otherPlayer.Pos.Y - playerPos.Y
-            local dz = otherPlayer.Pos.Z - playerPos.Z
+            local dx = otherPlayer.Pos.X - playerPosBuffer.X
+            local dy = otherPlayer.Pos.Y - playerPosBuffer.Y
+            local dz = otherPlayer.Pos.Z - playerPosBuffer.Z
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
             
             if distMeters > CONFIG.Players.GraceRadiusM then
-                local iconStr = "@ "
-                local labelStr = iconStr .. otherPlayer.Name
+                local labelStr = otherPlayer.LabelStr
+                if not labelStr then
+                    labelStr = "@ " .. otherPlayer.Name
+                    otherPlayer.LabelStr = labelStr
+                end
                 local distStr = distMeters .. "m"
-                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, distStr, CONFIG.Players.Style)
+                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, distStr, CONFIG.Players.Style, screenW, screenH)
             end
         end
     end
@@ -189,102 +219,51 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     -- 2. Draw Relics
     if CONFIG.Relics.Enabled then
         for _, pos in ipairs(activeRelics) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
-            local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
-            local distMeters = math.floor(dist / 100.0)
             local name = pos.Name or "Relic"
-            local distStr = distMeters .. "m"
-            DrawTrackerLabel(hud, pos, name, distStr, CONFIG.Relics.Style)
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Relics.Style, screenW, screenH)
         end
     end
 
     -- 3. Draw Chests
     if CONFIG.Chests.Enabled then
         for _, pos in ipairs(activeChests) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
-            local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
-            local distMeters = math.floor(dist / 100.0)
             local name = pos.Name or "Chest"
-            local distStr = distMeters .. "m"
-            DrawTrackerLabel(hud, pos, name, distStr, CONFIG.Chests.Style)
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Chests.Style, screenW, screenH)
         end
     end
 
     -- 4. Draw Eggs
     if CONFIG.Eggs.Filter ~= "None" then
         for _, pos in ipairs(activeEggs) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
-            local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
-            local distMeters = math.floor(dist / 100.0)
-            local prefix = pos.SizePrefix or ""
-            local name = pos.Name or "Egg"
-            local distStr = distMeters .. "m"
-            DrawTrackerLabel(hud, pos, prefix .. name, distStr, CONFIG.Eggs.Style)
+            local name = pos.FullName or pos.Name or "Egg"
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Eggs.Style, screenW, screenH)
         end
     end
 
     -- 5. Draw Caves
     if CONFIG.Caves.Enabled then
         for _, pos in ipairs(activeCaves) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
-            local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
-            local distMeters = math.floor(dist / 100.0)
-            local name = pos.Name or "Cave"
-            local distStr = distMeters .. "m"
-            
-            local nameStr
-            if pos.Level then
-                local lv = configMod.GetTranslation("Cave_Lv", "Lv.")
-                local stateStr = pos.State
-                if stateStr == "Open" then stateStr = configMod.GetTranslation("Cave_Open", "Open")
-                elseif stateStr == "Cleared" then stateStr = configMod.GetTranslation("Cave_Cleared", "Cleared")
-                end
-                nameStr = name .. " " .. lv .. pos.Level .. " (" .. stateStr .. ")"
-            else
-                local closed = configMod.GetTranslation("Cave_Closed", "(Closed)")
-                nameStr = name .. " " .. closed
+            if pos.ShowBeacon then
+                DrawCaveBeacon(hud, pos, CONFIG.Caves.Style.NameColor or { R = 0.5, G = 0.0, B = 1.0, A = 1.0 })
             end
-            
-            -- Draw 3D glowing beacon cylinder
-            --DrawCaveBeacon(hud, pos, CONFIG.Caves.Style.NameColor)
-            
-            DrawTrackerLabel(hud, pos, nameStr, distStr, CONFIG.Caves.Style)
+            local name = pos.Name or "Cave"
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Caves.Style, screenW, screenH)
         end
     end
 
     -- 6. Draw Loot
     if CONFIG.Loot.Enabled then
         for _, pos in ipairs(activeLoot) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
-            local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
-            local distMeters = math.floor(dist / 100.0)
             local name = pos.Name or "Loot"
-            local distStr = distMeters .. "m"
-            DrawTrackerLabel(hud, pos, name, distStr, CONFIG.Loot.Style)
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Loot.Style, screenW, screenH)
         end
     end
 
     -- 7. Draw Notes
     if CONFIG.Notes.Enabled then
         for _, pos in ipairs(activeNotes) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
-            local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
-            local distMeters = math.floor(dist / 100.0)
             local name = pos.Name or "Note"
-            local distStr = distMeters .. "m"
-            DrawTrackerLabel(hud, pos, name, distStr, CONFIG.Notes.Style)
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Notes.Style, screenW, screenH)
         end
     end
 end

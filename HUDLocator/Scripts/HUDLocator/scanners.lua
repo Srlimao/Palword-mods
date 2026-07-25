@@ -81,7 +81,8 @@ function M.ScanRelics(playerPos, maxDistSq)
                     -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
                     local rx, ry, rz = ueRelicPos.X, ueRelicPos.Y, ueRelicPos.Z
                     local dx, dy, dz = rx - playerPos.X, ry - playerPos.Y, rz - playerPos.Z
-                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
+                    local distSq = dx*dx + dy*dy + dz*dz
+                    if distSq <= maxDistSq then
                         local name = nil
                         local statusType, relicType = pcall(function() return relic:GetRelicType() end)
                         if not statusType or not relicType then
@@ -94,7 +95,8 @@ function M.ScanRelics(playerPos, maxDistSq)
                         else
                             name = configMod.GetTranslation("Relic", "Relic")
                         end
-                        table.insert(newRelics, { X = rx, Y = ry, Z = rz, Name = name })
+                        local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
+                        table.insert(newRelics, { X = rx, Y = ry, Z = rz, Name = name, DistStr = distStr })
                     end
                 end
             end)
@@ -170,7 +172,8 @@ function M.ScanChests(playerPos, maxDistSq)
                         end
 
                         if shouldAdd then
-                            table.insert(newChests, { X = cx, Y = cy, Z = cz, Name = name })
+                            local distStr = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0) .. "m"
+                            table.insert(newChests, { X = cx, Y = cy, Z = cz, Name = name, DistStr = distStr })
                         end
                     end
                 end
@@ -252,7 +255,8 @@ function M.ScanEggs(playerPos, maxDistSq, eggFilter, debug)
                                 transSize = configMod.GetTranslation(sizeStr, sizeStr) .. " "
                             end
                             
-                            table.insert(newEggs, { X = ex, Y = ey, Z = ez, SizePrefix = transSize, Name = name })
+                            local distStr = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0) .. "m"
+                            table.insert(newEggs, { X = ex, Y = ey, Z = ez, SizePrefix = transSize, Name = name, FullName = transSize .. name, DistStr = distStr })
                         end
                     end
                 end
@@ -308,13 +312,27 @@ function M.ScanCaves(playerPos, maxDistSq)
                         if not dungeonName then
                             dungeonName = configMod.GetTranslation("Cave", "Cave")
                         end
+                        local nameStr = dungeonName
+                        if level then
+                            local lv = configMod.GetTranslation("Cave_Lv", "Lv.")
+                            local stateStr = state
+                            if stateStr == "Open" then stateStr = configMod.GetTranslation("Cave_Open", "Open")
+                            elseif stateStr == "Cleared" then stateStr = configMod.GetTranslation("Cave_Cleared", "Cleared")
+                            end
+                            nameStr = dungeonName .. " " .. lv .. level .. " (" .. stateStr .. ")"
+                        else
+                            local closed = configMod.GetTranslation("Cave_Closed", "(Closed)")
+                            nameStr = dungeonName .. " " .. closed
+                        end
+                        local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
                         table.insert(M.tempCaves[cls], { 
                             X = cx,
                             Y = cy,
                             Z = cz,
                             Level = level,
                             State = state,
-                            Name = dungeonName
+                            Name = nameStr,
+                            DistStr = distStr
                         })
                     end
                 end
@@ -418,12 +436,15 @@ function M.ScanLoot(playerPos, maxDistSq, filters)
         end
     end
     
-    -- De-duplicate actors safely using table lookup
+    -- De-duplicate actors safely using string keys instead of raw C++ reflected objects
     local seen = {}
     local uniqueActors = {}
     for _, actor in ipairs(actors) do
-        if not seen[actor] then
-            seen[actor] = true
+        local key = nil
+        pcall(function() key = actor:GetFullName() end)
+        key = key or tostring(actor)
+        if not seen[key] then
+            seen[key] = true
             table.insert(uniqueActors, actor)
         end
     end
@@ -436,7 +457,8 @@ function M.ScanLoot(playerPos, maxDistSq, filters)
                     -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
                     local lx, ly, lz = ueLootPos.X, ueLootPos.Y, ueLootPos.Z
                     local dx, dy, dz = lx - playerPos.X, ly - playerPos.Y, lz - playerPos.Z
-                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
+                    local distSq = dx*dx + dy*dy + dz*dz
+                    if distSq <= maxDistSq then
                         local name, itemIdStr = GetItemDetails(actor)
                         if name and name ~= "" then
                             local shouldAdd = true
@@ -454,7 +476,8 @@ function M.ScanLoot(playerPos, maxDistSq, filters)
                             end
                             
                             if shouldAdd then
-                                table.insert(newLoot, { X = lx, Y = ly, Z = lz, Name = name })
+                                local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
+                                table.insert(newLoot, { X = lx, Y = ly, Z = lz, Name = name, DistStr = distStr })
                             end
                         end
                     end
@@ -482,7 +505,8 @@ function M.ScanNotes(playerPos, maxDistSq)
                     -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
                     local nx, ny, nz = ueNotePos.X, ueNotePos.Y, ueNotePos.Z
                     local dx, dy, dz = nx - playerPos.X, ny - playerPos.Y, nz - playerPos.Z
-                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
+                    local distSq = dx*dx + dy*dy + dz*dz
+                    if distSq <= maxDistSq then
                         local name = nil
                         local statusName, noteKey = pcall(function() return note.NoteRowName.Key end)
                         if statusName and noteKey then
@@ -495,7 +519,8 @@ function M.ScanNotes(playerPos, maxDistSq)
                         else
                             name = configMod.GetTranslation("Note", "Journal")
                         end
-                        table.insert(newNotes, { X = nx, Y = ny, Z = nz, Name = name })
+                        local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
+                        table.insert(newNotes, { X = nx, Y = ny, Z = nz, Name = name, DistStr = distStr })
                     end
                 end
             end)

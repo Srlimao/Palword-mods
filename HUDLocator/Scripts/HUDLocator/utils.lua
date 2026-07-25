@@ -52,13 +52,21 @@ function M.DrawText(hud, text, color, x, y, baseScale, scalePosition)
     hud:DrawText(text, color, x, y, font, finalScale, scalePosition or false)
 end
 
+local TextSizeCache = {}
+
 -- Safely measure text width using Unreal Engine's GetTextSize.
 -- Falls back to 0 on failure. Logs outcomes once via M.LogOnce to avoid frame-rate lag.
 function M.GetTextSize(hud, text, baseScale)
+    if not text or text == "" then return 0 end
     local font, scaleMult = M.GetFontAndScale()
     local finalScale = (baseScale or 1.0) * scaleMult
-    local width = 0
     
+    local cacheKey = text .. "_" .. string.format("%.3f", finalScale)
+    if TextSizeCache[cacheKey] then
+        return TextSizeCache[cacheKey]
+    end
+    
+    local width = 0
     if font then
         local success, err = pcall(function()
             local canvas = hud.Canvas
@@ -72,6 +80,7 @@ function M.GetTextSize(hud, text, baseScale)
         end)
         
         if success and width and width > 0 then
+            TextSizeCache[cacheKey] = width
             M.LogOnce("text_size_success", string.format("GetTextSize successfully measuring font sizes via UCanvas. Example: text='%s', scale=%.2f -> width=%.2f (using custom font: %s)", tostring(text), finalScale, width, tostring(font ~= nil)))
         else
             local errMsg = err or (not hud.Canvas and "hud.Canvas is nil" or "K2_TextSize returned nil size")

@@ -1,5 +1,5 @@
 {
     "publishedfileid":  "3764265846",
-    "changenote":  "Title updated to include version",
-    "last_published_version":  "2.7.0"
+    "changenote":  "v2.8.0 - Major rendering performance refactor: Zero-cost early exit, viewport bounds culling, 60% reduction in C++ reflection draw calls, and canvas text size caching.",
+    "last_published_version":  "2.8.0"
 }
