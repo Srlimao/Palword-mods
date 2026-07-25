@@ -1,5 +1,5 @@
 {
     "publishedfileid":  "3764889811",
-    "changenote":  "v2.6.0 - Major performance refactor: Off-render-thread background scanning, canvas text size caching, zero-allocation table reuse, and inventory pointer caching.",
-    "last_published_version":  "2.6.0"
+    "changenote":  "v2.6.1 - Suppressed unguarded console logs when Debug is disabled, centralized logger utilities, and streamlined workshop description.",
+    "last_published_version":  "2.6.1"
 }

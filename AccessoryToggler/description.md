@@ -1,43 +1,55 @@
 # Accessory Toggler
 
-Instantly equip or unequip accessories (like the Ring of Mercy or thermal underwear) using hotkeys without opening your inventory. Includes a customizable on-screen HUD.
+Instantly toggle equipped accessories (like the *Ring of Mercy* or thermal underwear) using hotkeys without opening your inventory!
+
+🎨 **Visual Web Configurator**: Easily adjust colors, positions, and options with a live preview at [https://pal-mod-configurator.dunhas.com/](https://pal-mod-configurator.dunhas.com/)!
+
+---
 
 ## Features
 
-- **Quick Hotkey Swapping**: Toggle accessory slots 1-4 instantly (Default: `5`, `6`, `7`, `8`).
-- **Interactive Status HUD**: View equipped items and their active status. You can now hide/show the HUD using **Alt + H**.
-- **Adjustable Slots**: Customize the HUD to only show 1 to 4 slots via `SlotsToShow` in your config.
-- **HUD Editor**: Press **Alt + F7** to edit HUD layout. Use Arrows to move and `+`/`-` (or brackets/slash/period keys for compact keyboards) to scale. Press **Alt + R** to reset.
-- **Auto-Saving & Reloading**: Saves layout changes automatically. Press **Alt + R** outside edit mode to reload config on the fly.
-- **Localization**: Supports all standard game languages automatically.
+- ⚡ **Instant Hotkey Swapping**: Toggle accessory slots 1–4 on the fly (Default: `5`, `6`, `7`, `8`).
+- 👁️ **Toggle HUD Visibility**: Press **Alt + H** to show or hide the HUD anytime.
+- 📐 **In-Game HUD Layout Editor**: Press **Alt + F7** to reposition with arrow keys and adjust scale with `+` / `-`.
+- 🔢 **Custom Slot Count**: Set `SlotsToShow` (1 to 4) to match your active equipped accessory count.
+- 🔄 **Quick Reload**: Press **Alt + R** to reload configuration instantly.
+- 🌐 **Multi-Language**: Automatically translates item names and labels based on your game language.
 
-## Quick Controls
+---
 
-- **5, 6, 7, 8**: Toggle Accessory Slots 1-4.
-- **Alt + H**: Toggle HUD Visibility.
-- **Alt + F7**: Toggle HUD Editor.
-- **Alt + R**: Reset HUD (in Editor) or Reload Config (normal mode).
-- **Arrows / Brackets & Symbols**: Move / Scale HUD.
+## Controls
+
+- **5, 6, 7, 8**: Toggle Accessory Slots 1–4.
+- **Alt + H**: Toggle HUD visibility.
+- **Alt + F7**: Toggle HUD layout editor.
+- **Alt + R**: Reset HUD position (in Editor) / Reload config settings.
+- **Arrow Keys / Symbols**: Move and scale HUD (in Editor mode).
 
 ---
 
 ## Chinese Description
 
-无需打开背包，即可使用快捷键瞬间装备或卸下饰品（如慈悲戒指、抗寒/抗热内衣）。包含游戏内状态 HUD 悬浮窗。
+无需打开背包，即可使用快捷键瞬间装备或卸下饰品（如*慈悲戒指*、抗寒/抗热内衣）！
+
+🎨 **网页可视化配置工具**：提供实时 preview 预览，方便在线调整位置与颜色参数！访问 [https://pal-mod-configurator.dunhas.com/](https://pal-mod-configurator.dunhas.com/)。
+
+---
 
 ### 主要功能
 
-- **快捷键切换**：瞬间切换饰品栏 1-4（默认快捷键：`5`、`6`、`7`、`8`）。
-- **HUD 显隐控制**：在屏幕上显示当前装备的饰品状态。支持按 **Alt + H** 快速隐藏/显示 HUD。
-- **自定义显示栏数**：支持通过配置文件中的 `SlotsToShow` 设置仅显示 1 到 4 个槽位。
-- **HUD 编辑器**：按 **Alt + F7** 进入编辑模式。用方向键移动，`+` / `-`（小键盘或括号键/斜杠键等）缩放大小。按 **Alt + R** 恢复默认位置。
-- **重载与自动保存**：自动保存布局改动。在普通模式下按 **Alt + R** 即可热重载配置。
-- **多语言支持**：自动适配游戏多语言显示名称。
+- ⚡ **快捷键瞬间切换**：随时开启/关闭饰品 1–4（默认快捷键：`5`、`6`、`7`、`8`）。
+- 👁️ **HUD 一键显隐**：按 **Alt + H** 随意开启或隐藏界面。
+- 📐 **游戏内 HUD 编辑器**：按 **Alt + F7** 开启编辑，使用方向键移动位置、`+` / `-` 调节大小。
+- 🔢 **自定义槽位数量**：可通过 `SlotsToShow` 自由设置显示 1 到 4 个槽位。
+- 🔄 **一键热重载**：按 **Alt + R** 实时刷新配置文件。
+- 🌐 **多语言支持**：自动跟随游戏语言翻译饰品名称与界面标签。
+
+---
 
 ### 快捷键
 
-- **5, 6, 7, 8**：切换饰品栏 1-4。
-- **Alt + H**：显示/隐藏 HUD。
-- **Alt + F7**：开启/关闭 HUD 编辑器。
-- **Alt + R**：恢复 HUD 位置（编辑器中）/ 重新加载配置（普通模式下）。
-- **方向键 / 括号与符号**：移动 / 缩放 HUD。
+- **5, 6, 7, 8**：开启 / 关闭饰品 1–4。
+- **Alt + H**：显示 / 隐藏 HUD。
+- **Alt + F7**：开启 / 关闭 HUD 编辑器。
+- **Alt + R**：恢复 HUD 默认位置（编辑模式）/ 重新加载配置。
+- **方向键 / 符号键**：移动 / 缩放 HUD。
