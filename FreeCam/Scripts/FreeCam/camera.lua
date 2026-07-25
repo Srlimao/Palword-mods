@@ -69,19 +69,32 @@ function camera.ToggleFreeCam()
     
     if not isSpectating then
         local inBase, baseCampObj = helpers.GetPlayerBaseCamp(localPlayer)
-        if not inBase or not baseCampObj then
-            print("[FreeCam] Cannot enable FreeCam: Player is not within Base Camp boundaries.")
+        
+        -- Enforce BaseOnly restriction if enabled in configuration
+        local baseOnlySetting = (config.CONFIG.BaseOnly == true)
+        if baseOnlySetting and (not inBase or not baseCampObj) then
+            print("[FreeCam] Cannot enable FreeCam: Player is not within Base Camp boundaries ('BaseOnly': true).")
             return
         end
         
-        local range = 3500.0
-        pcall(function()
-            local r = baseCampObj:GetRange()
-            if type(r) == "userdata" and r.get then r = r:get() end
-            if type(r) == "number" and r > 0 then range = r end
-        end)
-        limitRadius = range * 1.5
-        print(string.format("[FreeCam Debug] Enforcing flight radius limit: %.1f units (%.1f meters)", limitRadius, limitRadius / 100.0))
+        -- Determine Flight Limit Radius
+        local maxRangeMeters = tonumber(config.CONFIG.MaxRange) or 0.0
+        if maxRangeMeters > 0 then
+            limitRadius = maxRangeMeters * 100.0 -- Convert meters to UE units
+            print(string.format("[FreeCam] Enforcing MaxRange flight limit: %.1f meters (%.1f units)", maxRangeMeters, limitRadius))
+        elseif inBase and baseCampObj then
+            local range = 3500.0
+            pcall(function()
+                local r = baseCampObj:GetRange()
+                if type(r) == "userdata" and r.get then r = r:get() end
+                if type(r) == "number" and r > 0 then range = r end
+            end)
+            limitRadius = range * 1.5
+            print(string.format("[FreeCam] Enforcing Base Camp flight radius limit: %.1f meters", limitRadius / 100.0))
+        else
+            limitRadius = nil -- Unlimited range when BaseOnly=false and MaxRange=0
+            print("[FreeCam] Flight radius limit: Unlimited (BaseOnly=false, MaxRange=0)")
+        end
     end
     
     isSpectating = not isSpectating
@@ -134,14 +147,11 @@ end
 
 -- Orchestrate frame movement update (Zero-Query Render Tick compliant)
 function camera.UpdateCameraMovement()
-    -- Gamepad shortcut handler (Only queried if gamepad is active input mode)
-    local inputMode = config.CONFIG.InputMode or "Keyboard"
-    if inputMode == "Gamepad" then
-        local pc = activePC or GetPCCached()
-        if pc and pc:IsValid() and input.IsToggleShortcutPressed(pc) then
-            print("[FreeCam] Gamepad toggle shortcut detected!")
-            camera.ToggleFreeCam()
-        end
+    -- Gamepad shortcut handler (Always checked so keyboard and gamepad work simultaneously)
+    local pc = activePC or GetPCCached()
+    if pc and pc:IsValid() and input.IsToggleShortcutPressed(pc) then
+        print("[FreeCam] Gamepad toggle shortcut detected!")
+        camera.ToggleFreeCam()
     end
     
     if not isSpectating or not activePC or not activePC:IsValid() or not activePlayer or not activePlayer:IsValid() then return end
@@ -183,16 +193,18 @@ function camera.UpdateCameraMovement()
         currentCameraLocation.Z = currentCameraLocation.Z + (moveDir.Z / length) * currentSpeed
     end
     
-    -- Limit camera's 2D horizontal movement to 1.5x the base camp radius from its starting point
-    local origLoc = player_m.GetOriginalPlayerLocation()
-    if origLoc then
-        local dx = currentCameraLocation.X - origLoc.X
-        local dy = currentCameraLocation.Y - origLoc.Y
-        local dist2D = math.sqrt(dx * dx + dy * dy)
-        if dist2D > limitRadius then
-            local ratio = limitRadius / dist2D
-            currentCameraLocation.X = origLoc.X + dx * ratio
-            currentCameraLocation.Y = origLoc.Y + dy * ratio
+    -- Limit camera's 2D horizontal movement to flight limit radius (if enforced)
+    if limitRadius and limitRadius > 0 then
+        local origLoc = player_m.GetOriginalPlayerLocation()
+        if origLoc then
+            local dx = currentCameraLocation.X - origLoc.X
+            local dy = currentCameraLocation.Y - origLoc.Y
+            local dist2D = math.sqrt(dx * dx + dy * dy)
+            if dist2D > limitRadius then
+                local ratio = limitRadius / dist2D
+                currentCameraLocation.X = origLoc.X + dx * ratio
+                currentCameraLocation.Y = origLoc.Y + dy * ratio
+            end
         end
     end
     

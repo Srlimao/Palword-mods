@@ -1,5 +1,5 @@
 {
     "publishedfileid":  "3768635785",
-    "changenote":  "Title updated to include version",
-    "last_published_version":  "1.4.0"
+    "changenote":  "v1.5.0 - Added BaseOnly and MaxRange configuration options, and enabled simultaneous Gamepad \u0026 Keyboard flight controls.",
+    "last_published_version":  "1.5.0"
 }

@@ -15,62 +15,44 @@ end
 
 
 
--- Keybinds (Registered if InputMode is Keyboard)
-local inputMode = config.CONFIG.InputMode or "Keyboard"
-if inputMode == "Keyboard" then
-    local keyToggle = GetKey(config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.ToggleFreeCam, Key.F8)
-    local keySpeedUp = GetKey(config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.SpeedUp, Key.PAGE_UP)
-    local keySpeedDown = GetKey(config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.SpeedDown, Key.PAGE_DOWN)
+-- Register Keyboard Keybinds (Always registered so Keyboard and Gamepad work simultaneously)
+local keyToggle = GetKey(config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.ToggleFreeCam, Key.F8)
+local keySpeedUp = GetKey(config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.SpeedUp, Key.PAGE_UP)
+local keySpeedDown = GetKey(config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.SpeedDown, Key.PAGE_DOWN)
 
-    local function ResolveModifier(modStr)
-        if not modStr then return { ModifierKey.ALT } end
-        local upper = string.upper(modStr)
-        if upper == "ALT" then
-            return { ModifierKey.ALT }
-        elseif upper == "CTRL" or upper == "CONTROL" then
-            return { ModifierKey.CTRL }
-        elseif upper == "SHIFT" then
-            return { ModifierKey.SHIFT }
-        elseif upper == "NONE" or upper == "" then
-            return {}
-        else
-            return { ModifierKey.ALT }
-        end
+local function ResolveModifier(modStr)
+    if not modStr then return { ModifierKey.ALT } end
+    local upper = string.upper(modStr)
+    if upper == "ALT" then
+        return { ModifierKey.ALT }
+    elseif upper == "CTRL" or upper == "CONTROL" then
+        return { ModifierKey.CTRL }
+    elseif upper == "SHIFT" then
+        return { ModifierKey.SHIFT }
+    elseif upper == "NONE" or upper == "" then
+        return {}
+    else
+        return { ModifierKey.ALT }
     end
-
-    local modifier = config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.Modifier or "ALT"
-    local toggleModifiers = ResolveModifier(modifier)
-
-    RegisterKeyBind(keyToggle, toggleModifiers, function()
-        camera.ToggleFreeCam()
-    end)
-
-    RegisterKeyBind(keySpeedUp, {}, function()
-        camera.AdjustSpeed(5.0)
-    end)
-
-    RegisterKeyBind(keySpeedDown, {}, function()
-        camera.AdjustSpeed(-5.0)
-    end)
 end
 
-local statUnitExecuted = false
+local modifier = config.CONFIG.KeyBinds and config.CONFIG.KeyBinds.Modifier or "ALT"
+local toggleModifiers = ResolveModifier(modifier)
+
+RegisterKeyBind(keyToggle, toggleModifiers, function()
+    camera.ToggleFreeCam()
+end)
+
+RegisterKeyBind(keySpeedUp, {}, function()
+    camera.AdjustSpeed(5.0)
+end)
+
+RegisterKeyBind(keySpeedDown, {}, function()
+    camera.AdjustSpeed(-5.0)
+end)
 
 -- Update camera movement every frame (Zero-Query Render Tick compliant)
 local function OnReceiveDrawHUD(self, SizeX, SizeY)
-    if not statUnitExecuted then
-        statUnitExecuted = true
-        if config.CONFIG.Debug then
-            local KismetSystemLibrary = StaticFindObject("/Script/Engine.Default__KismetSystemLibrary")
-            local world = FindFirstOf("World")
-            if KismetSystemLibrary and world and world:IsValid() then
-                pcall(function()
-                    KismetSystemLibrary:ExecuteConsoleCommand(world, "stat unit", nil)
-                end)
-                print("[FreeCam] Executed console command 'stat unit' for performance diagnostics.")
-            end
-        end
-    end
     camera.UpdateCameraMovement()
 end
 

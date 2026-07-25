@@ -1,7 +1,8 @@
 {
   "Debug": false,
-  "InputMode": "Keyboard",
   "DefaultSpeed": 15.0,
+  "BaseOnly": true,
+  "MaxRange": 50.0,
   "KeyBinds": {
     "ToggleFreeCam": "F8",
     "UseAltModifier": true,

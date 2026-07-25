@@ -4,8 +4,9 @@ local M = {}
 
 M.CONFIG = {
     Debug = false,
-    InputMode = "Keyboard",
     DefaultSpeed = 15.0,
+    BaseOnly = true,
+    MaxRange = 50.0,
     KeyBinds = {
         ToggleFreeCam = "F8",
         Modifier = "ALT",
@@ -90,8 +91,9 @@ function M.LoadConfig()
         if outFile then
             local defaultJson = [[{
   "Debug": false,
-  "InputMode": "Keyboard",
   "DefaultSpeed": 15.0,
+  "BaseOnly": true,
+  "MaxRange": 50.0,
   "KeyBinds": {
     "ToggleFreeCam": "F8",
     "Modifier": "ALT",
@@ -134,8 +136,9 @@ function M.LoadConfig()
     local parsed = json.parse(content)
     if parsed then
         if parsed.Debug ~= nil then M.CONFIG.Debug = parsed.Debug end
-        if parsed.InputMode ~= nil then M.CONFIG.InputMode = parsed.InputMode end
         if parsed.DefaultSpeed ~= nil then M.CONFIG.DefaultSpeed = parsed.DefaultSpeed end
+        if parsed.BaseOnly ~= nil then M.CONFIG.BaseOnly = (parsed.BaseOnly == true) end
+        if parsed.MaxRange ~= nil then M.CONFIG.MaxRange = tonumber(parsed.MaxRange) or 50.0 end
         if parsed.KeyBinds then
             if parsed.KeyBinds.ToggleFreeCam ~= nil then M.CONFIG.KeyBinds.ToggleFreeCam = parsed.KeyBinds.ToggleFreeCam end
             if parsed.KeyBinds.Modifier ~= nil then

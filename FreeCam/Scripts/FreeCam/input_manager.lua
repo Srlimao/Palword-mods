@@ -57,8 +57,7 @@ end
 function input_manager.IsToggleShortcutPressed(pc)
     if not pc or not pc:IsValid() then return false end
     
-    local inputMode = config.CONFIG.InputMode or "Keyboard"
-    if inputMode == "Gamepad" and config.CONFIG.Gamepad then
+    if config.CONFIG.Gamepad then
         if not toggleKeyObj then CacheConfigKeyObjects() end
         local isModDown = true
         if modKeyObj then
@@ -76,40 +75,41 @@ function input_manager.PollMovement(pc, outMoveDir, forwardVec, rightVec, upVec)
     if not pc or not pc:IsValid() then return end
     
     if not toggleKeyObj then CacheConfigKeyObjects() end
-    local inputMode = config.CONFIG.InputMode or "Keyboard"
     
-    if inputMode == "Keyboard" then
-        if pc:IsInputKeyDown(KeyW_Obj) then
-            outMoveDir.X = outMoveDir.X + forwardVec.X
-            outMoveDir.Y = outMoveDir.Y + forwardVec.Y
-            outMoveDir.Z = outMoveDir.Z + forwardVec.Z
-        end
-        if pc:IsInputKeyDown(KeyS_Obj) then
-            outMoveDir.X = outMoveDir.X - forwardVec.X
-            outMoveDir.Y = outMoveDir.Y - forwardVec.Y
-            outMoveDir.Z = outMoveDir.Z - forwardVec.Z
-        end
-        if pc:IsInputKeyDown(KeyD_Obj) then
-            outMoveDir.X = outMoveDir.X + rightVec.X
-            outMoveDir.Y = outMoveDir.Y + rightVec.Y
-            outMoveDir.Z = outMoveDir.Z + rightVec.Z
-        end
-        if pc:IsInputKeyDown(KeyA_Obj) then
-            outMoveDir.X = outMoveDir.X - rightVec.X
-            outMoveDir.Y = outMoveDir.Y - rightVec.Y
-            outMoveDir.Z = outMoveDir.Z - rightVec.Z
-        end
-        if flyUpKbKeyObj and pc:IsInputKeyDown(flyUpKbKeyObj) then
-            outMoveDir.X = outMoveDir.X + upVec.X
-            outMoveDir.Y = outMoveDir.Y + upVec.Y
-            outMoveDir.Z = outMoveDir.Z + upVec.Z
-        end
-        if flyDownKbKeyObj and pc:IsInputKeyDown(flyDownKbKeyObj) then
-            outMoveDir.X = outMoveDir.X - upVec.X
-            outMoveDir.Y = outMoveDir.Y - upVec.Y
-            outMoveDir.Z = outMoveDir.Z - upVec.Z
-        end
-    elseif inputMode == "Gamepad" and config.CONFIG.Gamepad then
+    -- 1. Keyboard Inputs
+    if pc:IsInputKeyDown(KeyW_Obj) then
+        outMoveDir.X = outMoveDir.X + forwardVec.X
+        outMoveDir.Y = outMoveDir.Y + forwardVec.Y
+        outMoveDir.Z = outMoveDir.Z + forwardVec.Z
+    end
+    if pc:IsInputKeyDown(KeyS_Obj) then
+        outMoveDir.X = outMoveDir.X - forwardVec.X
+        outMoveDir.Y = outMoveDir.Y - forwardVec.Y
+        outMoveDir.Z = outMoveDir.Z - forwardVec.Z
+    end
+    if pc:IsInputKeyDown(KeyD_Obj) then
+        outMoveDir.X = outMoveDir.X + rightVec.X
+        outMoveDir.Y = outMoveDir.Y + rightVec.Y
+        outMoveDir.Z = outMoveDir.Z + rightVec.Z
+    end
+    if pc:IsInputKeyDown(KeyA_Obj) then
+        outMoveDir.X = outMoveDir.X - rightVec.X
+        outMoveDir.Y = outMoveDir.Y - rightVec.Y
+        outMoveDir.Z = outMoveDir.Z - rightVec.Z
+    end
+    if flyUpKbKeyObj and pc:IsInputKeyDown(flyUpKbKeyObj) then
+        outMoveDir.X = outMoveDir.X + upVec.X
+        outMoveDir.Y = outMoveDir.Y + upVec.Y
+        outMoveDir.Z = outMoveDir.Z + upVec.Z
+    end
+    if flyDownKbKeyObj and pc:IsInputKeyDown(flyDownKbKeyObj) then
+        outMoveDir.X = outMoveDir.X - upVec.X
+        outMoveDir.Y = outMoveDir.Y - upVec.Y
+        outMoveDir.Z = outMoveDir.Z - upVec.Z
+    end
+
+    -- 2. Gamepad Inputs
+    if config.CONFIG.Gamepad then
         local stickX = pc:GetInputAnalogKeyState(GamepadLeftX) or 0.0
         local stickY = pc:GetInputAnalogKeyState(GamepadLeftY) or 0.0
         if type(stickX) == "userdata" and stickX.get then stickX = stickX:get() end
