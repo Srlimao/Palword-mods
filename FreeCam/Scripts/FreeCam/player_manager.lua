@@ -1,5 +1,5 @@
--- FreeCam Player Manager component
 local helpers = require("FreeCam.helpers")
+local config = require("FreeCam.config")
 
 local player_manager = {}
 
@@ -19,7 +19,7 @@ function player_manager.Setup(player, pc)
         local lX, lY, lZ = loc.X, loc.Y, loc.Z
         if type(lX) == "userdata" and lX.get then lX = lX:get() lY = lY:get() lZ = lZ:get() end
         originalPlayerLocation = {X = lX, Y = lY, Z = lZ}
-        print(string.format("[FreeCam Debug] Captured original player location: (%.1f, %.1f, %.1f)", lX, lY, lZ))
+        config.DebugPrint(string.format("Captured original player location: (%.1f, %.1f, %.1f)", lX, lY, lZ))
     end)
     if not status then
         print("[FreeCam Error] Failed to capture original player location: " .. tostring(err))
@@ -90,16 +90,16 @@ function player_manager.Teardown(player, pc)
     player:SetActorEnableCollision(true)
     
     -- Restore player character location to its original position before flying
-    print(string.format("[FreeCam Debug] Teardown: originalPlayerLocation exists = %s", tostring(originalPlayerLocation ~= nil)))
+    config.DebugPrint(string.format("Teardown: originalPlayerLocation exists = %s", tostring(originalPlayerLocation ~= nil)))
     if originalPlayerLocation then
         local safeLoc = {
             X = originalPlayerLocation.X,
             Y = originalPlayerLocation.Y,
             Z = originalPlayerLocation.Z + 120.0
         }
-        print(string.format("[FreeCam Debug] Teleporting player to: (%.1f, %.1f, %.1f)", safeLoc.X, safeLoc.Y, safeLoc.Z))
+        config.DebugPrint(string.format("Teleporting player to: (%.1f, %.1f, %.1f)", safeLoc.X, safeLoc.Y, safeLoc.Z))
         local success = player:K2_SetActorLocation(safeLoc, false, {}, true)
-        print(string.format("[FreeCam Debug] Teleport success = %s", tostring(success)))
+        config.DebugPrint(string.format("Teleport success = %s", tostring(success)))
     end
     originalPlayerLocation = nil
     

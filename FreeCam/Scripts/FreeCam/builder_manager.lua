@@ -1,6 +1,7 @@
 -- FreeCam Builder Manager component
 local builder_manager = {}
 local helpers = require("FreeCam.helpers")
+local config = require("FreeCam.config")
 
 local originalInstallDistance = 400.0
 local lastBuilderMode = -1
@@ -55,13 +56,10 @@ function builder_manager.ResetSnapModeState()
 end
 
 function builder_manager.RotateTarget(bRight)
-    local step = 90.0
-    if bRight then
-        customRotationYaw = (customRotationYaw + step) % 360.0
-    else
-        customRotationYaw = (customRotationYaw - step) % 360.0
-    end
-    print("[FreeCam] Rotate Target called. New customRotationYaw = " .. customRotationYaw)
+    customRotationYaw = customRotationYaw + (bRight and 90.0 or -90.0)
+    if customRotationYaw >= 360.0 then customRotationYaw = customRotationYaw - 360.0 end
+    if customRotationYaw < 0.0 then customRotationYaw = customRotationYaw + 360.0 end
+    config.DebugPrint("Rotate Target called. New customRotationYaw = " .. customRotationYaw)
 end
 
 -- Cache original installation distance
@@ -109,7 +107,7 @@ function builder_manager.Setup(player)
             gameSetting.StepSP = 0
             gameSetting.SprintSP = 0.0
             gameSetting.GliderSP = 0.0
-            print("[FreeCam] Extended trace range and disabled stamina costs successfully.")
+            config.DebugPrint("Extended trace range and disabled stamina costs successfully.")
         end
     end
     
@@ -123,27 +121,22 @@ function builder_manager.Setup(player)
 end
 
 -- Restore builder distance and clear outlines
-function builder_manager.Teardown(player)
+function builder_manager.Teardown(player, pc)
     if not player or not player:IsValid() then return end
     
     local builder = player.BuilderComponent
+    local gameSetting = player.PalGameSetting
     if builder and builder:IsValid() then
         builder.InstallDistanceNormalFromOwner = originalInstallDistance
-    end
-    
-    -- Restore UPalGameSetting building trace ranges and stamina costs
-    local _, PalUtility = helpers.GetEngineHelpers()
-    if PalUtility and PalUtility:IsValid() then
-        local gameSetting = PalUtility:GetGameSetting(player)
-        if gameSetting and gameSetting:IsValid() then
-            gameSetting.BuilderModeInstallableRange = originalBuilderModeInstallableRange or 1000.0
-            gameSetting.PaintBuildModeInstallableRange = originalPaintBuildModeInstallableRange or 1000.0
-            gameSetting.JumpSP = originalJumpSP or 15
-            gameSetting.StepSP = originalStepSP or 10
-            gameSetting.SprintSP = originalSprintSP or 20.0
-            gameSetting.GliderSP = originalGliderSP or 15.0
-            print("[FreeCam] Restored trace settings and stamina costs successfully.")
-        end
+        pcall(function()
+            builder.BuilderModeInstallableRange = originalBuilderModeInstallableRange
+            builder.PaintBuildModeInstallableRange = originalPaintBuildModeInstallableRange
+            if gameSetting and gameSetting:IsValid() then
+                gameSetting.SprintSP = originalSprintSP or 20.0
+                gameSetting.GliderSP = originalGliderSP or 15.0
+            end
+            config.DebugPrint("Restored trace settings and stamina costs successfully.")
+        end)
     end
     
     if lastDismantleTarget and lastDismantleTarget:IsValid() then
@@ -176,7 +169,7 @@ function builder_manager.Update(player, pc, cameraRotation, aimLocation, aimDist
     local timeNow = os.clock()
     if modeNum ~= lastBuilderMode then
         lastBuilderMode = modeNum
-        print(string.format("[FreeCam Debug] Builder Mode Changed: mode = %d (0=None, 1=Building, 2=Dismantling, 3=Painting)", modeNum))
+        config.DebugPrint(string.format("Builder Mode Changed: mode = %d (0=None, 1=Building, 2=Dismantling, 3=Painting)", modeNum))
     end
     
     -- Auto-toggle Snap Mode to true with a safe 30-frame delay (approx 0.5s) after entering building mode
@@ -202,12 +195,12 @@ function builder_manager.Update(player, pc, cameraRotation, aimLocation, aimDist
                         end
                         
                         local isConstruction = IsConstructionPart(objIdStr)
-                        print(string.format("[FreeCam] Build item selected: %s. IsConstructionPart = %s", objIdStr, tostring(isConstruction)))
+                        config.DebugPrint(string.format("Build item selected: %s. IsConstructionPart = %s", objIdStr, tostring(isConstruction)))
                         
                         if not isConstruction and objIdStr ~= "None" and objIdStr ~= "" then
                             pcall(function()
                                 model:ChangeSnapMode(true)
-                                print("[FreeCam] Automatically enabled snap mode for production/freestanding building: " .. objIdStr)
+                                config.DebugPrint("Automatically enabled snap mode for production/freestanding building: " .. objIdStr)
                             end)
                         end
                         break
@@ -259,7 +252,7 @@ function builder_manager.Update(player, pc, cameraRotation, aimLocation, aimDist
             if targetObj and targetObj:IsValid() then
                 targetName = targetObj:GetFullName()
             end
-            print(string.format("[FreeCam Debug] Dismantle Mode: hitActor=%s, GetDismantleTarget=%s", hitActorName, targetName))
+            config.DebugPrint(string.format("Dismantle Mode: hitActor=%s, GetDismantleTarget=%s", hitActorName, targetName))
         end
     else
         if lastDismantleTarget and lastDismantleTarget:IsValid() then

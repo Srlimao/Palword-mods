@@ -41,9 +41,11 @@ function camera_manager.Setup(player, pc)
     return true
 end
 
+local config = require("FreeCam.config")
+
 -- Re-attach camera component to its original parent (EAttachmentRule::KeepRelative = 0) and restore transform
 function camera_manager.Teardown(player, pc)
-    print(string.format("[FreeCam Debug] Camera Teardown: cameraComponent exists = %s, originalParent exists = %s", 
+    config.DebugPrint(string.format("Camera Teardown: cameraComponent exists = %s, originalParent exists = %s", 
         tostring(cameraComponent ~= nil), tostring(originalParent ~= nil)))
     if cameraComponent and cameraComponent:IsValid() and originalParent and originalParent:IsValid() then
         local targetSocket = originalSocket or FName("None")
@@ -53,7 +55,7 @@ function camera_manager.Teardown(player, pc)
                 cameraComponent:K2_SetRelativeLocationAndRotation(originalRelativeLocation, originalRelativeRotation, false, {}, false)
             end
         end)
-        print(string.format("[FreeCam Debug] Camera re-attach status: %s, error: %s", tostring(status), tostring(err)))
+        config.DebugPrint(string.format("Camera re-attach status: %s, error: %s", tostring(status), tostring(err)))
     end
     
     cameraComponent = nil

@@ -24,7 +24,9 @@ M.CONFIG = {
 }
 
 function M.DebugPrint(msg)
-    print("[FreeCam] " .. tostring(msg))
+    if M.CONFIG.Debug then
+        print("[FreeCam] " .. tostring(msg))
+    end
 end
 
 local function GetModConfigsDir()

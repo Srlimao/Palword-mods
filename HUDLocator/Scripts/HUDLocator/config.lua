@@ -161,7 +161,7 @@ M.CONFIG = {
 }
 
 function M.DebugPrint(msg)
-    if M.CONFIG.Debug then
+    if (M.CONFIG.Global and M.CONFIG.Global.Debug) or M.CONFIG.Debug then
         print("[HUDLocator] " .. tostring(msg))
     end
 end

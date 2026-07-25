@@ -62,7 +62,7 @@ local function RegisterHUDHook()
                 pcall(function() if type(shootingHold) == "userdata" then shootingHold = shootingHold:get() end end)
                 pcall(function() if type(isShooting) == "userdata" then isShooting = isShooting:get() end end)
                 
-                print(string.format("[HoldToFire] Weapon: %s (%s) | holdTrigger: %s | reqPullTrigger: %s | shootingHold: %s | isShooting: %s",
+                DebugPrint(string.format("Weapon: %s (%s) | holdTrigger: %s | reqPullTrigger: %s | shootingHold: %s | isShooting: %s",
                     tostring(configKey),
                     tostring(weapon:GetClass():GetName()),
                     tostring(holdTrigger),

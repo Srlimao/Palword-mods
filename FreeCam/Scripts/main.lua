@@ -115,7 +115,7 @@ local function OnGetDismantleTargetObject(self)
             if target and target:IsValid() then
                 targetName = target:GetFullName()
             end
-            print("[FreeCam Hook Debug] GetDismantleTargetObject called! Target=" .. targetName)
+            config.DebugPrint("Hook Debug: GetDismantleTargetObject called! Target=" .. targetName)
         end
         if target and target:IsValid() then
             return target
@@ -136,7 +136,7 @@ local function OnCanRequestDismantle(self)
         local now = os.clock()
         if (now - lastDismantleLogTime) > 1.5 then
             lastDismantleLogTime = now
-            print("[FreeCam Hook Debug] CanRequestDismantle called! Returning 0")
+            config.DebugPrint("Hook Debug: CanRequestDismantle called! Returning 0")
         end
         return 0 -- EPalMapObjectOperationResult::Success = 0
     end
