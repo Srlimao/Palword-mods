@@ -65,6 +65,7 @@ M.CONFIG = {
     Chests = {
         Enabled = true,
         Filter = "Both",
+        GradeFilter = "All",
         MaxDistance = 15000.0,
         Style = {
             DrawBox = false,
@@ -331,6 +332,7 @@ local defaultJSON = [[{
   "Chests": {
     "Enabled": true,
     "Filter": "Both",
+    "GradeFilter": "All",
     "MaxDistance": 15000.0,
     "Style": {
       "DrawBox": false,

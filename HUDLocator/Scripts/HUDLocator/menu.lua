@@ -46,6 +46,14 @@ local menuItems = {
         transKey = "Settings_ChestFilter"
     },
     {
+        name = "Chest Grade Filter",
+        get = function() return CONFIG.Chests.GradeFilter or "All" end,
+        set = function(v) CONFIG.Chests.GradeFilter = v end,
+        type = "enum",
+        values = { "All", "Grade2+", "Grade3+", "Grade4+", "Grade5+", "Grade6Only", "None" },
+        transKey = "Settings_ChestGradeFilter"
+    },
+    {
         name = "Show Caves",
         get = function() return CONFIG.Caves.Enabled end,
         set = function(v) CONFIG.Caves.Enabled = v end,
