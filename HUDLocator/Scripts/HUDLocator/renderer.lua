@@ -14,15 +14,20 @@ local function DrawCaveBeacon(hud, pos, color)
     local ueScreenBase = hud:Project(baseWorld, false)
     local ueScreenTop = hud:Project(topWorld, false)
 
-    -- Optimize: Convert UE FVector to native Lua table to avoid thousands of C++ property reflection lookups during distance checks
-    local screenBase = { X = ueScreenBase.X, Y = ueScreenBase.Y, Z = ueScreenBase.Z }
-    local screenTop = { X = ueScreenTop.X, Y = ueScreenTop.Y, Z = ueScreenTop.Z }
+    -- Optimize: Defer evaluation of .X and .Y to save reflection calls for off-screen items
+    local baseZ = ueScreenBase.Z
+    local topZ = ueScreenTop.Z
     
-    if screenBase.Z > 0.0 or screenTop.Z > 0.0 then
+    if baseZ > 0.0 or topZ > 0.0 then
+        local baseX = ueScreenBase.X
+        local baseY = ueScreenBase.Y
+        local topX = ueScreenTop.X
+        local topY = ueScreenTop.Y
+
         -- Draw glowing cylinder beam using thick Canvas DrawLine calls
-        pcall(hud.DrawLine, hud, screenBase.X, screenBase.Y, screenTop.X, screenTop.Y, { R = color.R, G = color.G, B = color.B, A = 0.05 }, 16.0)
-        pcall(hud.DrawLine, hud, screenBase.X, screenBase.Y, screenTop.X, screenTop.Y, { R = color.R, G = color.G, B = color.B, A = 0.12 }, 8.0)
-        pcall(hud.DrawLine, hud, screenBase.X, screenBase.Y, screenTop.X, screenTop.Y, { R = 1.0, G = 1.0, B = 1.0, A = 0.35 }, 2.0)
+        pcall(hud.DrawLine, hud, baseX, baseY, topX, topY, { R = color.R, G = color.G, B = color.B, A = 0.05 }, 16.0)
+        pcall(hud.DrawLine, hud, baseX, baseY, topX, topY, { R = color.R, G = color.G, B = color.B, A = 0.12 }, 8.0)
+        pcall(hud.DrawLine, hud, baseX, baseY, topX, topY, { R = 1.0, G = 1.0, B = 1.0, A = 0.35 }, 2.0)
         
         -- Draw concentric squares for glowing ground flare
         local steps = 5
@@ -30,7 +35,7 @@ local function DrawCaveBeacon(hud, pos, color)
         for i = 1, steps do
             local size = baseSize * (1.0 + (i - 1) * 0.6)
             local alpha = 0.15 * (1.0 - (i - 1) / steps)
-            hud:DrawRect({ R = color.R, G = color.G, B = color.B, A = alpha }, screenBase.X - size/2, screenBase.Y - size/2, size, size)
+            hud:DrawRect({ R = color.R, G = color.G, B = color.B, A = alpha }, baseX - size/2, baseY - size/2, size, size)
         end
     end
 end
@@ -39,10 +44,12 @@ end
 local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
     local textWorldPos = { X = worldPos.X, Y = worldPos.Y, Z = worldPos.Z + style.TextOffsetZ }
     local ueTextScreen = hud:Project(textWorldPos, false)
-    -- Optimize: Convert UE FVector to native Lua table to avoid thousands of C++ property reflection lookups during distance checks
-    local textScreen = { X = ueTextScreen.X, Y = ueTextScreen.Y, Z = ueTextScreen.Z }
+    -- Optimize: Read .Z first, avoid .X/.Y reflection lookups if off-screen
+    local textScreenZ = ueTextScreen.Z
     
-    if textScreen.Z > 0.0 then
+    if textScreenZ > 0.0 then
+        local textScreenX = ueTextScreen.X
+        local textScreenY = ueTextScreen.Y
         local font, scaleMult = utils.GetFontAndScale()
         local fontScale = style.FontScale * scaleMult
         local smallFontScale = style.SmallFontScale * scaleMult
@@ -85,8 +92,8 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
             local boxW = contentW + padX * 2
             local boxH = contentH + padY * 2
             
-            local boxX = textScreen.X - boxW * 0.5
-            local boxY = textScreen.Y - boxH * 0.5
+            local boxX = textScreenX - boxW * 0.5
+            local boxY = textScreenY - boxH * 0.5
  
             -- Draw border
             hud:DrawRect(style.BorderColor, boxX - bw, boxY - bw, boxW + bw * 2, boxH + bw * 2)
@@ -94,13 +101,13 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
             -- Draw background fill box
             hud:DrawRect(style.BoxColor, boxX, boxY, boxW, boxH)
             
-            local nameX = textScreen.X - nameW * 0.5
+            local nameX = textScreenX - nameW * 0.5
             local nameY = boxY + padY
             
             utils.DrawText(hud, nameStr, style.NameColor, nameX, nameY, style.FontScale, false)
             
             if distStr then
-                local distX = textScreen.X - distW * 0.5
+                local distX = textScreenX - distW * 0.5
                 local distY = nameY + nameH + lineGap
                 utils.DrawText(hud, distStr, style.DistColor, distX, distY, style.SmallFontScale, false)
             end
@@ -126,8 +133,8 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
             
             local contentH = nameH + (distStr and (lineGap + distH) or 0)
             
-            local startX = textScreen.X - nameW * 0.5
-            local simpleY = textScreen.Y - contentH * 0.5
+            local startX = textScreenX - nameW * 0.5
+            local simpleY = textScreenY - contentH * 0.5
             local off = 1.0
             
             -- Draw Name Part Outline
@@ -139,7 +146,7 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style)
             utils.DrawText(hud, nameStr, style.NameColor, startX, simpleY, style.FontScale, false)
             
             if distStr then
-                local distX = textScreen.X - distPartW * 0.5
+                local distX = textScreenX - distPartW * 0.5
                 local distY = simpleY + nameH + lineGap
                 -- Draw Dist Part Outline
                 utils.DrawText(hud, distPartStr, style.BorderColor, distX - off, distY - off, style.SmallFontScale, false)
@@ -166,14 +173,19 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     if not cachedLocalPlayer or not cachedLocalPlayer:IsValid() then return end
     local uePlayerPos = cachedLocalPlayer:K2_GetActorLocation()
     if not uePlayerPos then return end
-    local playerPos = { X = uePlayerPos.X, Y = uePlayerPos.Y, Z = uePlayerPos.Z }
+
+    -- Optimize: Store coordinates in raw locals rather than allocating a table.
+    -- This saves table allocation/GC on every frame and provides faster access in loops.
+    local px = uePlayerPos.X
+    local py = uePlayerPos.Y
+    local pz = uePlayerPos.Z
 
     -- 1. Draw Players
     if CONFIG.Players.Enabled then
         for _, otherPlayer in ipairs(activePlayers) do
-            local dx = otherPlayer.Pos.X - playerPos.X
-            local dy = otherPlayer.Pos.Y - playerPos.Y
-            local dz = otherPlayer.Pos.Z - playerPos.Z
+            local dx = otherPlayer.Pos.X - px
+            local dy = otherPlayer.Pos.Y - py
+            local dz = otherPlayer.Pos.Z - pz
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
             
@@ -189,9 +201,9 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     -- 2. Draw Relics
     if CONFIG.Relics.Enabled then
         for _, pos in ipairs(activeRelics) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
+            local dx = pos.X - px
+            local dy = pos.Y - py
+            local dz = pos.Z - pz
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
             local name = pos.Name or "Relic"
@@ -203,9 +215,9 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     -- 3. Draw Chests
     if CONFIG.Chests.Enabled then
         for _, pos in ipairs(activeChests) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
+            local dx = pos.X - px
+            local dy = pos.Y - py
+            local dz = pos.Z - pz
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
             local name = pos.Name or "Chest"
@@ -217,9 +229,9 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     -- 4. Draw Eggs
     if CONFIG.Eggs.Filter ~= "None" then
         for _, pos in ipairs(activeEggs) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
+            local dx = pos.X - px
+            local dy = pos.Y - py
+            local dz = pos.Z - pz
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
             local prefix = pos.SizePrefix or ""
@@ -232,9 +244,9 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     -- 5. Draw Caves
     if CONFIG.Caves.Enabled then
         for _, pos in ipairs(activeCaves) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
+            local dx = pos.X - px
+            local dy = pos.Y - py
+            local dz = pos.Z - pz
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
             local name = pos.Name or "Cave"
@@ -263,9 +275,9 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     -- 6. Draw Loot
     if CONFIG.Loot.Enabled then
         for _, pos in ipairs(activeLoot) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
+            local dx = pos.X - px
+            local dy = pos.Y - py
+            local dz = pos.Z - pz
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
             local name = pos.Name or "Loot"
@@ -277,9 +289,9 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     -- 7. Draw Notes
     if CONFIG.Notes.Enabled then
         for _, pos in ipairs(activeNotes) do
-            local dx = pos.X - playerPos.X
-            local dy = pos.Y - playerPos.Y
-            local dz = pos.Z - playerPos.Z
+            local dx = pos.X - px
+            local dy = pos.Y - py
+            local dz = pos.Z - pz
             local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             local distMeters = math.floor(dist / 100.0)
             local name = pos.Name or "Note"
