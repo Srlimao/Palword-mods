@@ -1,8 +1,8 @@
 {
   "ModName": "Preset Switch",
   "PackageName": "PresetSwitch",
-  "Thumbnail": "preview.png",
-  "Version": "1.0.0",
+  "Thumbnail": "thumbnail.png",
+  "Version": "1.0.1",
   "DebugMode": false,
   "MinRevision": 82182,
   "Author": "Will",

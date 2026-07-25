@@ -530,7 +530,7 @@ def main():
             "name": "PresetSwitch",
             "lua_path": "PresetSwitch/Scripts/PresetSwitch/config.lua",
             "metadata": METADATA_PRESET_SWITCH,
-            "version": "1.0.0"
+            "version": "1.0.1"
         }
     ]
     
