@@ -1,0 +1,13 @@
+[h1]PresetSwitch - Quick Pal Party Presets[/h1]
+
+Instantly switch between your saved Pal party presets using quick hotkeys ([b]Alt+5, Alt+6, Alt+7, Alt+8, Alt+9[/b])—without opening any menus!
+
+[b]Key Features[/b]
+
+[list]
+[*] ⚡ [b]Instant Hotkey Switching[/b]: Press [b]Alt + 5 / 6 / 7 / 8 / 9[/b] to switch directly to your saved party presets.
+[*] 🚫 [b]No Menus Needed[/b]: Switch Pal teams on the fly while exploring, fighting, or flying without interrupting gameplay.
+[*] 🎮 [b]Uses Game Presets[/b]: Automatically connects to the party presets you save in your game.
+[*] 🔔 [b]On-Screen Popup[/b]: A brief notification confirms your active preset whenever you switch.
+[*] ⚙️ [b]Fully Configurable[/b]: Easily change keybinds or modifier keys (Alt, Ctrl, Shift, or None) in your config file.
+[/list]

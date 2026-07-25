@@ -1,0 +1,58 @@
+{
+  "modName": "PresetSwitch",
+  "version": "1.0.0",
+  "schema": {
+    "Enabled": {
+      "type": "boolean",
+      "description": "Enable or disable PresetSwitch mod.",
+      "default": true
+    },
+    "Debug": {
+      "type": "boolean",
+      "description": "Enable diagnostic logging console prints.",
+      "default": false
+    },
+    "KeyBinds": {
+      "type": "section",
+      "description": "Keybindings for switching native in-game Pal presets.",
+      "properties": {
+        "Modifier": {
+          "type": "enum",
+          "description": "Global modifier key for preset shortcuts (ALT, CTRL, SHIFT, or NONE).",
+          "default": "ALT",
+          "options": [
+            "ALT",
+            "CTRL",
+            "SHIFT",
+            "NONE"
+          ]
+        },
+        "SwitchPreset1": {
+          "type": "keybind",
+          "description": "Hotkey to switch to Pal Preset 1.",
+          "default": "FIVE"
+        },
+        "SwitchPreset2": {
+          "type": "keybind",
+          "description": "Hotkey to switch to Pal Preset 2.",
+          "default": "SIX"
+        },
+        "SwitchPreset3": {
+          "type": "keybind",
+          "description": "Hotkey to switch to Pal Preset 3.",
+          "default": "SEVEN"
+        },
+        "SwitchPreset4": {
+          "type": "keybind",
+          "description": "Hotkey to switch to Pal Preset 4.",
+          "default": "EIGHT"
+        },
+        "SwitchPreset5": {
+          "type": "keybind",
+          "description": "Hotkey to switch to Pal Preset 5.",
+          "default": "NINE"
+        }
+      }
+    }
+  }
+}

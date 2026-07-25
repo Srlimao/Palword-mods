@@ -288,6 +288,46 @@ METADATA_FREECAM = {
     }
 }
 
+METADATA_PRESET_SWITCH = {
+    "Enabled": {
+        "description": "Enable or disable PresetSwitch mod.",
+        "type": "boolean"
+    },
+    "Debug": {
+        "description": "Enable diagnostic logging console prints.",
+        "type": "boolean"
+    },
+    "KeyBinds": {
+        "description": "Keybindings for switching native in-game Pal presets."
+    },
+    "KeyBinds.Modifier": {
+        "description": "Global modifier key for preset shortcuts (ALT, CTRL, SHIFT, or NONE).",
+        "type": "enum",
+        "options": ["ALT", "CTRL", "SHIFT", "NONE"]
+    },
+    "KeyBinds.SwitchPreset1": {
+        "description": "Hotkey to switch to Pal Preset 1.",
+        "type": "keybind"
+    },
+    "KeyBinds.SwitchPreset2": {
+        "description": "Hotkey to switch to Pal Preset 2.",
+        "type": "keybind"
+    },
+    "KeyBinds.SwitchPreset3": {
+        "description": "Hotkey to switch to Pal Preset 3.",
+        "type": "keybind"
+    },
+    "KeyBinds.SwitchPreset4": {
+        "description": "Hotkey to switch to Pal Preset 4.",
+        "type": "keybind"
+    },
+    "KeyBinds.SwitchPreset5": {
+        "description": "Hotkey to switch to Pal Preset 5.",
+        "type": "keybind"
+    }
+}
+
+
 # --- Lua Tokenizer and Parser ---
 
 def tokenize_lua(source):
@@ -485,6 +525,12 @@ def main():
             "lua_path": "FreeCam/Scripts/FreeCam/config.lua",
             "metadata": METADATA_FREECAM,
             "version": "1.0.1"
+        },
+        {
+            "name": "PresetSwitch",
+            "lua_path": "PresetSwitch/Scripts/PresetSwitch/config.lua",
+            "metadata": METADATA_PRESET_SWITCH,
+            "version": "1.0.0"
         }
     ]
     
