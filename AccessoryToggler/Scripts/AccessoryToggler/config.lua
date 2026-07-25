@@ -506,21 +506,21 @@ local function ResolveActiveLanguage()
     if statusIntl and IntlLibrary then
         local langStatus, lang = pcall(function() return IntlLibrary:GetCurrentLanguage() end)
         if langStatus and type(lang) == "string" and lang ~= "" then
-            print("[AccessoryToggler] KismetInternationalizationLibrary string language: " .. tostring(lang))
+            M.DebugPrint("KismetInternationalizationLibrary string language: " .. tostring(lang))
             activeLang = lang
             langResolved = true
         elseif langStatus and type(lang) == "userdata" then
             local sStatus, s = pcall(function() return lang:ToString() end)
             if sStatus and s and s ~= "" then
-                print("[AccessoryToggler] KismetInternationalizationLibrary userdata language: " .. tostring(s))
+                M.DebugPrint("KismetInternationalizationLibrary userdata language: " .. tostring(s))
                 activeLang = s
                 langResolved = true
             end
         else
-            print("[AccessoryToggler] KismetInternationalizationLibrary returned invalid language type or empty string: " .. tostring(lang))
+            M.DebugPrint("KismetInternationalizationLibrary returned invalid language type or empty string: " .. tostring(lang))
         end
     else
-        print("[AccessoryToggler] Could not find KismetInternationalizationLibrary")
+        M.DebugPrint("Could not find KismetInternationalizationLibrary")
     end
     
     if not langResolved then
@@ -528,29 +528,29 @@ local function ResolveActiveLanguage()
         if status and SystemLibrary then
             local langStatus, lang = pcall(function() return SystemLibrary:GetDefaultLanguage() end)
             if langStatus and type(lang) == "string" and lang ~= "" then
-                print("[AccessoryToggler] KismetSystemLibrary string language: " .. tostring(lang))
+                M.DebugPrint("KismetSystemLibrary string language: " .. tostring(lang))
                 activeLang = lang
                 langResolved = true
             elseif langStatus and type(lang) == "userdata" then
                 local sStatus, s = pcall(function() return lang:ToString() end)
                 if sStatus and s and s ~= "" then
-                    print("[AccessoryToggler] KismetSystemLibrary userdata language: " .. tostring(s))
+                    M.DebugPrint("KismetSystemLibrary userdata language: " .. tostring(s))
                     activeLang = s
                     langResolved = true
                 end
             else
-                print("[AccessoryToggler] KismetSystemLibrary returned invalid language type or empty string: " .. tostring(lang))
+                M.DebugPrint("KismetSystemLibrary returned invalid language type or empty string: " .. tostring(lang))
             end
         else
-            print("[AccessoryToggler] Could not find KismetSystemLibrary")
+            M.DebugPrint("Could not find KismetSystemLibrary")
         end
     end
     
     if langResolved then
         CachedLang = activeLang
-        print("[AccessoryToggler] Game language locked to: " .. activeLang)
+        M.DebugPrint("Game language locked to: " .. activeLang)
     else
-        print("[AccessoryToggler] Failed to resolve any language, defaulting to: " .. activeLang)
+        M.DebugPrint("Failed to resolve any language, defaulting to: " .. activeLang)
     end
     
     return activeLang

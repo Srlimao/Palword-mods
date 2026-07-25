@@ -155,7 +155,7 @@ local function GetInventory()
         cachedInventory = inventory
         if not hasLoggedInventorySuccess then
             hasLoggedInventorySuccess = true
-            print("[AccessoryToggler] Successfully resolved and cached player inventory data!")
+            configMod.DebugPrint("Successfully resolved and cached player inventory data!")
         end
         return inventory
     end

@@ -133,7 +133,7 @@ function M.Draw(hud, SizeX, SizeY)
     if configMod.CONFIG.HUDX then
         if configMod.CONFIG.HUDX > 100.0 then
             local newX = tonumber(string.format("%.1f", (configMod.CONFIG.HUDX / maxScrollX) * 100.0))
-            print(string.format("[AccessoryToggler] Migrating HUDX from pixel %.1f to percentage %.1f%% (ScreenW: %.1f, HUDW: %.1f)", configMod.CONFIG.HUDX, newX, screenW, totalW))
+            configMod.DebugPrint(string.format("Migrating HUDX from pixel %.1f to percentage %.1f%% (ScreenW: %.1f, HUDW: %.1f)", configMod.CONFIG.HUDX, newX, screenW, totalW))
             configMod.CONFIG.HUDX = newX
             migrated = true
         end
@@ -147,7 +147,7 @@ function M.Draw(hud, SizeX, SizeY)
     if configMod.CONFIG.HUDY then
         if configMod.CONFIG.HUDY > 100.0 then
             local newY = tonumber(string.format("%.1f", (configMod.CONFIG.HUDY / maxScrollY) * 100.0))
-            print(string.format("[AccessoryToggler] Migrating HUDY from pixel %.1f to percentage %.1f%% (ScreenH: %.1f, HUDH: %.1f)", configMod.CONFIG.HUDY, newY, screenH, size))
+            configMod.DebugPrint(string.format("Migrating HUDY from pixel %.1f to percentage %.1f%% (ScreenH: %.1f, HUDH: %.1f)", configMod.CONFIG.HUDY, newY, screenH, size))
             configMod.CONFIG.HUDY = newY
             migrated = true
         end
@@ -160,7 +160,7 @@ function M.Draw(hud, SizeX, SizeY)
     if migrated then
         pcall(function()
             configMod.SaveConfig()
-            print(string.format("[AccessoryToggler] Legacy coordinate config successfully migrated: HUDX (%s -> %s%%), HUDY (%s -> %s%%)", tostring(oldX), tostring(configMod.CONFIG.HUDX), tostring(oldY), tostring(configMod.CONFIG.HUDY)))
+            configMod.DebugPrint(string.format("Legacy coordinate config successfully migrated: HUDX (%s -> %s%%), HUDY (%s -> %s%%)", tostring(oldX), tostring(configMod.CONFIG.HUDX), tostring(oldY), tostring(configMod.CONFIG.HUDY)))
         end)
     end
 

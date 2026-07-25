@@ -66,11 +66,15 @@ function M.GetFontAndScale()
     return font, scaleMult
 end
 
+function M.DebugPrint(msg)
+    configMod.DebugPrint(msg)
+end
+
 local LoggedKeys = {}
-local function LogOnce(key, msg)
+function M.LogOnce(key, msg)
     if not LoggedKeys[key] then
         LoggedKeys[key] = true
-        print("[AccessoryToggler] " .. msg)
+        M.DebugPrint(msg)
     end
 end
 
@@ -107,10 +111,10 @@ function M.GetTextSize(hud, text, baseScale)
         
         if success and width and width > 0 then
             TextSizeCache[cacheKey] = width
-            LogOnce("text_size_success", string.format("GetTextSize successfully measuring font sizes via UCanvas. Example: text='%s', scale=%.2f -> width=%.2f", tostring(text), finalScale, width))
+            M.LogOnce("text_size_success", string.format("GetTextSize successfully measuring font sizes via UCanvas. Example: text='%s', scale=%.2f -> width=%.2f", tostring(text), finalScale, width))
         else
             local errMsg = err or (not hud.Canvas and "hud.Canvas is nil" or "K2_TextSize returned nil size")
-            LogOnce("text_size_fail_" .. tostring(text), string.format("GetTextSize failed or returned 0 for text '%s' (scale=%.2f). Error: %s. Using fallback character spacing.", tostring(text), finalScale, tostring(errMsg)))
+            M.LogOnce("text_size_fail_" .. tostring(text), string.format("GetTextSize failed or returned 0 for text '%s' (scale=%.2f). Error: %s. Using fallback character spacing.", tostring(text), finalScale, tostring(errMsg)))
         end
     end
     
