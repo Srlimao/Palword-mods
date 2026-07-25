@@ -7,15 +7,6 @@
       "description": "Configuration for Debug.",
       "default": false
     },
-    "InputMode": {
-      "type": "enum",
-      "description": "Select the active control device for FreeCam (Keyboard or Gamepad).",
-      "default": "Keyboard",
-      "options": [
-        "Keyboard",
-        "Gamepad"
-      ]
-    },
     "DefaultSpeed": {
       "type": "number",
       "description": "Default camera flight speed.",
@@ -23,6 +14,16 @@
       "min": 2.0,
       "max": 150.0,
       "step": 1.0
+    },
+    "BaseOnly": {
+      "type": "boolean",
+      "description": "Configuration for BaseOnly.",
+      "default": true
+    },
+    "MaxRange": {
+      "type": "number",
+      "description": "Configuration for MaxRange.",
+      "default": 50.0
     },
     "KeyBinds": {
       "type": "section",
