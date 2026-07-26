@@ -123,13 +123,16 @@ $PreviewFileAbs = (Resolve-Path (Join-Path $ModStagingDir $ThumbnailName)).Path
 $ContentFolderEsc = $ContentFolderAbs.Replace('\', '\\')
 $PreviewFileEsc = $PreviewFileAbs.Replace('\', '\\')
 
-# Load description if available
-$DescriptionFile = Join-Path $ModDir "description_steam.txt"
+# Load description if available (check docs/description_steam.txt first, fallback to root)
+$DescriptionFile = Join-Path (Join-Path $ModDir "docs") "description_steam.txt"
+if (-not (Test-Path $DescriptionFile)) {
+    $DescriptionFile = Join-Path $ModDir "description_steam.txt"
+}
 $DescriptionEsc = ""
 if (Test-Path $DescriptionFile) {
     $DescriptionContent = Get-Content $DescriptionFile -Encoding UTF8 -Raw
     $DescriptionEsc = $DescriptionContent.Replace('\', '\\').Replace('"', '\"')
-    Write-Host "Found description_steam.txt. Including description in upload VDF." -ForegroundColor Cyan
+    Write-Host "Found description_steam.txt ($DescriptionFile). Including description in upload VDF." -ForegroundColor Cyan
 }
 $Title = "$($Info.ModName) v$Version"
 $TitleEsc = $Title.Replace('"', '\"')
