@@ -21,11 +21,13 @@ local function DrawCaveBeacon(hud, pos, color)
     local ueScreenBase = hud:Project(beaconBaseWorldBuffer, false)
     local ueScreenTop = hud:Project(beaconTopWorldBuffer, false)
 
-    -- Optimize: Convert UE FVector to native Lua table to avoid thousands of C++ property reflection lookups during distance checks
-    local screenBaseX, screenBaseY, screenBaseZ = ueScreenBase.X, ueScreenBase.Y, ueScreenBase.Z
-    local screenTopX, screenTopY, screenTopZ = ueScreenTop.X, ueScreenTop.Y, ueScreenTop.Z
+    -- Optimize: Check Z first to skip evaluating X/Y on off-screen items to save C++ reflection overhead
+    local screenBaseZ = ueScreenBase.Z
+    local screenTopZ = ueScreenTop.Z
     
     if screenBaseZ > 0.0 or screenTopZ > 0.0 then
+        local screenBaseX, screenBaseY = ueScreenBase.X, ueScreenBase.Y
+        local screenTopX, screenTopY = ueScreenTop.X, ueScreenTop.Y
         beaconColorBuffer.R = color.R; beaconColorBuffer.G = color.G; beaconColorBuffer.B = color.B
         
         beaconColorBuffer.A = 0.05
@@ -54,14 +56,15 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW,
     textWorldPosBuffer.Z = worldPos.Z + style.TextOffsetZ
     local ueTextScreen = hud:Project(textWorldPosBuffer, false)
     
+    local textScreenZ = ueTextScreen.Z
+    if textScreenZ <= 0.0 then return end
+
     local textScreenX = ueTextScreen.X
     local textScreenY = ueTextScreen.Y
-    local textScreenZ = ueTextScreen.Z
     
     -- Screen Viewport Bounds Culling: Only render text for items visible on the screen
     local margin = 100.0
-    local isVisibleOnScreen = (textScreenZ > 0.0) 
-                          and (textScreenX >= -margin) and (textScreenX <= screenW + margin) 
+    local isVisibleOnScreen = (textScreenX >= -margin) and (textScreenX <= screenW + margin)
                           and (textScreenY >= -margin) and (textScreenY <= screenH + margin)
     
     if isVisibleOnScreen then
