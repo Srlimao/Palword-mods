@@ -29,15 +29,22 @@ if ($Target -eq "Workshop" -or $Target -eq "Both") {
     }
     
     & "$PSScriptRoot\deploy_workshop.ps1" @workshopArgs
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Steam Workshop deployment failed."
-    }
 }
 
 # 2. Deploy to Nexus Mods if requested
 if ($Target -eq "Nexus" -or $Target -eq "Both") {
     Write-Host "`n[2/2] Deploying to Nexus Mods via MCP Server..." -ForegroundColor Yellow
     $mcpServerDir = "E:\MCP-SERVERS\mod-deploy-mcp-server"
+    if (-not $NexusApiKey) {
+        $NexusApiKey = $env:NEXUS_MODS_API_KEY
+    }
+    if (-not $NexusApiKey) {
+        $NexusApiKey = [System.Environment]::GetEnvironmentVariable('NEXUS_MODS_API_KEY', 'User')
+    }
+    if (-not $NexusApiKey) {
+        $NexusApiKey = [System.Environment]::GetEnvironmentVariable('NEXUS_MODS_API_KEY', 'Machine')
+    }
+
     if (Test-Path $mcpServerDir) {
         $nodeScript = @"
 import { uploadToNexusMods, createModZip } from './nexusClient.js';
@@ -56,6 +63,7 @@ async function run() {
   
   const version = infoData.Version || '1.0.0';
   const nexusModId = '$NexusModId' || workshopData.nexus_mod_id;
+  const nexusModFileId = '$NexusModFileId' || workshopData.nexus_mod_file_id || workshopData.nexus_file_id;
   const changeNote = '$ChangeNote' || workshopData.changenote || ('v' + version + ' release');
   const apiKey = '$NexusApiKey' || process.env.NEXUS_MODS_API_KEY || process.env.NEXUS_API_KEY;
 
@@ -73,6 +81,7 @@ async function run() {
     apiKey,
     gameDomain: workshopData.game_domain || 'palworld',
     modId: nexusModId,
+    modFileId: nexusModFileId,
     zipFilePath: tempZip,
     version,
     fileName: modName + ' v' + version,
