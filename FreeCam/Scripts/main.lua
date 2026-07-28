@@ -5,8 +5,13 @@
 local UEHelpers = require("UEHelpers")
 local config = require("FreeCam.config")
 local camera = require("FreeCam.camera")
+local ui_manager = require("FreeCam.ui_manager")
 
 print("[FreeCam] Detached Camera Component Mod Loaded successfully!")
+
+-- Initialize Building Window UI & Esc Key Handlers
+pcall(function() ui_manager.Initialize() end)
+
 
 local function GetKey(keyStr, fallbackKey)
     if not keyStr then return fallbackKey end

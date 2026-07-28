@@ -4,7 +4,7 @@
   "schema": {
     "Debug": {
       "type": "boolean",
-      "description": "Configuration for Debug.",
+      "description": "Print debug messages to the UE4SS log console.",
       "default": false
     },
     "DefaultSpeed": {
@@ -17,13 +17,16 @@
     },
     "BaseOnly": {
       "type": "boolean",
-      "description": "Configuration for BaseOnly.",
+      "description": "Restrict FreeCam mode to inside Base Camp boundaries.",
       "default": true
     },
     "MaxRange": {
       "type": "number",
-      "description": "Configuration for MaxRange.",
-      "default": 50.0
+      "description": "Maximum flight distance (meters) from starting position.",
+      "default": 50.0,
+      "min": 10.0,
+      "max": 500.0,
+      "step": 5.0
     },
     "KeyBinds": {
       "type": "section",
@@ -44,6 +47,16 @@
             "SHIFT",
             "NONE"
           ]
+        },
+        "BuildingWindowToggle": {
+          "type": "string",
+          "description": "Configuration for BuildingWindowToggle.",
+          "default": "L"
+        },
+        "ExitFreeCam": {
+          "type": "string",
+          "description": "Configuration for ExitFreeCam.",
+          "default": "ESCAPE"
         },
         "FlyUp": {
           "type": "keybind",
