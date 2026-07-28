@@ -246,11 +246,11 @@ end
 
 local function MergeConfig(target, source)
     if not source or type(source) ~= "table" then return end
-    for k, defaultVal in pairs(target) do
-        local sourceVal = source[k]
+    for k, sourceVal in pairs(source) do
         if sourceVal ~= nil then
-            if type(defaultVal) == "table" and type(sourceVal) == "table" and not IsArray(defaultVal) then
-                MergeConfig(defaultVal, sourceVal)
+            local targetVal = target[k]
+            if type(targetVal) == "table" and type(sourceVal) == "table" and not IsArray(targetVal) then
+                MergeConfig(targetVal, sourceVal)
             else
                 target[k] = sourceVal
             end
