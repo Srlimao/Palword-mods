@@ -1,0 +1,4 @@
+"D:\Mods\PalworkdModdingKit\PalworldModdingKit\Saved\Cooked\Windows\Pal\Content\Mods\UniversalBusPak\BPC_UniversalRPCBus.uasset" "../../../Pal/Content/Mods/UniversalBusPak/BPC_UniversalRPCBus.uasset"
+"D:\Mods\PalworkdModdingKit\PalworldModdingKit\Saved\Cooked\Windows\Pal\Content\Mods\UniversalBusPak\BPC_UniversalRPCBus.uexp" "../../../Pal/Content/Mods/UniversalBusPak/BPC_UniversalRPCBus.uexp"
+"D:\Mods\PalworkdModdingKit\PalworldModdingKit\Saved\Cooked\Windows\Pal\Content\Mods\UniversalBusPak\ModActor.uasset" "../../../Pal/Content/Mods/UniversalBusPak/ModActor.uasset"
+"D:\Mods\PalworkdModdingKit\PalworldModdingKit\Saved\Cooked\Windows\Pal\Content\Mods\UniversalBusPak\ModActor.uexp" "../../../Pal/Content/Mods/UniversalBusPak/ModActor.uexp"

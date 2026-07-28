@@ -1,0 +1,6 @@
+{
+    "ModName": "UniversalBusPakTest",
+    "PackageName": "UniversalBusPakTest",
+    "Version": "1.0.0",
+    "Description": "Simple example UE4SS Lua mod demonstrating client-to-server RPC messaging via UniversalBusPak"
+}

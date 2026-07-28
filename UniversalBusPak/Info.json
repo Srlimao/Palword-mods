@@ -1,0 +1,6 @@
+{
+    "Name": "UniversalBusPak",
+    "Version": "1.0.0",
+    "Author": "Palworld Modding Community",
+    "Description": "Native Unreal Engine Blueprint (.pak) Client-Server RPC & Message Bus for Palworld Mods"
+}
