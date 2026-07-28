@@ -6,6 +6,7 @@ local CONFIG = configMod.CONFIG
 local M = {}
 
 M.isOpen = false
+M.isCompletionistViewOpen = false
 local selectedIndex = 1
 
 local menuItems = {
@@ -110,6 +111,22 @@ local menuItems = {
         type = "enum",
         values = { "All", "Large+", "HugeOnly", "None" },
         transKey = "Settings_EggFilter"
+    },
+    {
+        name = "Show Progress Tracker HUD",
+        get = function() return CONFIG.Completionist and CONFIG.Completionist.ShowHUDTracker end,
+        set = function(v) if CONFIG.Completionist then CONFIG.Completionist.ShowHUDTracker = v end end,
+        type = "boolean",
+        transKey = "Settings_ShowProgressTracker"
+    },
+    {
+        name = "Completionist List",
+        get = function() return M.isCompletionistViewOpen and "Opened" or "Press ALT+Right" end,
+        type = "action",
+        action = function()
+            M.isCompletionistViewOpen = not M.isCompletionistViewOpen
+        end,
+        transKey = "Settings_CompletionistList"
     },
     {
         name = "Advanced Styles",

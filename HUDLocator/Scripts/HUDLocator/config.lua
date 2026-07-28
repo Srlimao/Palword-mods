@@ -212,6 +212,12 @@ M.CONFIG = {
             FontCharW = 8.0,
             FontLineH = 12.0
         }
+    },
+    Completionist = {
+        Enabled = true,
+        ShowHUDTracker = true,
+        ShowInMenu = true,
+        AutoHighlightRegion = true
     }
 }
 

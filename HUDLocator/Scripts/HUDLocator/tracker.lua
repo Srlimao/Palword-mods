@@ -2,6 +2,7 @@ local UEHelpers = require("UEHelpers")
 local configMod = require("HUDLocator.config")
 local scanners = require("HUDLocator.scanners")
 local utils = require("HUDLocator.utils")
+local completion = require("HUDLocator.completion")
 
 local M = {}
 
@@ -188,6 +189,9 @@ function M.scan()
     else
         M.activePals = {}
     end
+
+    -- 9. Scan Completionist Save Data
+    pcall(completion.ScanCompletionData)
 end
 
 return M

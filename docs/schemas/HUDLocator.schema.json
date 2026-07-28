@@ -44,6 +44,11 @@
           "max": 5000,
           "step": 250
         },
+        "MaxDistance": {
+          "type": "number",
+          "description": "Configuration for MaxDistance.",
+          "default": 15000.0
+        },
         "FontScale": {
           "type": "number",
           "description": "Configuration for FontScale.",
@@ -391,6 +396,20 @@
             "Both",
             "Chests",
             "Junk"
+          ]
+        },
+        "GradeFilter": {
+          "type": "enum",
+          "description": "Filter chests by tier/grade (All, Grade2+, Grade3+, Grade4+, Grade5+, Grade6Only, None).",
+          "default": "All",
+          "options": [
+            "All",
+            "Grade2+",
+            "Grade3+",
+            "Grade4+",
+            "Grade5+",
+            "Grade6Only",
+            "None"
           ]
         },
         "MaxDistance": {
@@ -1062,6 +1081,252 @@
               "step": 0.5
             }
           }
+        }
+      }
+    },
+    "Pals": {
+      "type": "section",
+      "description": "Configure tracking overlay for Wild / Boss / Shiny Pals.",
+      "properties": {
+        "Enabled": {
+          "type": "boolean",
+          "description": "Show Pals on HUD.",
+          "default": true
+        },
+        "MaxDistance": {
+          "type": "number",
+          "description": "Maximum tracking range for Pals (cm).",
+          "default": 15000.0,
+          "min": 1000,
+          "max": 100000,
+          "step": 1000
+        },
+        "FilterMode": {
+          "type": "enum",
+          "description": "Filtering mode for Pal radar (AllPals, BossOnly, ShinyOnly, TrackerListOnly, PassivesThreshold).",
+          "default": "TrackerListOnly",
+          "options": [
+            "AllPals",
+            "BossOnly",
+            "ShinyOnly",
+            "TrackerListOnly",
+            "PassivesThreshold"
+          ]
+        },
+        "ShowPassives": {
+          "type": "boolean",
+          "description": "Display passive skill names on the Pal HUD tag.",
+          "default": true
+        },
+        "ShowLevel": {
+          "type": "boolean",
+          "description": "Display Pal character level on the HUD tag.",
+          "default": true
+        },
+        "TrackerPals": {
+          "type": "array",
+          "description": "List of specific Pals and passive criteria to track.",
+          "default": [
+            {
+              "palname": "Lamball",
+              "shiny": false,
+              "boss": false,
+              "passive": {
+                "passives": {
+                  "1": "Runner",
+                  "2": "Motivational Leader"
+                },
+                "min_passive_threshold": 1
+              }
+            },
+            {
+              "palname": "Jetragon",
+              "shiny": false,
+              "boss": true,
+              "passive": {
+                "passives": {
+                  "1": "Legend",
+                  "2": "Divine Dragon",
+                  "3": "Swift",
+                  "4": "Runner"
+                },
+                "min_passive_threshold": 3
+              }
+            },
+            {
+              "palname": "Cattiva",
+              "shiny": true,
+              "boss": false,
+              "passive": {
+                "passives": {
+                  "1": "Lucky",
+                  "2": "Coward"
+                },
+                "min_passive_threshold": 2
+              }
+            }
+          ]
+        },
+        "Style": {
+          "type": "group",
+          "description": "Style customization for this category's overlay widgets.",
+          "properties": {
+            "DrawBox": {
+              "type": "boolean",
+              "description": "Draw a background border box around the label.",
+              "default": false
+            },
+            "FontScale": {
+              "type": "number",
+              "description": "Font size multiplier for the main label text.",
+              "default": 1.2,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "SmallFontScale": {
+              "type": "number",
+              "description": "Font size multiplier for sub-text (e.g. distance/details).",
+              "default": 0.9,
+              "min": 0.5,
+              "max": 3.0,
+              "step": 0.1
+            },
+            "TextOffsetZ": {
+              "type": "number",
+              "description": "Vertical offset (units) above the entity to position the HUD tag.",
+              "default": 120.0,
+              "min": -200,
+              "max": 500,
+              "step": 10
+            },
+            "ShinyColor": {
+              "type": "color",
+              "description": "RGBA color of Shiny Pal labels.",
+              "default": {
+                "R": 1.0,
+                "G": 0.85,
+                "B": 0.1,
+                "A": 1.0
+              }
+            },
+            "BossColor": {
+              "type": "color",
+              "description": "RGBA color of Alpha Boss Pal labels.",
+              "default": {
+                "R": 1.0,
+                "G": 0.25,
+                "B": 0.25,
+                "A": 1.0
+              }
+            },
+            "NameColor": {
+              "type": "color",
+              "description": "RGBA color of the name / label text.",
+              "default": {
+                "R": 0.2,
+                "G": 0.8,
+                "B": 1.0,
+                "A": 1.0
+              }
+            },
+            "DistColor": {
+              "type": "color",
+              "description": "RGBA color of the distance / details text.",
+              "default": {
+                "R": 0.2,
+                "G": 0.8,
+                "B": 1.0,
+                "A": 1.0
+              }
+            },
+            "BoxColor": {
+              "type": "color",
+              "description": "RGBA background fill color of the bounding box.",
+              "default": {
+                "R": 0.8,
+                "G": 0.8,
+                "B": 1.0,
+                "A": 1.0
+              }
+            },
+            "BorderColor": {
+              "type": "color",
+              "description": "RGBA border outline color of the bounding box.",
+              "default": {
+                "R": 0.0,
+                "G": 0.0,
+                "B": 0.0,
+                "A": 1.0
+              }
+            },
+            "BorderWidth": {
+              "type": "number",
+              "description": "Border line thickness.",
+              "default": 1.5,
+              "min": 0.5,
+              "max": 5.0,
+              "step": 0.1
+            },
+            "BoxPadX": {
+              "type": "number",
+              "description": "Horizontal padding inside the bounding box.",
+              "default": 10.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "BoxPadY": {
+              "type": "number",
+              "description": "Vertical padding inside the bounding box.",
+              "default": 6.0,
+              "min": 0,
+              "max": 50,
+              "step": 1
+            },
+            "FontCharW": {
+              "type": "number",
+              "description": "Font width calibration value.",
+              "default": 8.0,
+              "min": 1,
+              "max": 20,
+              "step": 0.5
+            },
+            "FontLineH": {
+              "type": "number",
+              "description": "Font line height calibration value.",
+              "default": 12.0,
+              "min": 1,
+              "max": 30,
+              "step": 0.5
+            }
+          }
+        }
+      }
+    },
+    "Completionist": {
+      "type": "section",
+      "description": "Completionist settings.",
+      "properties": {
+        "Enabled": {
+          "type": "boolean",
+          "description": "Configuration for Enabled.",
+          "default": true
+        },
+        "ShowHUDTracker": {
+          "type": "boolean",
+          "description": "Configuration for ShowHUDTracker.",
+          "default": true
+        },
+        "ShowInMenu": {
+          "type": "boolean",
+          "description": "Configuration for ShowInMenu.",
+          "default": true
+        },
+        "AutoHighlightRegion": {
+          "type": "boolean",
+          "description": "Configuration for AutoHighlightRegion.",
+          "default": true
         }
       }
     }
