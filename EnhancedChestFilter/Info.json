@@ -1,0 +1,7 @@
+{
+  "name": "EnhancedChestFilter",
+  "version": "1.0.0",
+  "description": "Adds a 'Strict Existing Items Only' filter mode to Palworld chest containers.",
+  "author": "Antigravity",
+  "enabled": true
+}
