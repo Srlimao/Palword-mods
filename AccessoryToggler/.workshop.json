@@ -2,6 +2,6 @@
     "publishedfileid":  "3764889811",
     "nexus_mod_id":  "3873",
     "nexus_mod_file_id":  "7680642",
-    "changenote":  "v2.6.1 - Suppressed unguarded console logs when Debug is disabled, centralized logger utilities, and streamlined workshop description.",
-    "last_published_version":  "2.6.1"
+    "changenote":  "v2.6.2 - Fixed HUD position resetting to default on restart by preserving custom HUDX and HUDY percentage coordinates during configuration load.",
+    "last_published_version":  "2.6.2"
 }
