@@ -1,0 +1,6 @@
+{
+  "DirectToInventory": true,
+  "ImplantsPerButcher": 1,
+  "GuaranteeOneImplant": true,
+  "DebugLogging": false
+}
