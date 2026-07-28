@@ -13,8 +13,7 @@ if (-not (Test-Path $ModDir)) {
 }
 
 # Primary local debug game directory
-$BaseDebugDir = "D:\Games\Palworld_Alt\Mods\NativeMods\UE4SS\Mods"
-$SecondaryDebugDir = "C:\Program Files (x86)\Steam\steamapps\common\Palworld\Mods\NativeMods\UE4SS\Mods"
+$BaseDebugDir = "C:\Program Files (x86)\Steam\steamapps\common\Palworld\Mods\NativeMods\UE4SS\Mods"
 $ServerDebugDir = "D:\Games\GameServers\PalworldLocal\Mods\NativeMods\UE4SS\Mods"
 
 # Determine target directories
@@ -23,8 +22,6 @@ $Targets = @()
 if (Test-Path $BaseDebugDir) {
     $Targets += (Join-Path $BaseDebugDir "$($ModName)DEBUG")
     $Targets += (Join-Path $BaseDebugDir $ModName)
-} elseif (Test-Path $SecondaryDebugDir) {
-    $Targets += (Join-Path $SecondaryDebugDir "$($ModName)DEBUG")
 }
 
 # MapsPlusServer special handling for local test server

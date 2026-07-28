@@ -57,7 +57,7 @@ METADATA_HUD_LOCATOR = {
         "type": "keybind"
     },
     
-    # Categories (Players, Relics, Chests, Eggs, Caves, Loot, Notes)
+    # Categories (Players, Relics, Chests, Eggs, Caves, Loot, Notes, Pals)
     "Players": { "description": "Configure tracking overlay for other Players." },
     "Relics": { "description": "Configure tracking overlay for Lifmunk Relics." },
     "Chests": { "description": "Configure tracking overlay for Treasure Chests." },
@@ -65,6 +65,7 @@ METADATA_HUD_LOCATOR = {
     "Caves": { "description": "Configure tracking overlay for Dungeon/Cave entrances." },
     "Loot": { "description": "Configure tracking overlay for dropped ground items." },
     "Notes": { "description": "Configure tracking overlay for Memo Journals / Notes." },
+    "Pals": { "description": "Configure tracking overlay for Wild / Boss / Shiny Pals." },
     
     "Players.Enabled": { "description": "Show other players on HUD.", "type": "boolean" },
     "Players.MaxDistance": { "description": "Maximum tracking range for players (cm).", "type": "number", "min": 1000, "max": 100000, "step": 1000 },
@@ -75,6 +76,7 @@ METADATA_HUD_LOCATOR = {
     
     "Chests.Enabled": { "description": "Show chests on HUD.", "type": "boolean" },
     "Chests.Filter": { "description": "Filter which chests to track: Both, Chests (locked/rare only), or Junk (common items).", "type": "enum", "options": ["Both", "Chests", "Junk"] },
+    "Chests.GradeFilter": { "description": "Filter chests by tier/grade (All, Grade2+, Grade3+, Grade4+, Grade5+, Grade6Only, None).", "type": "enum", "options": ["All", "Grade2+", "Grade3+", "Grade4+", "Grade5+", "Grade6Only", "None"] },
     "Chests.MaxDistance": { "description": "Maximum tracking range for chests (cm).", "type": "number", "min": 1000, "max": 100000, "step": 1000 },
     
     "Eggs.Filter": { "description": "Filter which eggs to track: All, Large+ (Large, Huge), HugeOnly, or None.", "type": "enum", "options": ["All", "Large+", "HugeOnly", "None"] },
@@ -89,10 +91,17 @@ METADATA_HUD_LOCATOR = {
     
     "Notes.Enabled": { "description": "Show Memo Journals/Notes on HUD.", "type": "boolean" },
     "Notes.MaxDistance": { "description": "Maximum tracking range for notes (cm).", "type": "number", "min": 1000, "max": 100000, "step": 1000 },
+
+    "Pals.Enabled": { "description": "Show Pals on HUD.", "type": "boolean" },
+    "Pals.MaxDistance": { "description": "Maximum tracking range for Pals (cm).", "type": "number", "min": 1000, "max": 100000, "step": 1000 },
+    "Pals.FilterMode": { "description": "Filtering mode for Pal radar (AllPals, BossOnly, ShinyOnly, TrackerListOnly, PassivesThreshold).", "type": "enum", "options": ["AllPals", "BossOnly", "ShinyOnly", "TrackerListOnly", "PassivesThreshold"] },
+    "Pals.ShowPassives": { "description": "Display passive skill names on the Pal HUD tag.", "type": "boolean" },
+    "Pals.ShowLevel": { "description": "Display Pal character level on the HUD tag.", "type": "boolean" },
+    "Pals.TrackerPals": { "description": "List of specific Pals and passive criteria to track.", "type": "array" },
 }
 
 # Add common Category Style fields recursively to avoid boilerplate
-for category in ["Players", "Relics", "Chests", "Eggs", "Caves", "Loot", "Notes"]:
+for category in ["Players", "Relics", "Chests", "Eggs", "Caves", "Loot", "Notes", "Pals"]:
     METADATA_HUD_LOCATOR[f"{category}.Style"] = { "description": "Style customization for this category's overlay widgets." }
     METADATA_HUD_LOCATOR[f"{category}.Style.DrawBox"] = { "description": "Draw a background border box around the label.", "type": "boolean" }
     METADATA_HUD_LOCATOR[f"{category}.Style.FontScale"] = { "description": "Font size multiplier for the main label text.", "type": "number", "min": 0.5, "max": 3.0, "step": 0.1 }
@@ -107,6 +116,9 @@ for category in ["Players", "Relics", "Chests", "Eggs", "Caves", "Loot", "Notes"
     METADATA_HUD_LOCATOR[f"{category}.Style.BoxPadY"] = { "description": "Vertical padding inside the bounding box.", "type": "number", "min": 0, "max": 50, "step": 1 }
     METADATA_HUD_LOCATOR[f"{category}.Style.FontCharW"] = { "description": "Font width calibration value.", "type": "number", "min": 1, "max": 20, "step": 0.5 }
     METADATA_HUD_LOCATOR[f"{category}.Style.FontLineH"] = { "description": "Font line height calibration value.", "type": "number", "min": 1, "max": 30, "step": 0.5 }
+
+METADATA_HUD_LOCATOR["Pals.Style.ShinyColor"] = { "description": "RGBA color of Shiny Pal labels.", "type": "color" }
+METADATA_HUD_LOCATOR["Pals.Style.BossColor"] = { "description": "RGBA color of Alpha Boss Pal labels.", "type": "color" }
 
 
 METADATA_ACCESSORY_TOGGLER = {
@@ -215,6 +227,21 @@ METADATA_HOLD_TO_FIRE = {
 }
 
 METADATA_FREECAM = {
+    "Debug": {
+        "description": "Print debug messages to the UE4SS log console.",
+        "type": "boolean"
+    },
+    "BaseOnly": {
+        "description": "Restrict FreeCam mode to inside Base Camp boundaries.",
+        "type": "boolean"
+    },
+    "MaxRange": {
+        "description": "Maximum flight distance (meters) from starting position.",
+        "type": "number",
+        "min": 10.0,
+        "max": 500.0,
+        "step": 5.0
+    },
     "AutoSwitchOnBuild": {
         "description": "Automatically enable FreeCam when selecting a building structure in a Base Camp.",
         "type": "boolean"
@@ -441,7 +468,7 @@ def extract_and_parse_config(lua_content):
 # --- Schema Builder ---
 
 def build_schema(config_node, path_parts, metadata_db):
-    path_str = ".".join(path_parts)
+    path_str = ".".join(str(p) for p in path_parts)
     meta = metadata_db.get(path_str, {})
     
     is_color = isinstance(config_node, dict) and 'R' in config_node and 'G' in config_node and 'B' in config_node
@@ -449,16 +476,17 @@ def build_schema(config_node, path_parts, metadata_db):
     if isinstance(config_node, dict) and not is_color:
         explicit_type = meta.get("type")
         if explicit_type in ("array", "map"):
+            default_val = list(config_node.values()) if isinstance(config_node, dict) else (config_node if isinstance(config_node, list) else [])
             return {
                 "type": explicit_type,
                 "description": meta.get("description", f"Configuration for {path_parts[-1]}."),
-                "default": [] if explicit_type == "array" else {}
+                "default": default_val if explicit_type == "array" else (config_node if isinstance(config_node, dict) else {})
             }
             
         node_type = "section" if len(path_parts) == 1 else "group"
         properties = {}
         for key, val in config_node.items():
-            properties[key] = build_schema(val, path_parts + [key], metadata_db)
+            properties[str(key)] = build_schema(val, path_parts + [key], metadata_db)
             
         result = {
             "type": node_type,
