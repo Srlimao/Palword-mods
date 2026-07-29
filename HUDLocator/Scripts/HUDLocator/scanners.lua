@@ -79,25 +79,35 @@ function M.ScanRelics(playerPos, maxDistSq)
             pcall(function()
                 local ueRelicPos = relic:K2_GetActorLocation()
                 if ueRelicPos then
-                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
-                    local rx, ry, rz = ueRelicPos.X, ueRelicPos.Y, ueRelicPos.Z
-                    local dx, dy, dz = rx - playerPos.X, ry - playerPos.Y, rz - playerPos.Z
-                    local distSq = dx*dx + dy*dy + dz*dz
-                    if distSq <= maxDistSq then
-                        local name = nil
-                        local statusType, relicType = pcall(function() return relic:GetRelicType() end)
-                        if not statusType or not relicType then
-                            statusType, relicType = pcall(function() return relic.RelicType end)
+                    -- Optimize: Sequential axis evaluation. Check X first and short-circuit to avoid reflection overhead for Y/Z of distant items.
+                    local rx = ueRelicPos.X
+                    local dx = rx - playerPos.X
+                    local dxSq = dx * dx
+                    if dxSq <= maxDistSq then
+                        local ry = ueRelicPos.Y
+                        local dy = ry - playerPos.Y
+                        local dySq = dy * dy
+                        if (dxSq + dySq) <= maxDistSq then
+                            local rz = ueRelicPos.Z
+                            local dz = rz - playerPos.Z
+                            local distSq = dxSq + dySq + dz * dz
+                            if distSq <= maxDistSq then
+                                local name = nil
+                                local statusType, relicType = pcall(function() return relic:GetRelicType() end)
+                                if not statusType or not relicType then
+                                    statusType, relicType = pcall(function() return relic.RelicType end)
+                                end
+                                local resolvedType = (statusType and relicType) and relicType or 0
+                                local trans = utils.GetTranslatedRelicName(resolvedType)
+                                if trans then
+                                    name = trans
+                                else
+                                    name = configMod.GetTranslation("Relic", "Relic")
+                                end
+                                local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
+                                table.insert(newRelics, { X = rx, Y = ry, Z = rz, Name = name, DistStr = distStr })
+                            end
                         end
-                        local resolvedType = (statusType and relicType) and relicType or 0
-                        local trans = utils.GetTranslatedRelicName(resolvedType)
-                        if trans then
-                            name = trans
-                        else
-                            name = configMod.GetTranslation("Relic", "Relic")
-                        end
-                        local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                        table.insert(newRelics, { X = rx, Y = ry, Z = rz, Name = name, DistStr = distStr })
                     end
                 end
             end)
@@ -201,10 +211,19 @@ function M.ScanChests(playerPos, maxDistSq)
             pcall(function()
                 local ueChestPos = chest:K2_GetActorLocation()
                 if ueChestPos then
-                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
-                    local cx, cy, cz = ueChestPos.X, ueChestPos.Y, ueChestPos.Z
-                    local dx, dy, dz = cx - playerPos.X, cy - playerPos.Y, cz - playerPos.Z
-                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
+                    -- Optimize: Sequential axis evaluation. Check X first and short-circuit to avoid reflection overhead for Y/Z of distant items.
+                    local cx = ueChestPos.X
+                    local dx = cx - playerPos.X
+                    local dxSq = dx * dx
+                    if dxSq <= maxDistSq then
+                        local cy = ueChestPos.Y
+                        local dy = cy - playerPos.Y
+                        local dySq = dy * dy
+                        if (dxSq + dySq) <= maxDistSq then
+                            local cz = ueChestPos.Z
+                            local dz = cz - playerPos.Z
+                            local distSq = dxSq + dySq + dz * dz
+                            if distSq <= maxDistSq then
                         local name = configMod.GetTranslation("Chest", "Chest")
                         local isJunk = false
                         local gradeVal = nil
@@ -256,8 +275,10 @@ function M.ScanChests(playerPos, maxDistSq)
                         end
 
                         if shouldAdd then
-                            local distStr = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0) .. "m"
+                            local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
                             table.insert(newChests, { X = cx, Y = cy, Z = cz, Name = name, DistStr = distStr })
+                        end
+                            end
                         end
                     end
                 end
@@ -280,10 +301,19 @@ function M.ScanEggs(playerPos, maxDistSq, eggFilter, debug)
             pcall(function()
                 local ueEggPos = egg:K2_GetActorLocation()
                 if ueEggPos then
-                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
-                    local ex, ey, ez = ueEggPos.X, ueEggPos.Y, ueEggPos.Z
-                    local dx, dy, dz = ex - playerPos.X, ey - playerPos.Y, ez - playerPos.Z
-                    if (dx*dx + dy*dy + dz*dz) <= maxDistSq then
+                    -- Optimize: Sequential axis evaluation. Check X first and short-circuit to avoid reflection overhead for Y/Z of distant items.
+                    local ex = ueEggPos.X
+                    local dx = ex - playerPos.X
+                    local dxSq = dx * dx
+                    if dxSq <= maxDistSq then
+                        local ey = ueEggPos.Y
+                        local dy = ey - playerPos.Y
+                        local dySq = dy * dy
+                        if (dxSq + dySq) <= maxDistSq then
+                            local ez = ueEggPos.Z
+                            local dz = ez - playerPos.Z
+                            local distSq = dxSq + dySq + dz * dz
+                            if distSq <= maxDistSq then
                         local sizeStr = ""
                         local statusScale, scale = pcall(function() return egg.Scale end)
                         
@@ -339,8 +369,10 @@ function M.ScanEggs(playerPos, maxDistSq, eggFilter, debug)
                                 transSize = configMod.GetTranslation(sizeStr, sizeStr) .. " "
                             end
                             
-                            local distStr = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0) .. "m"
+                            local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
                             table.insert(newEggs, { X = ex, Y = ey, Z = ez, SizePrefix = transSize, Name = name, FullName = transSize .. name, DistStr = distStr })
+                        end
+                            end
                         end
                     end
                 end
@@ -369,17 +401,26 @@ function M.ScanCaves(playerPos, maxDistSq)
             local status, err = pcall(function()
                 local ueCavePos = cave:K2_GetActorLocation()
                 if ueCavePos then
-                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
-                    local cx, cy, cz = ueCavePos.X, ueCavePos.Y, ueCavePos.Z
+                    -- Optimize: Sequential axis evaluation. Check X first and short-circuit to avoid reflection overhead for Y/Z of distant items.
                     successCount = successCount + 1
-                    local dx, dy, dz = cx - playerPos.X, cy - playerPos.Y, cz - playerPos.Z
-                    local distSq = dx*dx + dy*dy + dz*dz
-                    if distSq < closestDistSq then
-                        closestDistSq = distSq
-                    end
-                    if distSq <= maxDistSq then
-                        local level, state = utils.GetDungeonDetails(cave)
-                        local dungeonName = nil
+                    local cx = ueCavePos.X
+                    local dx = cx - playerPos.X
+                    local dxSq = dx * dx
+                    -- Keep closestDistSq computation, we evaluate remaining dimensions only if needed for global minimum or if inside bounds
+                    if dxSq <= maxDistSq or dxSq < closestDistSq then
+                        local cy = ueCavePos.Y
+                        local dy = cy - playerPos.Y
+                        local dySq = dy * dy
+                        if (dxSq + dySq) <= maxDistSq or (dxSq + dySq) < closestDistSq then
+                            local cz = ueCavePos.Z
+                            local dz = cz - playerPos.Z
+                            local distSq = dxSq + dySq + dz * dz
+                            if distSq < closestDistSq then
+                                closestDistSq = distSq
+                            end
+                            if distSq <= maxDistSq then
+                                local level, state = utils.GetDungeonDetails(cave)
+                                local dungeonName = nil
                         pcall(function()
                             local stageModel = cave.StageModel
                             if stageModel and stageModel:IsValid() then
@@ -418,6 +459,8 @@ function M.ScanCaves(playerPos, maxDistSq)
                             Name = nameStr,
                             DistStr = distStr
                         })
+                            end
+                        end
                     end
                 end
             end)
@@ -536,11 +579,19 @@ function M.ScanLoot(playerPos, maxDistSq, filters)
             pcall(function()
                 local ueLootPos = actor:K2_GetActorLocation()
                 if ueLootPos then
-                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
-                    local lx, ly, lz = ueLootPos.X, ueLootPos.Y, ueLootPos.Z
-                    local dx, dy, dz = lx - playerPos.X, ly - playerPos.Y, lz - playerPos.Z
-                    local distSq = dx*dx + dy*dy + dz*dz
-                    if distSq <= maxDistSq then
+                    -- Optimize: Sequential axis evaluation. Check X first and short-circuit to avoid reflection overhead for Y/Z of distant items.
+                    local lx = ueLootPos.X
+                    local dx = lx - playerPos.X
+                    local dxSq = dx * dx
+                    if dxSq <= maxDistSq then
+                        local ly = ueLootPos.Y
+                        local dy = ly - playerPos.Y
+                        local dySq = dy * dy
+                        if (dxSq + dySq) <= maxDistSq then
+                            local lz = ueLootPos.Z
+                            local dz = lz - playerPos.Z
+                            local distSq = dxSq + dySq + dz * dz
+                            if distSq <= maxDistSq then
                         local name, itemIdStr = GetItemDetails(actor)
                         if name and name ~= "" then
                             local shouldAdd = true
@@ -560,6 +611,8 @@ function M.ScanLoot(playerPos, maxDistSq, filters)
                             if shouldAdd then
                                 local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
                                 table.insert(newLoot, { X = lx, Y = ly, Z = lz, Name = name, DistStr = distStr })
+                            end
+                        end
                             end
                         end
                     end
@@ -584,25 +637,35 @@ function M.ScanNotes(playerPos, maxDistSq)
             pcall(function()
                 local ueNotePos = note:K2_GetActorLocation()
                 if ueNotePos then
-                    -- Optimize: Inline C++ properties to locals and defer table allocation to reduce GC pressure in loops
-                    local nx, ny, nz = ueNotePos.X, ueNotePos.Y, ueNotePos.Z
-                    local dx, dy, dz = nx - playerPos.X, ny - playerPos.Y, nz - playerPos.Z
-                    local distSq = dx*dx + dy*dy + dz*dz
-                    if distSq <= maxDistSq then
-                        local name = nil
-                        local statusName, noteKey = pcall(function() return note.NoteRowName.Key end)
-                        if statusName and noteKey then
-                            local trans = utils.GetTranslatedNoteName(noteKey)
-                            if trans then
-                                name = trans
-                            else
-                                name = configMod.GetTranslation("Note", "Journal")
+                    -- Optimize: Sequential axis evaluation. Check X first and short-circuit to avoid reflection overhead for Y/Z of distant items.
+                    local nx = ueNotePos.X
+                    local dx = nx - playerPos.X
+                    local dxSq = dx * dx
+                    if dxSq <= maxDistSq then
+                        local ny = ueNotePos.Y
+                        local dy = ny - playerPos.Y
+                        local dySq = dy * dy
+                        if (dxSq + dySq) <= maxDistSq then
+                            local nz = ueNotePos.Z
+                            local dz = nz - playerPos.Z
+                            local distSq = dxSq + dySq + dz * dz
+                            if distSq <= maxDistSq then
+                                local name = nil
+                                local statusName, noteKey = pcall(function() return note.NoteRowName.Key end)
+                                if statusName and noteKey then
+                                    local trans = utils.GetTranslatedNoteName(noteKey)
+                                    if trans then
+                                        name = trans
+                                    else
+                                        name = configMod.GetTranslation("Note", "Journal")
+                                    end
+                                else
+                                    name = configMod.GetTranslation("Note", "Journal")
+                                end
+                                local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
+                                table.insert(newNotes, { X = nx, Y = ny, Z = nz, Name = name, DistStr = distStr })
                             end
-                        else
-                            name = configMod.GetTranslation("Note", "Journal")
                         end
-                        local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                        table.insert(newNotes, { X = nx, Y = ny, Z = nz, Name = name, DistStr = distStr })
                     end
                 end
             end)
@@ -679,11 +742,20 @@ function M.ScanPals(playerPos, maxDistSq, palConfig)
             pcall(function()
                 local uePos = actor:K2_GetActorLocation()
                 if uePos then
-                    local px, py, pz = uePos.X, uePos.Y, uePos.Z
-                    local dx, dy, dz = px - playerPos.X, py - playerPos.Y, pz - playerPos.Z
-                    local distSq = dx*dx + dy*dy + dz*dz
+                    -- Optimize: Sequential axis evaluation. Check X first and short-circuit to avoid reflection overhead for Y/Z of distant items.
+                    local px = uePos.X
+                    local dx = px - playerPos.X
+                    local dxSq = dx * dx
+                    if dxSq <= maxDistSq then
+                        local py = uePos.Y
+                        local dy = py - playerPos.Y
+                        local dySq = dy * dy
+                        if (dxSq + dySq) <= maxDistSq then
+                            local pz = uePos.Z
+                            local dz = pz - playerPos.Z
+                            local distSq = dxSq + dySq + dz * dz
 
-                    if distSq <= maxDistSq then
+                            if distSq <= maxDistSq then
                         local charParam = nil
                         pcall(function() charParam = actor:GetCharacterParameterComponent() end)
 
@@ -827,6 +899,8 @@ function M.ScanPals(playerPos, maxDistSq, palConfig)
                                     Passives = showPassives and translatedPassives or {},
                                     DistStr = distStr
                                 })
+                            end
+                        end
                             end
                         end
                     end

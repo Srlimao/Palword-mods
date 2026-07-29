@@ -4,3 +4,6 @@
 ## 2024-07-27 - Deferred FVector Property Access in Projection Loops
 **Learning:** Checking the `.Z` property (representing screen depth/visibility) on an Unreal `FVector` returned by `hud:Project()` first before accessing `.X` and `.Y` avoids unnecessary C++ reflection overhead for items that are off-screen.
 **Action:** In rendering or projection loops, read the `.Z` property of projected vectors first. Conditionally read the `.X` and `.Y` properties only if `.Z > 0.0` (i.e., the item is visible).
+## 2024-07-27 - Distance Check Short-Circuiting
+**Learning:** Checking X, Y, and Z axes of `FVector` sequentially and short-circuiting on distance failures effectively avoids native property access for off-screen/distant objects. This saves C++ reflection time in intensive scanning loops over thousands of game actors (like items, caves, relics).
+**Action:** Always sequentially evaluate `dx*dx`, `dxSq+dy*dy`, then `dxSq+dySq+dz*dz` against `maxDistSq`, reading native properties one-by-one as required.
