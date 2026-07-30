@@ -201,15 +201,25 @@ function M.FindClosestChestGuidFromRegistry()
         if player and player:IsValid() then
             local playerLoc = player:K2_GetActorLocation()
             local px, py, pz = playerLoc.X, playerLoc.Y, playerLoc.Z
+            -- Optimize: Use squared distance to avoid expensive math.sqrt and ^2 ops in loops
+            local minDistSq = minDist * minDist
+            local logThresholdSq = 1200 * 1200
             for _, data in ipairs(chestRegistry) do
-                local dist = math.sqrt((px - data.x)^2 + (py - data.y)^2 + (pz - data.z)^2)
-                if dist < 1200 then
-                    distLog = distLog .. string.format("[%.1f]", dist)
+                local dx = px - data.x
+                local dy = py - data.y
+                local dz = pz - data.z
+                local distSq = dx*dx + dy*dy + dz*dz
+
+                if distSq < logThresholdSq then
+                    distLog = distLog .. string.format("[%.1f]", math.sqrt(distSq))
                 end
-                if dist < minDist then
-                    minDist = dist
+                if distSq < minDistSq then
+                    minDistSq = distSq
                     chestGuid = data.guid
                 end
+            end
+            if chestGuid then
+                minDist = math.sqrt(minDistSq)
             end
         else
             error("PalPlayerCharacter not found")

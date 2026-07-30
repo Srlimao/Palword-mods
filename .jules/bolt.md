@@ -7,3 +7,6 @@
 ## 2024-07-27 - Distance Check Short-Circuiting
 **Learning:** Checking X, Y, and Z axes of `FVector` sequentially and short-circuiting on distance failures effectively avoids native property access for off-screen/distant objects. This saves C++ reflection time in intensive scanning loops over thousands of game actors (like items, caves, relics).
 **Action:** Always sequentially evaluate `dx*dx`, `dxSq+dy*dy`, then `dxSq+dySq+dz*dz` against `maxDistSq`, reading native properties one-by-one as required.
+## 2024-07-28 - Avoid math.sqrt and ^2 in loops
+**Learning:** In Lua loops, using `math.sqrt` and `^2` inside loops for distance calculations is slow and computationally expensive.
+**Action:** Replace `math.sqrt` and `^2` with squared distance calculations (`dx*dx + dy*dy + dz*dz`) and compare against pre-computed squared distance thresholds. Only compute `math.sqrt` when logging or returning the actual distance.
