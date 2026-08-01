@@ -186,7 +186,8 @@ function camera.UpdateCameraMovement()
     input.PollMovement(activePC, moveDir, forwardVec, rightVec, upVec)
     
     -- Apply speed
-    local length = math.sqrt(moveDir.X^2 + moveDir.Y^2 + moveDir.Z^2)
+    -- Optimize: Use multiplication instead of exponentiation (`^2`)
+    local length = math.sqrt(moveDir.X * moveDir.X + moveDir.Y * moveDir.Y + moveDir.Z * moveDir.Z)
     if length > 0.001 then
         currentCameraLocation.X = currentCameraLocation.X + (moveDir.X / length) * currentSpeed
         currentCameraLocation.Y = currentCameraLocation.Y + (moveDir.Y / length) * currentSpeed
