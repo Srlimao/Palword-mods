@@ -319,6 +319,41 @@ function M.UpdateCustomUIString(isStrict)
     end)
 end
 
+function M.OnHotkeyMPressed()
+    Log("HOTKEY [M] TOGGLED - TESTING FILTER OFF LIST!")
+    pcall(function()
+        local cachedPlayer = UEHelpers.GetPlayer()
+        if cachedPlayer and cachedPlayer:IsValid() then
+            local interactComp = cachedPlayer.InteractComponent
+            if interactComp and interactComp:IsValid() then
+                local targetInt = interactComp.TargetInteractiveObject
+                if targetInt then
+                    local target = Unwrap(targetInt)
+                    if target and target:IsValid() then
+                        local cm = Unwrap(target.ConcreteModel)
+                        if cm and cm.Modules then
+                            -- It's hard to get the module via GetModule without reflection,
+                            -- but let's try calling GetModule
+                            local module = cm:GetModule(StaticClass("PalMapObjectItemContainerModule"))
+                            if module and module:IsValid() then
+                                local container = module:GetContainer()
+                                if container and container:IsValid() then
+                                    local filterList = container.FilterPreference.FilterOffList
+                                    filterList:Empty()
+                                    filterList:Add(FName("Wood"))
+                                    Log("SUCCESS: Set FilterOffList to block Wood!")
+                                    return
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        Log("ERROR: Failed to find target chest container for testing!")
+    end)
+end
+
 function M.OnHotkeyNPressed()
     Log("HOTKEY [N] TOGGLED!")
 
@@ -343,7 +378,10 @@ function M.InitializeHooks()
         registerKeybind(Key.N, function()
             pcall(ExecuteInGameThread, M.OnHotkeyNPressed)
         end)
-        Log("SUCCESS: Registered hotkey [N]!")
+        registerKeybind(Key.M, function()
+            pcall(ExecuteInGameThread, M.OnHotkeyMPressed)
+        end)
+        Log("SUCCESS: Registered hotkeys [N, M]!")
     end)
 
     local function FindCanvasPathLoop()

@@ -50,11 +50,16 @@ function M.GetModConfigsDir()
     return path
 end
 
--- Try to create the ModConfigs directory
 function M.EnsureConfigsDirectoryExists()
     local path = M.GetModConfigsDir()
+    local testPath = path .. "/.dir_check"
+    local testFile = io.open(testPath, "w")
+    if testFile then
+        testFile:close()
+        os.remove(testPath)
+        return
+    end
     pcall(function()
-        -- Silent folder creation on Windows
         os.execute('mkdir "' .. string.gsub(path, "/", "\\") .. '" >nul 2>nul')
     end)
 end

@@ -319,40 +319,38 @@ local function GrantImplantToPlayer(playerChar, implantId)
     return success
 end
 
--- Hand Butchering Hooks (Meat Cleaver)
-RegisterHook("/Script/Pal.PalActionBase:OnBeginAction", function(selfParam)
+-- Dedicated Server Native Butchering Hook
+RegisterHook("/Script/Pal.PalUtility:GiftItem_FromOtomoCutMeat", function(selfParam, OtomoParam, TrainerParam)
     pcall(function()
-        local actionObj = selfParam:get()
-        if not actionObj or not actionObj:IsValid() then return end
+        Log("GiftItem_FromOtomoCutMeat hook fired on Server!")
 
-        local fullName = ""
-        pcall(function() fullName = actionObj:GetFullName() end)
-        if not string.find(fullName, "BP_ActionCutPalMeat_Player") then return end
+        local otomo = nil
+        if OtomoParam then pcall(function() otomo = OtomoParam:get() end) end
+        
+        local trainer = nil
+        if TrainerParam then pcall(function() trainer = TrainerParam:get() end) end
 
-        Log("Hand butchering action started: " .. fullName)
+        -- Fallback in case UE4SS drops the self param for static functions
+        if not trainer or not trainer:IsValid() then
+            if OtomoParam then pcall(function() trainer = OtomoParam:get() end) end
+            if selfParam then pcall(function() otomo = selfParam:get() end) end
+        end
 
-        local targetPal = nil
-        pcall(function() targetPal = actionObj.TargetCharacter end)
-        if not targetPal or not targetPal:IsValid() then
-            pcall(function() targetPal = actionObj:GetActionTarget() end)
+        if not otomo or not otomo:IsValid() then
+            Log("Target Pal (Otomo) not valid in GiftItem hook.")
+            return
+        end
+
+        if not trainer or not trainer:IsValid() then
+            Log("Player character (Trainer) not valid in GiftItem hook.")
+            return
         end
         
-        Log("Target Pal object: " .. tostring(targetPal and targetPal:GetFullName() or "nil"))
-        if not targetPal or not targetPal:IsValid() then
-            Log("Target Pal not valid on butcher start.")
-            return
-        end
-
-        local playerChar = nil
-        pcall(function() playerChar = actionObj:GetActionCharacter() end)
-        Log("Player Char object: " .. tostring(playerChar and playerChar:GetFullName() or "nil"))
-        if not playerChar or not playerChar:IsValid() then
-            Log("Player character not valid on butcher start.")
-            return
-        end
+        Log("Target Pal object: " .. otomo:GetFullName())
+        Log("Player Char object: " .. trainer:GetFullName())
 
         -- Extract passive skill strings from butchered Pal
-        local passivesTable = ExtractPassivesFromPal(targetPal)
+        local passivesTable = ExtractPassivesFromPal(otomo)
 
         for idx, passStr in ipairs(passivesTable) do
             Log(string.format("Extracted passive #%d: '%s'", idx, passStr))
@@ -360,7 +358,7 @@ RegisterHook("/Script/Pal.PalActionBase:OnBeginAction", function(selfParam)
 
         local validImplants = {}
         for _, passStr in ipairs(passivesTable) do
-            local implantId = GetImplantItemIdForPassive(passStr, actionObj)
+            local implantId = GetImplantItemIdForPassive(passStr, trainer)
             if implantId then
                 table.insert(validImplants, implantId)
             end
@@ -375,58 +373,105 @@ RegisterHook("/Script/Pal.PalActionBase:OnBeginAction", function(selfParam)
                 table.insert(implantsToGrant, validImplants[math.random(1, #validImplants)])
             end
 
-            local actionKey = fullName
-            pendingButchers[actionKey] = {
-                implants = implantsToGrant,
-                playerChar = playerChar
-            }
-            Log(string.format("Selected %d Implant(s) for butcher action (actionKey: %s)", #implantsToGrant, actionKey))
+            Log(string.format("Selected %d Implant(s) for drop.", #implantsToGrant))
+            for _, impId in ipairs(implantsToGrant) do
+                GrantImplantToPlayer(trainer, impId)
+            end
         else
             Log("[SKIPPED DROP] No valid passive implants found on butchered Pal.")
         end
     end)
 end)
 
-RegisterHook("/Script/Pal.PalActionBase:OnEndAction", function(selfParam)
+-- Auto-Patch broken Pocketpair implants so they appear in the Surgery Table
+local bSurgeryPatchApplied = false
+local function ApplySurgeryTablePatch()
+    if bSurgeryPatchApplied then return end
     pcall(function()
-        local actionObj = selfParam:get()
-        if not actionObj or not actionObj:IsValid() then return end
-
-        local fullName = ""
-        pcall(function() fullName = actionObj:GetFullName() end)
-        if not string.find(fullName, "BP_ActionCutPalMeat_Player") then return end
-
-        local actionKey = fullName
-        Log("Hand butchering action ended hook fired: " .. actionKey)
-
-        local pending = pendingButchers[actionKey]
-        if not pending then
-            for k, v in pairs(pendingButchers) do
-                pending = v
-                pendingButchers[k] = nil
-                Log("Used fallback pending butcher entry for key: " .. tostring(k))
-                break
-            end
-        else
-            pendingButchers[actionKey] = nil
-        end
-
-        if not pending then
-            Log("No pending butcher record found in OnEndAction!")
+        Log("=== Starting Surgery Table Patch ===")
+        local itemManager = FindFirstOf("PalItemIDManager")
+        if not itemManager or not itemManager:IsValid() then
+            Log("PalItemIDManager not found. Aborting patch.")
             return
         end
-
-        local isDeletePal = false
-        pcall(function() isDeletePal = actionObj.IsDeletePal end)
-        Log(string.format("Hand butchering action ended: IsDeletePal = %s", tostring(isDeletePal)))
-
-        local playerChar = pending.playerChar
-        local implants = pending.implants or {}
-
-        for _, impId in ipairs(implants) do
-            GrantImplantToPlayer(playerChar, impId)
+        
+        -- Ensure the cache of all implants is built first
+        CachePassiveChangeItems(nil)
+        
+        local patchedCount = 0
+        -- Iterate over EVERY single implant item found in the game files
+        for itemStr, fName in pairs(PassiveItemCache) do
+            local staticData = itemManager:GetStaticItemData(fName)
+            if staticData and staticData:IsValid() then
+                local changed = false
+                
+                -- 6 = EPalItemTypeA::Consume
+                if staticData.TypeA ~= 6 then
+                    staticData.TypeA = 6
+                    changed = true
+                end
+                -- 72 = EPalItemTypeB::ConsumePassiveSkillChange
+                if staticData.TypeB ~= 72 then
+                    staticData.TypeB = 72
+                    changed = true
+                end
+                
+                -- Force Legal in Game
+                if staticData.bLegalInGame == false then
+                    staticData.bLegalInGame = true
+                    changed = true
+                end
+                
+                -- Fix missing Passive Skill mapping
+                local pass = UnwrapToNameString(staticData.PassiveSkill)
+                if pass == "" or pass == "None" then
+                    -- Guess the passive skill name by stripping the item prefix
+                    local guessedPassive = itemStr:gsub("PalPassiveSkillChange_Consumable_", "")
+                    guessedPassive = guessedPassive:gsub("PalPassiveSkillChange_", "")
+                    staticData.PassiveSkill = FName(guessedPassive)
+                    changed = true
+                end
+                
+                -- Custom Sell Prices based on Implant Tier (Rarity)
+                local rarity = 0
+                pcall(function() rarity = staticData.Rarity end)
+                
+                local oldPrice = 0
+                pcall(function() oldPrice = staticData.Price end)
+                
+                if rarity >= 4 then
+                    staticData.Price = 2500000 -- Rainbow (Sells for 250,000)
+                elseif rarity == 3 then
+                    staticData.Price = 1500000 -- Tier 3 (Sells for 150,000)
+                elseif rarity == 2 then
+                    staticData.Price = 500000  -- Tier 2 (Sells for 50,000)
+                elseif rarity == 1 then
+                    staticData.Price = 350000  -- Tier 1 (Sells for 35,000)
+                else
+                    staticData.Price = 100000  -- Red Tier / Unknown (Sells for 10,000)
+                end
+                
+                if oldPrice ~= staticData.Price then
+                    changed = true
+                end
+                
+                if changed then
+                    patchedCount = patchedCount + 1
+                    Log(string.format("Patched %s: Rarity=%d | Price %d -> %d", itemStr, rarity, oldPrice, staticData.Price))
+                end
+            end
         end
+        Log(string.format("Surgery Table Patch Complete: %d total implants updated.", patchedCount))
+        bSurgeryPatchApplied = true
     end)
+end
+
+RegisterHook("/Script/Engine.PlayerController:ClientRestart", function(selfParam)
+    ApplySurgeryTablePatch()
+end)
+
+ExecuteWithDelay(5000, function()
+    ApplySurgeryTablePatch()
 end)
 
 -- Hotkey F8: Dump all Disposable Implant Item IDs and Passives
