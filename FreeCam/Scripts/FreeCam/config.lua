@@ -85,13 +85,14 @@ function M.LoadConfig()
         end
     end
     
-    -- Ensure the AppData directory is created
-    local modConfigDir = GetModConfigsDir() .. "/FreeCam"
-    pcall(function() os.execute('mkdir "' .. string.gsub(modConfigDir, "/", "\\") .. '" >nul 2>nul') end)
-    
     if not file then
         M.DebugPrint("Config file not found. Creating default config.json...")
         local outFile = io.open(primaryPath, "w")
+        if not outFile then
+            local modConfigDir = GetModConfigsDir() .. "/FreeCam"
+            pcall(function() os.execute('mkdir "' .. string.gsub(modConfigDir, "/", "\\") .. '" >nul 2>nul') end)
+            outFile = io.open(primaryPath, "w")
+        end
         if outFile then
             local defaultJson = [[{
   "Debug": false,
@@ -128,6 +129,11 @@ function M.LoadConfig()
     -- If we loaded it from somewhere else, write it to primaryPath (AppData) so it is initialized there
     if loadedPath ~= primaryPath then
         local outFile = io.open(primaryPath, "w")
+        if not outFile then
+            local modConfigDir = GetModConfigsDir() .. "/FreeCam"
+            pcall(function() os.execute('mkdir "' .. string.gsub(modConfigDir, "/", "\\") .. '" >nul 2>nul') end)
+            outFile = io.open(primaryPath, "w")
+        end
         if outFile then
             outFile:write(content)
             outFile:close()
