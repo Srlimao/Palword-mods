@@ -4,8 +4,18 @@
 
 local UEHelpers = require("UEHelpers")
 local configMod = require("HUDLocator.config")
+local logger = require("HUDLocator.logger")
 
 local M = {}
+
+local lastLogged = {
+    region = "",
+    ft = -1,
+    alphas = -1,
+    towers = -1,
+    bounties = -1,
+    effigies = -1
+}
 
 -- Defined Palworld Regions with map coordinate bounds
 M.Regions = {
@@ -83,16 +93,48 @@ local function ParseRepInfoArray(repInfoArray, outMap)
     if not repInfoArray or not outMap then return end
     pcall(function()
         local items = repInfoArray.Items
-        if items and items.ForEach then
-            items:ForEach(function(_, elem)
-                pcall(function()
-                    if elem and elem.Key then
-                        local keyStr = elem.Key:ToString()
-                        local val = elem.Value
-                        outMap[keyStr] = val
+        if not items then return end
+        
+        local function ProcessElem(elem)
+            if not elem then return end
+            local rawElem = nil
+            if elem.get then pcall(function() rawElem = elem:get() end) end
+            if not rawElem then rawElem = elem end
+
+            if rawElem then
+                local keyObj = rawElem.Key
+                local keyStr = nil
+                if keyObj then
+                    if type(keyObj) == "userdata" and keyObj.ToString then
+                        keyStr = keyObj:ToString()
+                    else
+                        keyStr = tostring(keyObj)
                     end
+                end
+                if keyStr and keyStr ~= "" then
+                    local val = rawElem.Value
+                    if type(val) == "userdata" and val.get then
+                        pcall(function() val = val:get() end)
+                    end
+                    outMap[keyStr] = val
+                end
+            end
+        end
+
+        if items.ForEach then
+            items:ForEach(function(arg1, arg2)
+                pcall(function()
+                    local elem = (type(arg1) == "number") and arg2 or arg1
+                    ProcessElem(elem)
                 end)
             end)
+        else
+            for i = 0, 500 do
+                local elem = nil
+                local ok = pcall(function() elem = items[i] end)
+                if not ok or not elem then break end
+                ProcessElem(elem)
+            end
         end
     end)
 end
@@ -123,6 +165,10 @@ function M.ScanCompletionData()
     if not configMod.CONFIG.Global.Enabled then return end
     if configMod.CONFIG.Completionist and not configMod.CONFIG.Completionist.Enabled then return end
 
+    -- Loading Screen Protection Directive: Never run scans on title/loading screens
+    local hudCheck = FindFirstOf("BP_PalHUD_InGame_C")
+    if not hudCheck or not hudCheck:IsValid() then return end
+
     local localPlayer = UEHelpers.GetPlayer()
     if not localPlayer or not localPlayer:IsValid() then return end
 
@@ -136,7 +182,7 @@ function M.ScanCompletionData()
         end
     end)
 
-    -- Access UPalPlayerRecordData
+    -- Access UPalPlayerRecordData safely
     local playerState = localPlayer.PlayerState
     if not playerState or not playerState:IsValid() then return end
 
@@ -157,6 +203,7 @@ function M.ScanCompletionData()
     local towersMap = {}
     local bountiesMap = {}
     local effigiesMap = {}
+    local npcTalkMap = {}
 
     -- Decode flags from reflected arrays
     pcall(function() ParseRepInfoArray(recordData.FastTravelPointUnlockFlag, fastTravelsMap) end)
@@ -164,6 +211,7 @@ function M.ScanCompletionData()
     pcall(function() ParseRepInfoArray(recordData.TowerBossDefeatFlag, towersMap) end)
     pcall(function() ParseRepInfoArray(recordData.SpecificBossDefeatFlag, bountiesMap) end)
     pcall(function() ParseRepInfoArray(recordData.RelicObtainForInstanceFlag_CapturePower, effigiesMap) end)
+    pcall(function() ParseRepInfoArray(recordData.NPCTalkIdCount, npcTalkMap) end)
 
     -- Count total unlocked/defeated items
     local ftCount, alphaCount, towerCount, bountyCount, effigyCount = 0, 0, 0, 0, 0
@@ -178,17 +226,34 @@ function M.ScanCompletionData()
         if v == true or v == 1 then towerCount = towerCount + 1 end
     end
     for k, v in pairs(bountiesMap) do
-        if v and v > 0 then bountyCount = bountyCount + 1 end
+        local n = tonumber(v)
+        if v == true or (n and n > 0) then bountyCount = bountyCount + 1 end
     end
     for _, v in pairs(effigiesMap) do
         if v == true or v == 1 then effigyCount = effigyCount + 1 end
     end
 
-    -- Fallback: Use native C++ methods on UPalPlayerRecordData if available
+    -- Safe direct UObject methods & primitive fields on recordData for Bounties / Bosses / Effigies
     pcall(function()
+        if recordData.GetNormalBossDefeatCount then
+            local rel = recordData:GetNormalBossDefeatCount()
+            if rel and rel > alphaCount then alphaCount = rel end
+        end
         if recordData.GetRelicPossessNumByType then
             local rel = recordData:GetRelicPossessNumByType(0)
             if rel and rel > effigyCount then effigyCount = rel end
+        end
+        if recordData.PredatorDefeatCount then
+            local pred = recordData.PredatorDefeatCount
+            if type(pred) == "userdata" and pred.get then pcall(function() pred = pred:get() end) end
+            local pNum = tonumber(pred)
+            if pNum and pNum > bountyCount then bountyCount = pNum end
+        end
+        if recordData.CampConqueredCount then
+            local camp = recordData.CampConqueredCount
+            if type(camp) == "userdata" and camp.get then pcall(function() camp = camp:get() end) end
+            local cNum = tonumber(camp)
+            if cNum and cNum > bountyCount then bountyCount = cNum end
         end
     end)
 
@@ -204,6 +269,44 @@ function M.ScanCompletionData()
                        M.globalSaveProgress.totalEffigies
     local unlockedItems = ftCount + alphaCount + towerCount + bountyCount + effigyCount
     M.globalSaveProgress.overallPercent = (totalItems > 0) and math.floor((unlockedItems / totalItems) * 100) or 0
+
+    -- Log diagnostic completion state whenever region or counts change
+    if ftCount ~= lastLogged.ft or alphaCount ~= lastLogged.alphas or towerCount ~= lastLogged.towers or 
+       bountyCount ~= lastLogged.bounties or effigyCount ~= lastLogged.effigies or M.currentRegionId ~= lastLogged.region then
+        
+        lastLogged.ft = ftCount
+        lastLogged.alphas = alphaCount
+        lastLogged.towers = towerCount
+        lastLogged.bounties = bountyCount
+        lastLogged.effigies = effigyCount
+        lastLogged.region = M.currentRegionId
+
+        local ftMapSize, alphaMapSize, towerMapSize, bountyMapSize, effigyMapSize = 0, 0, 0, 0, 0
+        for _ in pairs(fastTravelsMap) do ftMapSize = ftMapSize + 1 end
+        for _ in pairs(alphasMap) do alphaMapSize = alphaMapSize + 1 end
+        for _ in pairs(towersMap) do towerMapSize = towerMapSize + 1 end
+        for _ in pairs(bountiesMap) do bountyMapSize = bountyMapSize + 1 end
+        for _ in pairs(effigiesMap) do effigyMapSize = effigyMapSize + 1 end
+
+        logger.log(string.format("[Completionist Scan] Region: %s (%s) | Unlocked FTs: %d/%d | Alphas: %d/%d | Towers: %d/%d | Bounties: %d/%d | Effigies: %d/%d",
+            tostring(M.currentRegionName), tostring(M.currentRegionId),
+            ftCount, M.globalSaveProgress.totalFastTravels,
+            alphaCount, M.globalSaveProgress.totalAlphas,
+            towerCount, M.globalSaveProgress.totalTowers,
+            bountyCount, M.globalSaveProgress.totalBounties,
+            effigyCount, M.globalSaveProgress.totalEffigies))
+
+        logger.log(string.format("[Completionist Detail] Decoded RepInfo Map Entries -> FTs: %d, Alphas: %d, Towers: %d, Bounties: %d, Effigies: %d",
+            ftMapSize, alphaMapSize, towerMapSize, bountyMapSize, effigyMapSize))
+
+        local bountyKeyList = {}
+        for k, v in pairs(bountiesMap) do
+            table.insert(bountyKeyList, tostring(k) .. "=" .. tostring(v))
+        end
+        if #bountyKeyList > 0 then
+            logger.log("[Completionist Bounties Keys] " .. table.concat(bountyKeyList, ", "))
+        end
+    end
 
     -- Populate per-region breakdown stats
     local newRegionStats = {}

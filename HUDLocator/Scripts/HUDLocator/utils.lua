@@ -663,5 +663,26 @@ function M.GetTranslatedPassiveName(passiveId)
     return idStr
 end
 
+-- Fast sequential axis spatial distance evaluation
+function M.IsWithinDistanceSq(uePos, playerPos, maxDistSq)
+    if not uePos or not playerPos then return false, math.huge end
+    local px = uePos.X
+    local dx = px - playerPos.X
+    local dxSq = dx * dx
+    if dxSq > maxDistSq then return false, math.huge end
+
+    local py = uePos.Y
+    local dy = py - playerPos.Y
+    local dySq = dy * dy
+    if (dxSq + dySq) > maxDistSq then return false, math.huge end
+
+    local pz = uePos.Z
+    local dz = pz - playerPos.Z
+    local distSq = dxSq + dySq + dz * dz
+    if distSq > maxDistSq then return false, math.huge end
+
+    return true, distSq
+end
+
 return M
 

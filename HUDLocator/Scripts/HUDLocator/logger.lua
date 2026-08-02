@@ -24,7 +24,6 @@ function M.log(msg)
         f:write("[HUDLocator] " .. tostring(msg) .. "\n")
         f:close()
     end
-    print("[HUDLocator] " .. tostring(msg))
 end
 
 return M

@@ -129,22 +129,6 @@ local menuItems = {
         transKey = "Settings_CompletionistList"
     },
     {
-        name = "Advanced Styles",
-        get = function() return "Action_OpenURL" end,
-        type = "action",
-        action = function()
-            local url = configMod.ConfiguratorURL or "https://pal-mod-configurator.dunhas.com/"
-            utils.OpenURL(url)
-            popup.Show(configMod.GetTranslation("Menu_OpeningURL", "Opening Configurator..."), 120)
-            
-            -- Automatically close the menu so they don't overwrite it when returning from the browser
-            M.isOpen = false
-            pcall(configMod.SaveConfig)
-        end,
-        transKey = "Settings_AdvancedStyles",
-        valKey = "Action_OpenURL"
-    },
-    {
         name = "Max Distance (All)",
         get = function() return (CONFIG.Global and CONFIG.Global.MaxDistance) or CONFIG.Players.MaxDistance end,
         set = function(v)

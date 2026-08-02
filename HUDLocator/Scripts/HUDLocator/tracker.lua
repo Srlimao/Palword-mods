@@ -72,6 +72,11 @@ end
 
 -- Scan players, relics, chests, eggs, caves
 function M.scan()
+    pcall(function()
+        local pmoIntegration = require("HUDLocator.pmo_integration")
+        pmoIntegration.Sync()
+    end)
+
     if not configMod.CONFIG.Global.Enabled then
         M.activePlayers = {}
         M.activeRelics = {}
@@ -185,7 +190,9 @@ function M.scan()
 
     -- 8. Scan Pals
     if configMod.CONFIG.Pals and configMod.CONFIG.Pals.Enabled then
-        M.activePals = scanners.ScanPals(playerPos, GetMaxDistSq(configMod.CONFIG.Pals), configMod.CONFIG.Pals)
+        pcall(function()
+            M.activePals = scanners.ScanPals(playerPos, GetMaxDistSq(configMod.CONFIG.Pals), configMod.CONFIG.Pals)
+        end)
     else
         M.activePals = {}
     end

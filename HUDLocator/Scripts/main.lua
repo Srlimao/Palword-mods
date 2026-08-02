@@ -8,11 +8,15 @@ local tracker = require("HUDLocator.tracker")
 local renderer = require("HUDLocator.renderer")
 local popup = require("HUDLocator.popup")
 local menu = require("HUDLocator.menu")
+local pmoIntegration = require("HUDLocator.pmo_integration")
 
 local CONFIG = configMod.CONFIG
 local DebugPrint = configMod.DebugPrint
 
 DebugPrint("Initializing Mod...")
+
+-- Initialize Mod Options Framework Integration
+pcall(pmoIntegration.Init)
 
 -- Hook into HUD Draw frame tick (ReceiveDrawHUD)
 local isHUDHooked = false

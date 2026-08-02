@@ -3,8 +3,6 @@ local json = require("HUDLocator.json")
 local M = {}
 M.ConfigLoadedOnce = false
 
-M.ConfiguratorURL = "https://pal-mod-configurator.dunhas.com/"
-
 -- Config settings
 M.CONFIG = {
     Global = {
@@ -548,7 +546,7 @@ function M.LoadConfig()
         local parsed = json.parse(content)
         if parsed then
             MergeConfig(M.CONFIG, parsed)
-            print("[HUDLocator] Configuration loaded from central path: " .. newConfigPath)
+            M.DebugPrint("Configuration loaded from central path: " .. newConfigPath)
             centralLoaded = true
             M.ConfigLoadedOnce = true
             -- Save back immediately to prune invalid keys and add missing keys
@@ -707,7 +705,7 @@ function M.SaveConfig()
         local status, str = pcall(function() return json.stringify(M.CONFIG) end)
         if status and str then
             outFile:write(str)
-            print("[HUDLocator] Configuration saved successfully to " .. configPath)
+            M.DebugPrint("Configuration saved successfully to " .. configPath)
             M.ConfigLoadedOnce = true
         else
             print("[HUDLocator] Failed to stringify config: " .. tostring(str))
