@@ -182,15 +182,21 @@ function helpers.GetAimDistanceAndLocation(activePlayer, cameraComponent, curren
         local dx = locX - currentCameraLocation.X
         local dy = locY - currentCameraLocation.Y
         local dz = locZ - currentCameraLocation.Z
-        local totalDist = math.sqrt(dx^2 + dy^2 + dz^2)
 
-        if totalDist > maxAimDistance then
-            defaultDist = math.sqrt((forward.X * maxAimDistance)^2 + (forward.Y * maxAimDistance)^2)
-            outAimLoc.X = currentCameraLocation.X + forward.X * maxAimDistance
-            outAimLoc.Y = currentCameraLocation.Y + forward.Y * maxAimDistance
+        -- Optimize: Use multiplication instead of exponentiation (`^2`) and squared distance check
+        local totalDistSq = dx * dx + dy * dy + dz * dz
+
+        if totalDistSq > (maxAimDistance * maxAimDistance) then
+            -- Optimize: Use multiplication instead of exponentiation (`^2`)
+            local fxd = forward.X * maxAimDistance
+            local fyd = forward.Y * maxAimDistance
+            defaultDist = math.sqrt(fxd * fxd + fyd * fyd)
+            outAimLoc.X = currentCameraLocation.X + fxd
+            outAimLoc.Y = currentCameraLocation.Y + fyd
             outAimLoc.Z = currentCameraLocation.Z + forward.Z * maxAimDistance
         else
-            defaultDist = math.sqrt(dx^2 + dy^2)
+            -- Optimize: Use multiplication instead of exponentiation (`^2`)
+            defaultDist = math.sqrt(dx * dx + dy * dy)
             outAimLoc.X = locX
             outAimLoc.Y = locY
             outAimLoc.Z = locZ
@@ -200,10 +206,12 @@ function helpers.GetAimDistanceAndLocation(activePlayer, cameraComponent, curren
         local targetDist = math.min(defaultDist, maxAimDistance)
         local dx = forward.X * targetDist
         local dy = forward.Y * targetDist
-        defaultDist = math.sqrt(dx^2 + dy^2)
 
-        outAimLoc.X = currentCameraLocation.X + forward.X * targetDist
-        outAimLoc.Y = currentCameraLocation.Y + forward.Y * targetDist
+        -- Optimize: Use multiplication instead of exponentiation (`^2`)
+        defaultDist = math.sqrt(dx * dx + dy * dy)
+
+        outAimLoc.X = currentCameraLocation.X + dx
+        outAimLoc.Y = currentCameraLocation.Y + dy
         outAimLoc.Z = currentCameraLocation.Z + forward.Z * targetDist
     end
 
