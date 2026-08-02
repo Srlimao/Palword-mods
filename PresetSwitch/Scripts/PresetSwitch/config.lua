@@ -261,13 +261,15 @@ end
 
 function M.SaveConfig()
     local path = GetNewConfigFilePath()
-
-    -- Ensure directories exist via os.execute
-    local dirPath = GetModConfigsDir() .. "/PresetSwitch"
-    local winDirPath = string.gsub(dirPath, "/", "\\")
-    os.execute('cmd /c if not exist "' .. winDirPath .. '" mkdir "' .. winDirPath .. '"')
-
     local file = io.open(path, "w")
+    if not file then
+        -- Fallback directory creation if path does not exist yet
+        local dirPath = GetModConfigsDir() .. "/PresetSwitch"
+        local winDirPath = string.gsub(dirPath, "/", "\\")
+        pcall(function() os.execute('cmd /c if not exist "' .. winDirPath .. '" mkdir "' .. winDirPath .. '"') end)
+        file = io.open(path, "w")
+    end
+
     if file then
         file:write(json.stringify(M.CONFIG))
         file:close()
