@@ -38,20 +38,30 @@ function M.Scan(playerPos, maxDistSq)
                 local ueCavePos = cave:K2_GetActorLocation()
                 if ueCavePos then
                     successCount = successCount + 1
-                    local cx, cy, cz = ueCavePos.X, ueCavePos.Y, ueCavePos.Z
+
+                    -- ⚡ Bolt Performance Optimization:
+                    -- Optimize distance calculation by reading X first and short-circuiting
+                    -- before reading Y and Z to avoid expensive C++ reflection on distant items.
+                    local cx = ueCavePos.X
                     local dx = cx - playerPos.X
-                    local dy = cy - playerPos.Y
-                    local dz = cz - playerPos.Z
-                    local distSq = dx * dx + dy * dy + dz * dz
+                    local dxSq = dx * dx
 
-                    if distSq < closestDistSq then
-                        closestDistSq = distSq
-                    end
+                    -- We can only short-circuit if dxSq ALONE is greater than maxDistSq AND
+                    -- greater than closestDistSq (to preserve closest finding logic).
+                    if dxSq <= maxDistSq or dxSq < closestDistSq then
+                        local cy, cz = ueCavePos.Y, ueCavePos.Z
+                        local dy = cy - playerPos.Y
+                        local dz = cz - playerPos.Z
+                        local distSq = dxSq + dy * dy + dz * dz
 
-                    if distSq <= maxDistSq then
-                        local level, state = utils.GetDungeonDetails(cave)
-                        local dungeonName = nil
-                        pcall(function()
+                        if distSq < closestDistSq then
+                            closestDistSq = distSq
+                        end
+
+                        if distSq <= maxDistSq then
+                            local level, state = utils.GetDungeonDetails(cave)
+                            local dungeonName = nil
+                            pcall(function()
                             local stageModel = cave.StageModel
                             if stageModel and stageModel:IsValid() then
                                 local instanceModel = stageModel.InstanceModel
@@ -90,6 +100,7 @@ function M.Scan(playerPos, maxDistSq)
                             DistStr = distStr
                         })
                     end
+                    end -- End of dxSq short-circuit block
                 end
             end)
         end
