@@ -234,14 +234,17 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
 
     -- 1. Draw Players
     if CONFIG.Players.Enabled then
+        local graceRadiusUEUnits = CONFIG.Players.GraceRadiusM * 100.0
+        local graceRadiusSq = graceRadiusUEUnits * graceRadiusUEUnits
         for _, otherPlayer in ipairs(activePlayers) do
             local dx = otherPlayer.Pos.X - playerPosBuffer.X
             local dy = otherPlayer.Pos.Y - playerPosBuffer.Y
             local dz = otherPlayer.Pos.Z - playerPosBuffer.Z
-            local dist = math.sqrt(dx*dx + dy*dy + dz*dz)
-            local distMeters = math.floor(dist / 100.0)
+            local distSq = dx*dx + dy*dy + dz*dz
             
-            if distMeters > CONFIG.Players.GraceRadiusM then
+            if distSq > graceRadiusSq then
+                local dist = math.sqrt(distSq)
+                local distMeters = math.floor(dist / 100.0)
                 local labelStr = otherPlayer.LabelStr
                 if not labelStr then
                     labelStr = "@ " .. otherPlayer.Name
