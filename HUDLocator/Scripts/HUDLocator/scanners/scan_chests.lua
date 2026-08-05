@@ -92,12 +92,13 @@ function M.Scan(playerPos, maxDistSq)
     local newChests = {}
     local chests = FindAllOf("PalMapObjectTreasureBox") or {}
     for _, chest in ipairs(chests) do
-        if chest:IsValid() and not utils.IsChestOpened(chest) then
+        if chest:IsValid() then
             pcall(function()
                 local ueChestPos = chest:K2_GetActorLocation()
                 if ueChestPos then
                     local within, distSq = utils.IsWithinDistanceSq(ueChestPos, playerPos, maxDistSq)
-                    if within then
+                    -- ⚡ Bolt Performance Optimization: Defer expensive C++ state reflection check until after fast spatial distance check
+                    if within and not utils.IsChestOpened(chest) then
                         local name = configMod.GetTranslation("Chest", "Chest")
                         local isJunk = false
                         local gradeVal = nil
