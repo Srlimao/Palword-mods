@@ -9,12 +9,16 @@ function M.Scan(playerPos, maxDistSq)
     local newNotes = {}
     local notes = FindAllOf("PalLevelObjectNote") or {}
     for _, note in ipairs(notes) do
-        if note:IsValid() and not utils.IsNotePicked(note) then
+        if note:IsValid() then
             pcall(function()
                 local ueNotePos = note:K2_GetActorLocation()
                 if ueNotePos then
                     local within, distSq = utils.IsWithinDistanceSq(ueNotePos, playerPos, maxDistSq)
                     if within then
+                        -- ⚡ Bolt Performance Optimization:
+                        -- Defer C++ reflection property checks until AFTER distance is confirmed.
+                        if utils.IsNotePicked(note) then return end
+
                         local name = nil
                         local statusName, noteKey = pcall(function() return note.NoteRowName.Key end)
                         if statusName and noteKey then
