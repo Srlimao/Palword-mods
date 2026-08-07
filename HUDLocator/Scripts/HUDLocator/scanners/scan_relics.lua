@@ -9,12 +9,16 @@ function M.Scan(playerPos, maxDistSq)
     local newRelics = {}
     local relics = FindAllOf("PalLevelObjectRelic") or {}
     for _, relic in ipairs(relics) do
-        if relic:IsValid() and not utils.IsRelicPicked(relic) then
+        if relic:IsValid() then
             pcall(function()
                 local ueRelicPos = relic:K2_GetActorLocation()
                 if ueRelicPos then
                     local within, distSq = utils.IsWithinDistanceSq(ueRelicPos, playerPos, maxDistSq)
                     if within then
+                        -- ⚡ Bolt Performance Optimization:
+                        -- Defer C++ reflection property checks until AFTER distance is confirmed.
+                        if utils.IsRelicPicked(relic) then return end
+
                         local name = nil
                         local statusType, relicType = pcall(function() return relic:GetRelicType() end)
                         if not statusType or not relicType then
