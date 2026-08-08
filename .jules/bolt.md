@@ -17,3 +17,6 @@
 ## 2026-08-04 - Fast Distance Calculations and Logging Overhead in Lua Loops
 **Learning:** Using `math.sqrt` repeatedly in game update loops creates measurable CPU overhead. Similarly, building large strings using concatenation (`..`) inside tight iterative loops (like scanning objects) triggers significant garbage collection (GC) pressure in Lua, causing micro-stutters.
 **Action:** When filtering objects by distance, always compare squared distances (`dx*dx + dy*dy + dz*dz`) against a squared threshold limit rather than computing the square root. Strip out logging or string concatenations embedded in performance-critical execution loops.
+## 2024-11-20 - [HUDLocator Scanner Optimization]
+**Learning:** In UE4SS Lua, performing C++ reflection checks like `utils.IsRelicPicked` or `utils.IsChestOpened` *before* filtering by distance means expensive C++ API calls are made for thousands of objects, even those halfway across the map.
+**Action:** Always defer boolean state queries on Unreal Engine actors until *after* the fast spatial/distance check (`IsWithinDistanceSq`) validates they are within tracking range.
