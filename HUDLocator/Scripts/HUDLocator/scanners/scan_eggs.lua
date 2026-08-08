@@ -9,13 +9,13 @@ function M.Scan(playerPos, maxDistSq, eggFilter)
     local newEggs = {}
     local eggs = FindAllOf("PalMapObjectPalEgg") or {}
     for _, egg in ipairs(eggs) do
-        local isPicked = utils.IsEggPicked(egg)
-        if egg:IsValid() and not isPicked then
+        if egg:IsValid() then
             pcall(function()
                 local ueEggPos = egg:K2_GetActorLocation()
                 if ueEggPos then
                     local within, distSq = utils.IsWithinDistanceSq(ueEggPos, playerPos, maxDistSq)
-                    if within then
+                    -- Defer expensive C++ reflection check until after spatial distance check
+                    if within and not utils.IsEggPicked(egg) then
                         local sizeStr = ""
                         local statusScale, scale = pcall(function() return egg.Scale end)
                         
