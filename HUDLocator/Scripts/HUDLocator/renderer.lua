@@ -243,14 +243,8 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local distSq = dx*dx + dy*dy + dz*dz
             
             if distSq > graceRadiusSq then
-                local dist = math.sqrt(distSq)
-                local distMeters = math.floor(dist / 100.0)
-                local labelStr = otherPlayer.LabelStr
-                if not labelStr then
-                    labelStr = "@ " .. otherPlayer.Name
-                    otherPlayer.LabelStr = labelStr
-                end
-                local distStr = distMeters .. "m"
+                local labelStr = otherPlayer.LabelStr or ("@ " .. otherPlayer.Name)
+                local distStr = otherPlayer.DistStr or ""
                 DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, distStr, CONFIG.Players.Style, screenW, screenH)
             end
         end
