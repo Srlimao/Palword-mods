@@ -20,3 +20,6 @@
 ## 2024-11-20 - [HUDLocator Scanner Optimization]
 **Learning:** In UE4SS Lua, performing C++ reflection checks like `utils.IsRelicPicked` or `utils.IsChestOpened` *before* filtering by distance means expensive C++ API calls are made for thousands of objects, even those halfway across the map.
 **Action:** Always defer boolean state queries on Unreal Engine actors until *after* the fast spatial/distance check (`IsWithinDistanceSq`) validates they are within tracking range.
+## 2024-11-21 - Moving String Allocations from Renderer to Scanner
+**Learning:** Performing `math.sqrt` computations and constructing display strings via concatenation in a high-frequency rendering loop (`ReceiveDrawHUD` frame tick) causes significant per-frame CPU overhead and garbage collection (GC) spikes in Lua.
+**Action:** Move distance calculations (`math.sqrt`) and string construction out of high-frequency render functions and into lower-frequency scanner/update loops, so the renderer simply reads pre-calculated strings.
