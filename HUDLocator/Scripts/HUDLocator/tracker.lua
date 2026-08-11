@@ -140,7 +140,7 @@ function M.scan()
     -- 1. Scan Players
     if configMod.CONFIG.Players.Enabled then
         local localPlayerState = localPlayer.PlayerState
-        M.activePlayers = scanners.ScanPlayers(localPlayerState)
+        M.activePlayers = scanners.ScanPlayers(localPlayerState, playerPos)
     else
         M.activePlayers = {}
     end
