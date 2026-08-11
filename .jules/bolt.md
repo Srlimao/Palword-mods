@@ -20,3 +20,9 @@
 ## 2024-11-20 - [HUDLocator Scanner Optimization]
 **Learning:** In UE4SS Lua, performing C++ reflection checks like `utils.IsRelicPicked` or `utils.IsChestOpened` *before* filtering by distance means expensive C++ API calls are made for thousands of objects, even those halfway across the map.
 **Action:** Always defer boolean state queries on Unreal Engine actors until *after* the fast spatial/distance check (`IsWithinDistanceSq`) validates they are within tracking range.
+## 2024-08-11 - Deferred Distance Calculation for Draw loop
+**Learning:** In UE4SS Lua, calculating distances and constructing strings dynamically inside high-frequency frame drawing loops () leads to GC spikes and CPU overhead. These properties can safely be evaluated in a lower-frequency background scanner.
+**Action:** Moved `math.sqrt` distance calculations and string concatenation (`.. "m"`) out of `HUDLocator/Scripts/HUDLocator/renderer.lua` and into the periodic scanner `HUDLocator/Scripts/HUDLocator/scanners/scan_players.lua`.
+## 2024-08-11 - Deferred Distance Calculation for Draw loop
+**Learning:** In UE4SS Lua, calculating distances and constructing strings dynamically inside high-frequency frame drawing loops (`ReceiveDrawHUD`) leads to GC spikes and CPU overhead. These properties can safely be evaluated in a lower-frequency background scanner.
+**Action:** Moved `math.sqrt` distance calculations and string concatenation (`.. "m"`) out of `HUDLocator/Scripts/HUDLocator/renderer.lua` and into the periodic scanner `HUDLocator/Scripts/HUDLocator/scanners/scan_players.lua`.
