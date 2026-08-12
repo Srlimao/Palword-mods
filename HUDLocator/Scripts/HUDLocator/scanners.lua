@@ -10,8 +10,8 @@ local scanPals = require("HUDLocator.scanners.scan_pals")
 
 local M = {}
 
-function M.ScanPlayers(localPlayerState)
-    return scanPlayers.Scan(localPlayerState)
+function M.ScanPlayers(localPlayerState, playerPos, graceRadiusSq)
+    return scanPlayers.Scan(localPlayerState, playerPos, graceRadiusSq)
 end
 
 function M.ScanRelics(playerPos, maxDistSq)
