@@ -3,7 +3,7 @@ local logger = require("HUDLocator.logger")
 local M = {}
 M.hasLoggedPlayers = false
 
-function M.Scan(localPlayerState)
+function M.Scan(localPlayerState, playerPos, graceRadiusSq)
     local newPlayers = {}
     local seen = {}
     
@@ -21,11 +21,24 @@ function M.Scan(localPlayerState)
                             if loc then
                                 local locX, locY, locZ = loc.X, loc.Y, loc.Z
                                 if locX ~= 0.0 or locY ~= 0.0 or locZ ~= 0.0 then
-                                    seen[nameStr] = true
-                                    table.insert(newPlayers, {
-                                        Name = nameStr,
-                                        Pos = { X = locX, Y = locY, Z = locZ }
-                                    })
+                                    local dx = locX - playerPos.X
+                                    local dy = locY - playerPos.Y
+                                    local dz = locZ - playerPos.Z
+                                    local distSq = dx*dx + dy*dy + dz*dz
+
+                                    if distSq > graceRadiusSq then
+                                        local dist = math.sqrt(distSq)
+                                        local distMeters = math.floor(dist / 100.0)
+                                        local distStr = distMeters .. "m"
+
+                                        seen[nameStr] = true
+                                        table.insert(newPlayers, {
+                                            Name = nameStr,
+                                            LabelStr = "@ " .. nameStr,
+                                            DistStr = distStr,
+                                            Pos = { X = locX, Y = locY, Z = locZ }
+                                        })
+                                    end
                                 end
                             end
                         end

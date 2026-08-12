@@ -231,6 +231,12 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                 local formattedLabel = table.concat(labelParts, " ")
                                 local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
 
+                                local passivesList = showPassives and translatedPassives or {}
+                                local passivesStr = nil
+                                if #passivesList > 0 then
+                                    passivesStr = table.concat(passivesList, ", ")
+                                end
+
                                 table.insert(newPals, {
                                     X = uePos.X, Y = uePos.Y, Z = uePos.Z,
                                     Name = formattedLabel,
@@ -238,7 +244,8 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                     Level = level,
                                     IsShiny = isShiny,
                                     IsBoss = isBoss,
-                                    Passives = showPassives and translatedPassives or {},
+                                    Passives = passivesList,
+                                    PassivesStr = passivesStr,
                                     DistStr = distStr
                                 })
                             end
