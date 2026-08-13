@@ -140,7 +140,9 @@ function M.scan()
     -- 1. Scan Players
     if configMod.CONFIG.Players.Enabled then
         local localPlayerState = localPlayer.PlayerState
-        M.activePlayers = scanners.ScanPlayers(localPlayerState)
+        local graceRadiusUEUnits = configMod.CONFIG.Players.GraceRadiusM * 100.0
+        local graceRadiusSq = graceRadiusUEUnits * graceRadiusUEUnits
+        M.activePlayers = scanners.ScanPlayers(localPlayerState, playerPos, graceRadiusSq)
     else
         M.activePlayers = {}
     end
