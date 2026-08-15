@@ -195,7 +195,6 @@ function M.FindClosestChestGuidFromRegistry()
     local chestGuid = nil
     -- Optimize: Use squared distance checks to avoid expensive math.sqrt and ^2 operations in a tight loop
     local minDistSq = 800 * 800
-    local distLog = ""
 
     local ok, err = pcall(function()
         local player = FindFirstOf("PalPlayerCharacter")
@@ -208,10 +207,6 @@ function M.FindClosestChestGuidFromRegistry()
                 local dz = pz - data.z
                 local distSq = dx * dx + dy * dy + dz * dz
 
-                if distSq < (1200 * 1200) then
-                    local dist = math.sqrt(distSq)
-                    distLog = distLog .. string.format("[%.1f]", dist)
-                end
                 if distSq < minDistSq then
                     minDistSq = distSq
                     chestGuid = data.guid
@@ -226,7 +221,7 @@ function M.FindClosestChestGuidFromRegistry()
         Log("FindClosest ERROR: " .. tostring(err))
     else
         local nearestDist = minDistSq == (800 * 800) and 800 or math.sqrt(minDistSq)
-        Log(string.format("FindClosest evaluated. Nearest dist: %.1f | Found: %s | Close dists: %s", nearestDist, tostring(chestGuid ~= nil), distLog))
+        Log(string.format("FindClosest evaluated. Nearest dist: %.1f | Found: %s", nearestDist, tostring(chestGuid ~= nil)))
     end
     
     return chestGuid
