@@ -314,10 +314,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                 colorOverride = CONFIG.Pals.Style.BossColor
             end
 
-            local subStr = nil
-            if pal.Passives and #pal.Passives > 0 then
-                subStr = table.concat(pal.Passives, ", ")
-            end
+            local subStr = pal.PassivesStr
 
             DrawTrackerLabel(hud, pal, pal.Name, pal.DistStr, CONFIG.Pals.Style, screenW, screenH, subStr, colorOverride)
         end

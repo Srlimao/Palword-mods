@@ -28,7 +28,11 @@ function M.Scan(playerPos, maxDistSq)
     local cls = M.dungeonClasses[M.currentClassIndex]
     M.tempCaves[cls] = {}
     
-    local caves = FindAllOf(cls) or {}
+    local caves = {}
+    local status, res = pcall(function() return FindAllOf(cls) end)
+    if status and res then
+        caves = res
+    end
     local successCount = 0
     local closestDistSq = math.huge
 

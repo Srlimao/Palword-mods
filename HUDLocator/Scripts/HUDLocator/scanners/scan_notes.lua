@@ -7,7 +7,11 @@ M.hasLoggedNotes = false
 
 function M.Scan(playerPos, maxDistSq)
     local newNotes = {}
-    local notes = FindAllOf("PalLevelObjectNote") or {}
+    local notes = {}
+    local status, res = pcall(function() return FindAllOf("PalLevelObjectNote") end)
+    if status and res then
+        notes = res
+    end
     for _, note in ipairs(notes) do
         if note:IsValid() and not utils.IsNotePicked(note) then
             pcall(function()

@@ -585,6 +585,26 @@ function M.FNameToString(fn)
     return s
 end
 
+function M.GetCleanPalId(idStr)
+    if not idStr or idStr == "" then return "" end
+    local clean = idStr
+    -- Strip Blueprint prefixes and suffixes if present
+    clean = string.gsub(clean, "^BP_", "")
+    clean = string.gsub(clean, "_C$", "")
+    
+    -- Strip Boss / Predator / Raid / Gym prefixes (case-insensitive)
+    clean = string.gsub(clean, "^[Bb][Oo][Ss][Ss]_", "")
+    clean = string.gsub(clean, "^[Ff][Bb][Oo][Ss][Ss]_", "")
+    clean = string.gsub(clean, "^[Pp][Rr][Ee][Dd][Aa][Tt][Oo][Rr]_", "")
+    clean = string.gsub(clean, "^[Rr][Aa][Ii][Dd]_", "")
+    clean = string.gsub(clean, "^[Gg][Yy][Mm]_", "")
+    
+    -- Strip Boss suffixes
+    clean = string.gsub(clean, "_[Bb][Oo][Ss][Ss]$", "")
+    
+    return clean
+end
+
 function M.GetTranslatedPalName(masterDataId)
     local idStr = nil
     if type(masterDataId) == "string" then
@@ -594,10 +614,8 @@ function M.GetTranslatedPalName(masterDataId)
     end
     if not idStr then idStr = tostring(masterDataId) end
 
-    local cleanId = idStr
-    if string.sub(cleanId, 1, 5) == "Boss_" then
-        cleanId = string.sub(cleanId, 6)
-    end
+    local cleanId = M.GetCleanPalId(idStr)
+    if cleanId == "" then cleanId = idStr end
 
     if M.PalNameCache[cleanId] then
         return M.PalNameCache[cleanId]

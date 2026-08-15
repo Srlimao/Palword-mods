@@ -7,7 +7,11 @@ M.hasLoggedRelics = false
 
 function M.Scan(playerPos, maxDistSq)
     local newRelics = {}
-    local relics = FindAllOf("PalLevelObjectRelic") or {}
+    local relics = {}
+    local status, res = pcall(function() return FindAllOf("PalLevelObjectRelic") end)
+    if status and res then
+        relics = res
+    end
     for _, relic in ipairs(relics) do
         if relic:IsValid() and not utils.IsRelicPicked(relic) then
             pcall(function()

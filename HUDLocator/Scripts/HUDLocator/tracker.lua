@@ -139,36 +139,46 @@ function M.scan()
 
     -- 1. Scan Players
     if configMod.CONFIG.Players.Enabled then
-        local localPlayerState = localPlayer.PlayerState
-        M.activePlayers = scanners.ScanPlayers(localPlayerState)
+        pcall(function()
+            local localPlayerState = localPlayer.PlayerState
+            M.activePlayers = scanners.ScanPlayers(localPlayerState)
+        end)
     else
         M.activePlayers = {}
     end
 
     -- 2. Scan Relics
     if configMod.CONFIG.Relics.Enabled then
-        M.activeRelics = scanners.ScanRelics(playerPos, GetMaxDistSq(configMod.CONFIG.Relics))
+        pcall(function()
+            M.activeRelics = scanners.ScanRelics(playerPos, GetMaxDistSq(configMod.CONFIG.Relics))
+        end)
     else
         M.activeRelics = {}
     end
 
     -- 3. Scan Chests
     if configMod.CONFIG.Chests.Enabled then
-        M.activeChests = scanners.ScanChests(playerPos, GetMaxDistSq(configMod.CONFIG.Chests))
+        pcall(function()
+            M.activeChests = scanners.ScanChests(playerPos, GetMaxDistSq(configMod.CONFIG.Chests))
+        end)
     else
         M.activeChests = {}
     end
 
     -- 4. Scan Eggs
     if configMod.CONFIG.Eggs.Filter ~= "None" then
-        M.activeEggs = scanners.ScanEggs(playerPos, GetMaxDistSq(configMod.CONFIG.Eggs), configMod.CONFIG.Eggs.Filter, configMod.CONFIG.Global.Debug)
+        pcall(function()
+            M.activeEggs = scanners.ScanEggs(playerPos, GetMaxDistSq(configMod.CONFIG.Eggs), configMod.CONFIG.Eggs.Filter, configMod.CONFIG.Global.Debug)
+        end)
     else
         M.activeEggs = {}
     end
 
     -- 5. Scan Caves
     if configMod.CONFIG.Caves.Enabled then
-        M.activeCaves = scanners.ScanCaves(playerPos, GetMaxDistSq(configMod.CONFIG.Caves))
+        pcall(function()
+            M.activeCaves = scanners.ScanCaves(playerPos, GetMaxDistSq(configMod.CONFIG.Caves))
+        end)
     else
         M.activeCaves = {}
         scanners.tempCaves = {}
@@ -176,14 +186,18 @@ function M.scan()
 
     -- 6. Scan Loot
     if configMod.CONFIG.Loot.Enabled then
-        M.activeLoot = scanners.ScanLoot(playerPos, GetMaxDistSq(configMod.CONFIG.Loot), configMod.CONFIG.Loot.Filters)
+        pcall(function()
+            M.activeLoot = scanners.ScanLoot(playerPos, GetMaxDistSq(configMod.CONFIG.Loot), configMod.CONFIG.Loot.Filters)
+        end)
     else
         M.activeLoot = {}
     end
 
     -- 7. Scan Notes
     if configMod.CONFIG.Notes and configMod.CONFIG.Notes.Enabled then
-        M.activeNotes = scanners.ScanNotes(playerPos, GetMaxDistSq(configMod.CONFIG.Notes))
+        pcall(function()
+            M.activeNotes = scanners.ScanNotes(playerPos, GetMaxDistSq(configMod.CONFIG.Notes))
+        end)
     else
         M.activeNotes = {}
     end

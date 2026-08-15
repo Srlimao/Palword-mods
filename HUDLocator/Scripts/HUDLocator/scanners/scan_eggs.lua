@@ -7,7 +7,11 @@ M.hasLoggedEggs = false
 
 function M.Scan(playerPos, maxDistSq, eggFilter)
     local newEggs = {}
-    local eggs = FindAllOf("PalMapObjectPalEgg") or {}
+    local eggs = {}
+    local status, res = pcall(function() return FindAllOf("PalMapObjectPalEgg") end)
+    if status and res then
+        eggs = res
+    end
     for _, egg in ipairs(eggs) do
         local isPicked = utils.IsEggPicked(egg)
         if egg:IsValid() and not isPicked then

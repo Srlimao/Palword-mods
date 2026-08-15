@@ -90,7 +90,11 @@ end
 
 function M.Scan(playerPos, maxDistSq)
     local newChests = {}
-    local chests = FindAllOf("PalMapObjectTreasureBox") or {}
+    local chests = {}
+    local status, res = pcall(function() return FindAllOf("PalMapObjectTreasureBox") end)
+    if status and res then
+        chests = res
+    end
     for _, chest in ipairs(chests) do
         if chest:IsValid() and not utils.IsChestOpened(chest) then
             pcall(function()

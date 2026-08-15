@@ -8,7 +8,11 @@ function M.Scan(localPlayerState)
     local seen = {}
     
     if localPlayerState and localPlayerState:IsValid() then
-        local playerStates = FindAllOf("PalPlayerState") or {}
+        local playerStates = {}
+        local status, res = pcall(function() return FindAllOf("PalPlayerState") end)
+        if status and res then
+            playerStates = res
+        end
         
         for _, state in ipairs(playerStates) do
             if state:IsValid() and state ~= localPlayerState then

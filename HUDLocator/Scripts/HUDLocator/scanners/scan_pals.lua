@@ -1,20 +1,68 @@
+local configMod = require("HUDLocator.config")
 local utils = require("HUDLocator.utils")
 local logger = require("HUDLocator.logger")
 
 local M = {}
 M.hasLoggedPals = false
 
-local function EvaluatePalRule(rule, palName, charIdStr, isShiny, isBoss, palPassives)
+local cachedPalUtility = nil
+local function GetPalUtility()
+    if cachedPalUtility and cachedPalUtility:IsValid() then
+        return cachedPalUtility
+    end
+    pcall(function()
+        local status, util = pcall(function() return StaticFindObject("/Script/Pal.Default__PalUtility") end)
+        if status and util and util:IsValid() then
+            cachedPalUtility = util
+        else
+            local statusClass, uClass = pcall(function() return FindFirstOf("PalUtility") end)
+            if statusClass and uClass and uClass:IsValid() then
+                cachedPalUtility = uClass:GetDefaultObject()
+            end
+        end
+    end)
+    return cachedPalUtility
+end
+
+local function IsValidGuid(guid)
+    if not guid then return false end
+    local valid = false
+    pcall(function()
+        if (guid.A and guid.A ~= 0) or 
+           (guid.B and guid.B ~= 0) or 
+           (guid.C and guid.C ~= 0) or 
+           (guid.D and guid.D ~= 0) then
+            valid = true
+        end
+    end)
+    return valid
+end
+
+local function EvaluatePalRule(rule, palName, charIdStr, cleanCharId, isShiny, isBoss, palPassives)
     if not rule then return false, 0 end
     if type(rule) == "string" then
         rule = { palname = rule }
     end
 
     if rule.palname and rule.palname ~= "" and rule.palname ~= "*" then
-        local targetName = string.lower(rule.palname)
+        local rawTarget = string.lower(rule.palname)
+        local cleanTarget = rawTarget
+        cleanTarget = string.gsub(cleanTarget, "^boss[_%s]+", "")
+        cleanTarget = string.gsub(cleanTarget, "^alpha[_%s]+", "")
+        cleanTarget = string.gsub(cleanTarget, "[_%s]+boss$", "")
+
         local lowerPalName = string.lower(palName or "")
         local lowerCharId = string.lower(charIdStr or "")
-        if not string.find(lowerPalName, targetName, 1, true) and not string.find(lowerCharId, targetName, 1, true) then
+        local lowerCleanId = string.lower(cleanCharId or "")
+
+        local matchedName = false
+        if string.find(lowerPalName, rawTarget, 1, true) or string.find(lowerCharId, rawTarget, 1, true) or string.find(lowerCleanId, rawTarget, 1, true) then
+            matchedName = true
+        elseif cleanTarget ~= "" and (string.find(lowerPalName, cleanTarget, 1, true) or string.find(lowerCharId, cleanTarget, 1, true) or string.find(lowerCleanId, cleanTarget, 1, true)) then
+            matchedName = true
+        end
+
+        if not matchedName then
             return false, 0
         end
     end
@@ -73,6 +121,7 @@ function M.Scan(playerPos, maxDistSq, palConfig)
     local rulesList = palConfig.TrackerPals or {}
     local showPassives = palConfig.ShowPassives ~= false
     local showLevel = palConfig.ShowLevel ~= false
+    local palUtil = GetPalUtility()
 
     for _, actor in ipairs(actors) do
         if actor:IsValid() then
@@ -95,24 +144,71 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                         local isDead = false
                         if indivParam and indivParam:IsValid() then
                             pcall(function() isDead = indivParam:IsDead() end)
+                        elseif charParam and charParam:IsValid() then
+                            pcall(function() isDead = charParam:IsDead() end)
                         end
 
                         local isOwned = false
-                        pcall(function()
-                            if indivParam and indivParam:IsValid() then
-                                local ownerUid = indivParam:GetOwnerPlayerUId()
-                                if ownerUid and ownerUid:IsValid() then
+
+                        -- 1. Check UPalUtility (native engine reflection functions)
+                        if palUtil and palUtil:IsValid() then
+                            pcall(function()
+                                if palUtil:IsPlayerOrOtomo(actor) or palUtil:IsOtomo(actor) or palUtil:IsPlayersOtomo(actor) or not palUtil:IsWildNPC(actor) then
                                     isOwned = true
                                 end
-                            end
-                        end)
-                        pcall(function()
-                            if not isOwned and charParam and charParam:IsValid() then
-                                if charParam:IsOtomo() then
+                            end)
+                        end
+
+                        -- 2. Check CharacterParameterComponent (party, work assignments, base camp)
+                        if not isOwned and charParam and charParam:IsValid() then
+                            pcall(function()
+                                if charParam:IsOtomo() or charParam:IsPlayersOtomo() or charParam:IsInactiveOtomo() or charParam:IsAssignedToAnyWork() or charParam:IsAssignedFixed() or IsValidGuid(charParam:GetBaseCampId()) then
+                                    isOwned = true
+                                elseif charParam.Trainer and charParam.Trainer:IsValid() then
                                     isOwned = true
                                 end
-                            end
-                        end)
+                            end)
+                        end
+
+                        -- 3. Check IndividualParameter (OwnerPlayerUId, BaseCampId, favorite, expedition)
+                        if not isOwned and indivParam and indivParam:IsValid() then
+                            pcall(function()
+                                if IsValidGuid(indivParam:GetOwnerPlayerUId()) or IsValidGuid(indivParam:GetBaseCampId()) then
+                                    isOwned = true
+                                elseif indivParam:IsFavoritePal() or indivParam:IsAssignedToExpedition() or indivParam:IsImportedCharacter() then
+                                    isOwned = true
+                                elseif indivParam.SaveParameter and IsValidGuid(indivParam.SaveParameter.OwnerPlayerUId) then
+                                    isOwned = true
+                                end
+                            end)
+                        end
+
+                        local charIdStr = ""
+                        if indivParam and indivParam:IsValid() then
+                            pcall(function()
+                                local cId = indivParam:GetCharacterID()
+                                if cId then charIdStr = cId:ToString() end
+                            end)
+                        end
+                        if charIdStr == "" and staticParam and staticParam:IsValid() then
+                            pcall(function()
+                                local cId = staticParam.CharacterID
+                                if cId then charIdStr = cId:ToString() end
+                            end)
+                        end
+
+                        local cleanCharId = utils.GetCleanPalId(charIdStr)
+                        if cleanCharId == "" then cleanCharId = charIdStr end
+
+                        local isBoss = false
+                        local lowerCharId = string.lower(charIdStr)
+
+                        -- Character ID checks (case-insensitive prefixes/suffixes: BOSS_Anubis, FBOSS_Deer, CaptainPenguin_BOSS)
+                        if string.find(lowerCharId, "boss_") or string.find(lowerCharId, "fboss_") or string.find(lowerCharId, "_boss") then
+                            isBoss = true
+                        elseif staticParam and staticParam:IsValid() and staticParam.IsBoss_Database == true then
+                            isBoss = true
+                        end
 
                         if not isDead and not isOwned then
                             local isShiny = false
@@ -120,23 +216,6 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                 pcall(function() isShiny = indivParam:IsRarePal() end)
                             elseif staticParam and staticParam:IsValid() then
                                 pcall(function() isShiny = staticParam:IsRarePal() end)
-                            end
-
-                            local isBoss = false
-                            if staticParam and staticParam:IsValid() then
-                                pcall(function() isBoss = staticParam.IsBoss_Database or staticParam:IsBossPal_Database() end)
-                            end
-
-                            local charIdStr = ""
-                            if indivParam and indivParam:IsValid() then
-                                pcall(function()
-                                    local cId = indivParam:GetCharacterID()
-                                    if cId then charIdStr = cId:ToString() end
-                                end)
-                            end
-
-                            if string.find(charIdStr, "Boss_") then
-                                isBoss = true
                             end
 
                             local palName = utils.GetTranslatedPalName(charIdStr)
@@ -193,7 +272,7 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                 shouldTrack = isShiny or isBoss
                             elseif filterMode == "TrackerListOnly" then
                                 for _, rule in ipairs(rulesList) do
-                                    local pass, count = EvaluatePalRule(rule, palName, charIdStr, isShiny, isBoss, palPassivesStr)
+                                    local pass, count = EvaluatePalRule(rule, palName, charIdStr, cleanCharId, isShiny, isBoss, palPassivesStr)
                                     if pass then
                                         shouldTrack = true
                                         if count > matchedPassiveCount then
@@ -230,6 +309,7 @@ function M.Scan(playerPos, maxDistSq, palConfig)
 
                                 local formattedLabel = table.concat(labelParts, " ")
                                 local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
+                                local passivesStr = (showPassives and #translatedPassives > 0) and table.concat(translatedPassives, ", ") or nil
 
                                 table.insert(newPals, {
                                     X = uePos.X, Y = uePos.Y, Z = uePos.Z,
@@ -239,6 +319,7 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                     IsShiny = isShiny,
                                     IsBoss = isBoss,
                                     Passives = showPassives and translatedPassives or {},
+                                    PassivesStr = passivesStr,
                                     DistStr = distStr
                                 })
                             end
