@@ -14,6 +14,27 @@ local beaconBaseWorldBuffer = { X = 0.0, Y = 0.0, Z = 0.0 }
 local beaconTopWorldBuffer = { X = 0.0, Y = 0.0, Z = 0.0 }
 local beaconColorBuffer = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 }
 
+local CAVE_BEACON_DEF_COLOR = { R = 0.5, G = 0.0, B = 1.0, A = 1.0 }
+local CARD_BG_COL = { R = 0.05, G = 0.07, B = 0.15, A = 0.85 }
+local CARD_BORDER_COL = { R = 0.0, G = 0.95, B = 1.0, A = 0.6 }
+local CARD_SHADOW_COL = { R = 0.0, G = 0.0, B = 0.0, A = 0.9 }
+local CARD_TITLE_COL = { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }
+local CARD_TEXT_COL = { R = 0.9, G = 0.9, B = 0.95, A = 1.0 }
+
+local HIGHLIGHT_COL = { R = 0.0, G = 0.96, B = 0.83, A = 1.0 }
+local HIGHLIGHT_COL_ALPHA = { R = 0.0, G = 0.96, B = 0.83, A = 0.9 }
+local BAR_BG_COL = { R = 0.15, G = 0.15, B = 0.25, A = 0.8 }
+local MODAL_BG_COL = { R = 0.04, G = 0.06, B = 0.12, A = 0.92 }
+local MODAL_BORDER_COL = { R = 0.0, G = 0.95, B = 1.0, A = 0.8 }
+local MODAL_SHADOW_COL = { R = 0.0, G = 0.0, B = 0.0, A = 0.95 }
+local MODAL_HEADER_COL = { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }
+local SEPARATOR_COL = { R = 0.2, G = 0.25, B = 0.35, A = 0.5 }
+local REGION_BG_CURR = { R = 0.0, G = 0.3, B = 0.4, A = 0.35 }
+local REGION_BG_NORM = { R = 0.08, G = 0.1, B = 0.18, A = 0.6 }
+local REGION_BORDER_NORM = { R = 0.2, G = 0.2, B = 0.3, A = 0.4 }
+local REGION_TITLE_NORM = { R = 0.95, G = 0.95, B = 1.0, A = 1.0 }
+local DETAIL_TEXT_COL = { R = 0.8, G = 0.85, B = 0.9, A = 1.0 }
+
 -- Render a 3D glowing beam and ground flare at the location
 local function DrawCaveBeacon(hud, pos, color)
     beaconBaseWorldBuffer.X = pos.X; beaconBaseWorldBuffer.Y = pos.Y; beaconBaseWorldBuffer.Z = pos.Z
@@ -245,12 +266,13 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             if distSq > graceRadiusSq then
                 local dist = math.sqrt(distSq)
                 local distMeters = math.floor(dist / 100.0)
+                local distStr = distMeters .. "m"
+
                 local labelStr = otherPlayer.LabelStr
                 if not labelStr then
                     labelStr = "@ " .. otherPlayer.Name
                     otherPlayer.LabelStr = labelStr
                 end
-                local distStr = distMeters .. "m"
                 DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, distStr, CONFIG.Players.Style, screenW, screenH)
             end
         end
@@ -284,7 +306,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     if CONFIG.Caves.Enabled then
         for _, pos in ipairs(activeCaves) do
             if pos.ShowBeacon then
-                DrawCaveBeacon(hud, pos, CONFIG.Caves.Style.NameColor or { R = 0.5, G = 0.0, B = 1.0, A = 1.0 })
+                DrawCaveBeacon(hud, pos, CONFIG.Caves.Style.NameColor or CAVE_BEACON_DEF_COLOR)
             end
             local name = pos.Name or "Cave"
             DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Caves.Style, screenW, screenH)
@@ -339,31 +361,25 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local cardX = screenW - cardW - 30.0
             local cardY = 40.0
 
-            local bgCol = { R = 0.05, G = 0.07, B = 0.15, A = 0.85 }
-            local borderCol = { R = 0.0, G = 0.95, B = 1.0, A = 0.6 }
-            local shadowCol = { R = 0.0, G = 0.0, B = 0.0, A = 0.9 }
-            local titleCol = { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }
-            local textCol = { R = 0.9, G = 0.9, B = 0.95, A = 1.0 }
-
             -- Draw Card Background & Shadow
-            hud:DrawRect(shadowCol, cardX - 2.0, cardY - 2.0, cardW + 4.0, cardH + 4.0)
-            hud:DrawRect(bgCol, cardX, cardY, cardW, cardH)
-            hud:DrawRect(borderCol, cardX, cardY, cardW, 3.0)
+            hud:DrawRect(CARD_SHADOW_COL, cardX - 2.0, cardY - 2.0, cardW + 4.0, cardH + 4.0)
+            hud:DrawRect(CARD_BG_COL, cardX, cardY, cardW, cardH)
+            hud:DrawRect(CARD_BORDER_COL, cardX, cardY, cardW, 3.0)
 
             -- Header: Region Name & Progress
             local pct = regStats and regStats.percent or 0
-            utils.DrawText(hud, "📍 " .. activeRegName, titleCol, cardX + 15.0, cardY + 12.0, 1.0, false)
-            utils.DrawText(hud, pct .. "% Completed", { R = 0.0, G = 0.96, B = 0.83, A = 1.0 }, cardX + cardW - 120.0, cardY + 12.0, 0.9, false)
+            utils.DrawText(hud, "📍 " .. activeRegName, CARD_TITLE_COL, cardX + 15.0, cardY + 12.0, 1.0, false)
+            utils.DrawText(hud, pct .. "% Completed", HIGHLIGHT_COL, cardX + cardW - 120.0, cardY + 12.0, 0.9, false)
 
             -- Progress Bar
             local barX = cardX + 15.0
             local barY = cardY + 38.0
             local barW = cardW - 30.0
             local barH = 6.0
-            hud:DrawRect({ R = 0.15, G = 0.15, B = 0.25, A = 0.8 }, barX, barY, barW, barH)
+            hud:DrawRect(BAR_BG_COL, barX, barY, barW, barH)
             local fillW = math.max(0.0, math.min(barW, barW * (pct / 100.0)))
             if fillW > 0 then
-                hud:DrawRect({ R = 0.0, G = 0.96, B = 0.83, A = 0.9 }, barX, barY, fillW, barH)
+                hud:DrawRect(HIGHLIGHT_COL_ALPHA, barX, barY, fillW, barH)
             end
 
             -- Stat Lines
@@ -376,8 +392,8 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                     regStats.towers.defeated, regStats.towers.total,
                     regStats.bounties.cleared, regStats.bounties.total)
 
-                utils.DrawText(hud, line1, textCol, cardX + 15.0, cardY + 54.0, 0.8, false)
-                utils.DrawText(hud, line2, textCol, cardX + 15.0, cardY + 84.0, 0.75, false)
+                utils.DrawText(hud, line1, CARD_TEXT_COL, cardX + 15.0, cardY + 54.0, 0.8, false)
+                utils.DrawText(hud, line2, CARD_TEXT_COL, cardX + 15.0, cardY + 84.0, 0.75, false)
             end
         end)
     end
@@ -390,23 +406,18 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local modalX = screenW - modalW - 40.0
             local modalY = (screenH / 2.0) - (modalH / 2.0)
 
-            local bgCol = { R = 0.04, G = 0.06, B = 0.12, A = 0.92 }
-            local borderCol = { R = 0.0, G = 0.95, B = 1.0, A = 0.8 }
-            local shadowCol = { R = 0.0, G = 0.0, B = 0.0, A = 0.95 }
-            local headerCol = { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }
-
             -- Draw Panel Shadow & Base
-            hud:DrawRect(shadowCol, modalX - 2.0, modalY - 2.0, modalW + 4.0, modalH + 4.0)
-            hud:DrawRect(bgCol, modalX, modalY, modalW, modalH)
-            hud:DrawRect(borderCol, modalX, modalY, modalW, 4.0)
+            hud:DrawRect(MODAL_SHADOW_COL, modalX - 2.0, modalY - 2.0, modalW + 4.0, modalH + 4.0)
+            hud:DrawRect(MODAL_BG_COL, modalX, modalY, modalW, modalH)
+            hud:DrawRect(MODAL_BORDER_COL, modalX, modalY, modalW, 4.0)
 
             -- Header Title & Subtitle
-            utils.DrawText(hud, "🏆 REGIONAL COMPLETIONIST LIST", headerCol, modalX + 20.0, modalY + 16.0, 1.25, false)
+            utils.DrawText(hud, "🏆 REGIONAL COMPLETIONIST LIST", MODAL_HEADER_COL, modalX + 20.0, modalY + 16.0, 1.25, false)
             local globPct = completion.globalSaveProgress and completion.globalSaveProgress.overallPercent or 0
-            utils.DrawText(hud, "Global Save Progress: " .. globPct .. "%", { R = 0.0, G = 0.96, B = 0.83, A = 1.0 }, modalX + modalW - 200.0, modalY + 18.0, 0.9, false)
+            utils.DrawText(hud, "Global Save Progress: " .. globPct .. "%", HIGHLIGHT_COL, modalX + modalW - 200.0, modalY + 18.0, 0.9, false)
 
             -- Separator Line
-            hud:DrawRect({ R = 0.2, G = 0.25, B = 0.35, A = 0.5 }, modalX + 20.0, modalY + 48.0, modalW - 40.0, 1.0)
+            hud:DrawRect(SEPARATOR_COL, modalX + 20.0, modalY + 48.0, modalW - 40.0, 1.0)
 
             -- Render List of Regions
             local startY = modalY + 60.0
@@ -418,8 +429,8 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                 local stats = completion.cachedRegionStats and completion.cachedRegionStats[reg.id]
                 local isCurr = (reg.id == completion.currentRegionId)
 
-                local rBg = isCurr and { R = 0.0, G = 0.3, B = 0.4, A = 0.35 } or { R = 0.08, G = 0.1, B = 0.18, A = 0.6 }
-                local rBorder = isCurr and { R = 0.0, G = 0.96, B = 0.83, A = 0.9 } or { R = 0.2, G = 0.2, B = 0.3, A = 0.4 }
+                local rBg = isCurr and REGION_BG_CURR or REGION_BG_NORM
+                local rBorder = isCurr and HIGHLIGHT_COL_ALPHA or REGION_BORDER_NORM
 
                 hud:DrawRect(rBg, modalX + 20.0, rY, modalW - 40.0, cardH)
                 hud:DrawRect(rBorder, modalX + 20.0, rY, 3.0, cardH)
@@ -427,11 +438,11 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                 -- Region Title & Current Location Badge
                 local titleStr = (reg.icon or "") .. " " .. reg.name
                 if isCurr then titleStr = titleStr .. "  [CURRENT LOCATION]" end
-                local tCol = isCurr and { R = 0.0, G = 0.96, B = 0.83, A = 1.0 } or { R = 0.95, G = 0.95, B = 1.0, A = 1.0 }
+                local tCol = isCurr and HIGHLIGHT_COL or REGION_TITLE_NORM
                 utils.DrawText(hud, titleStr, tCol, modalX + 30.0, rY + 8.0, 0.95, false)
 
                 local regPct = stats and stats.percent or 0
-                utils.DrawText(hud, regPct .. "%", { R = 0.0, G = 0.96, B = 0.83, A = 1.0 }, modalX + modalW - 75.0, rY + 8.0, 0.9, false)
+                utils.DrawText(hud, regPct .. "%", HIGHLIGHT_COL, modalX + modalW - 75.0, rY + 8.0, 0.9, false)
 
                 -- Details Line: Effigies, Alphas, Fast Travels, Watch Towers, Bounties
                 if stats then
@@ -443,8 +454,8 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                         stats.towers.defeated, stats.towers.total,
                         stats.bounties.cleared, stats.bounties.total)
 
-                    utils.DrawText(hud, detStr, { R = 0.8, G = 0.85, B = 0.9, A = 1.0 }, modalX + 30.0, rY + 30.0, 0.72, false)
-                    utils.DrawText(hud, detStr2, { R = 0.8, G = 0.85, B = 0.9, A = 1.0 }, modalX + 30.0, rY + 48.0, 0.72, false)
+                    utils.DrawText(hud, detStr, DETAIL_TEXT_COL, modalX + 30.0, rY + 30.0, 0.72, false)
+                    utils.DrawText(hud, detStr2, DETAIL_TEXT_COL, modalX + 30.0, rY + 48.0, 0.72, false)
                 end
             end
         end)
