@@ -76,7 +76,7 @@ function M.Scan(playerPos, maxDistSq, eggFilter)
                             end
                             
                             local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                            table.insert(newEggs, { X = ueEggPos.X, Y = ueEggPos.Y, Z = ueEggPos.Z, SizePrefix = transSize, Name = name, FullName = transSize .. name, DistStr = distStr })
+                            table.insert(newEggs, { X = ueEggPos.X, Y = ueEggPos.Y, Z = ueEggPos.Z, SizePrefix = transSize, Name = name, FullName = transSize .. name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
                         end
                     end
                 end

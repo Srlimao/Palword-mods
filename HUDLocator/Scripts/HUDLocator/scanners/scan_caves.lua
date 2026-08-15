@@ -101,7 +101,8 @@ function M.Scan(playerPos, maxDistSq)
                             Level = level,
                             State = state,
                             Name = nameStr,
-                            DistStr = distStr
+                            DistStr = distStr,
+                            BracketDistStr = "[" .. distStr .. "]"
                         })
                     end
                     end -- End of dxSq short-circuit block

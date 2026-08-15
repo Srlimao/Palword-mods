@@ -154,7 +154,7 @@ function M.Scan(playerPos, maxDistSq)
 
                         if shouldAdd then
                             local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                            table.insert(newChests, { X = ueChestPos.X, Y = ueChestPos.Y, Z = ueChestPos.Z, Name = name, DistStr = distStr })
+                            table.insert(newChests, { X = ueChestPos.X, Y = ueChestPos.Y, Z = ueChestPos.Z, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
                         end
                     end
                 end

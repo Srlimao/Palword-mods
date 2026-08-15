@@ -33,7 +33,7 @@ function M.Scan(playerPos, maxDistSq)
                             name = configMod.GetTranslation("Note", "Journal")
                         end
                         local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                        table.insert(newNotes, { X = ueNotePos.X, Y = ueNotePos.Y, Z = ueNotePos.Z, Name = name, DistStr = distStr })
+                        table.insert(newNotes, { X = ueNotePos.X, Y = ueNotePos.Y, Z = ueNotePos.Z, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
                     end
                 end
             end)

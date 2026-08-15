@@ -320,7 +320,8 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                     IsBoss = isBoss,
                                     Passives = showPassives and translatedPassives or {},
                                     PassivesStr = passivesStr,
-                                    DistStr = distStr
+                                    DistStr = distStr,
+                                    BracketDistStr = "[" .. distStr .. "]"
                                 })
                             end
                         end

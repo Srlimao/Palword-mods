@@ -33,7 +33,7 @@ function M.Scan(playerPos, maxDistSq)
                             name = configMod.GetTranslation("Relic", "Relic")
                         end
                         local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                        table.insert(newRelics, { X = ueRelicPos.X, Y = ueRelicPos.Y, Z = ueRelicPos.Z, Name = name, DistStr = distStr })
+                        table.insert(newRelics, { X = ueRelicPos.X, Y = ueRelicPos.Y, Z = ueRelicPos.Z, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
                     end
                 end
             end)

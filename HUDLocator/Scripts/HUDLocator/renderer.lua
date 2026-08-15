@@ -33,12 +33,12 @@ local function DrawCaveBeacon(hud, pos, color)
         beaconColorBuffer.R = color.R; beaconColorBuffer.G = color.G; beaconColorBuffer.B = color.B
         
         beaconColorBuffer.A = 0.05
-        pcall(hud.DrawLine, hud, screenBaseX, screenBaseY, screenTopX, screenTopY, beaconColorBuffer, 16.0)
+        hud:DrawLine(screenBaseX, screenBaseY, screenTopX, screenTopY, beaconColorBuffer, 16.0)
         beaconColorBuffer.A = 0.12
-        pcall(hud.DrawLine, hud, screenBaseX, screenBaseY, screenTopX, screenTopY, beaconColorBuffer, 8.0)
+        hud:DrawLine(screenBaseX, screenBaseY, screenTopX, screenTopY, beaconColorBuffer, 8.0)
         
         beaconColorBuffer.R = 1.0; beaconColorBuffer.G = 1.0; beaconColorBuffer.B = 1.0; beaconColorBuffer.A = 0.35
-        pcall(hud.DrawLine, hud, screenBaseX, screenBaseY, screenTopX, screenTopY, beaconColorBuffer, 2.0)
+        hud:DrawLine(screenBaseX, screenBaseY, screenTopX, screenTopY, beaconColorBuffer, 2.0)
         
         beaconColorBuffer.R = color.R; beaconColorBuffer.G = color.G; beaconColorBuffer.B = color.B
         local steps = 5
@@ -52,7 +52,7 @@ local function DrawCaveBeacon(hud, pos, color)
 end
 
 -- Render tracker label (either box style or simple text style)
-local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW, screenH, subStr, nameColorOverride)
+local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW, screenH, subStr, nameColorOverride, bracketDistStr)
     textWorldPosBuffer.X = worldPos.X
     textWorldPosBuffer.Y = worldPos.Y
     textWorldPosBuffer.Z = worldPos.Z + style.TextOffsetZ
@@ -156,9 +156,9 @@ local function DrawTrackerLabel(hud, worldPos, nameStr, distStr, style, screenW,
                 nameW = utils.GetStringLength(nameStr) * charW * fontScale
             end
             
-            local distPartStr = distStr and ("[" .. distStr .. "]") or ""
+            local distPartStr = bracketDistStr or (distStr and ("[" .. distStr .. "]") or "")
             local distPartW = 0
-            if distStr then
+            if distPartStr ~= "" then
                 distPartW = utils.GetTextSize(hud, distPartStr, style.SmallFontScale)
                 if not distPartW or distPartW == 0 then
                     distPartW = utils.GetStringLength(distPartStr) * charW * smallFontScale
@@ -251,7 +251,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                     otherPlayer.LabelStr = labelStr
                 end
                 local distStr = distMeters .. "m"
-                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, distStr, CONFIG.Players.Style, screenW, screenH)
+                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, distStr, CONFIG.Players.Style, screenW, screenH, nil, nil, "[" .. distStr .. "]")
             end
         end
     end
@@ -260,7 +260,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     if CONFIG.Relics.Enabled then
         for _, pos in ipairs(activeRelics) do
             local name = pos.Name or "Relic"
-            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Relics.Style, screenW, screenH)
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Relics.Style, screenW, screenH, nil, nil, pos.BracketDistStr)
         end
     end
 
@@ -268,7 +268,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     if CONFIG.Chests.Enabled then
         for _, pos in ipairs(activeChests) do
             local name = pos.Name or "Chest"
-            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Chests.Style, screenW, screenH)
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Chests.Style, screenW, screenH, nil, nil, pos.BracketDistStr)
         end
     end
 
@@ -276,7 +276,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     if CONFIG.Eggs.Filter ~= "None" then
         for _, pos in ipairs(activeEggs) do
             local name = pos.FullName or pos.Name or "Egg"
-            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Eggs.Style, screenW, screenH)
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Eggs.Style, screenW, screenH, nil, nil, pos.BracketDistStr)
         end
     end
 
@@ -287,7 +287,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                 DrawCaveBeacon(hud, pos, CONFIG.Caves.Style.NameColor or { R = 0.5, G = 0.0, B = 1.0, A = 1.0 })
             end
             local name = pos.Name or "Cave"
-            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Caves.Style, screenW, screenH)
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Caves.Style, screenW, screenH, nil, nil, pos.BracketDistStr)
         end
     end
 
@@ -295,7 +295,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     if CONFIG.Loot.Enabled then
         for _, pos in ipairs(activeLoot) do
             local name = pos.Name or "Loot"
-            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Loot.Style, screenW, screenH)
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Loot.Style, screenW, screenH, nil, nil, pos.BracketDistStr)
         end
     end
 
@@ -303,7 +303,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     if CONFIG.Notes.Enabled then
         for _, pos in ipairs(activeNotes) do
             local name = pos.Name or "Note"
-            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Notes.Style, screenW, screenH)
+            DrawTrackerLabel(hud, pos, name, pos.DistStr, CONFIG.Notes.Style, screenW, screenH, nil, nil, pos.BracketDistStr)
         end
     end
 
@@ -319,7 +319,7 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
 
             local subStr = pal.PassivesStr
 
-            DrawTrackerLabel(hud, pal, pal.Name, pal.DistStr, CONFIG.Pals.Style, screenW, screenH, subStr, colorOverride)
+            DrawTrackerLabel(hud, pal, pal.Name, pal.DistStr, CONFIG.Pals.Style, screenW, screenH, subStr, colorOverride, pal.BracketDistStr)
         end
     end
 

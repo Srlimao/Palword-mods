@@ -212,7 +212,9 @@ function M.scan()
     end
 
     -- 9. Scan Completionist Save Data
-    pcall(completion.ScanCompletionData)
+    if configMod.CONFIG.Completionist and configMod.CONFIG.Completionist.Enabled then
+        pcall(completion.ScanCompletionData)
+    end
 end
 
 return M

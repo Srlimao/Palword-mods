@@ -1,7 +1,7 @@
 {
-    "publishedfileid": "3764265846",
-    "nexus_mod_id": "3932",
-    "nexus_mod_file_id": "7676373",
-    "changenote": "v2.10.0 - Added Chest Grade Detection \u0026 Enum Cycle Filter (All, Grade 2+..6 Only, None) with localized HUD labels.",
-    "last_published_version": "2.10.0"
+    "publishedfileid":  "3764265846",
+    "nexus_mod_id":  "3932",
+    "nexus_mod_file_id":  "7676373",
+    "changenote":  "v2.11.0: PalTracker Wild Pal filtering, localized Boss name resolution \u0026 flexible search, zero-allocation rendering optimizations, and scanner engine conversion crash resilience.",
+    "last_published_version":  "2.11.0"
 }
