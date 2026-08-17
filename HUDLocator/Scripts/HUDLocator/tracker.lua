@@ -141,7 +141,7 @@ function M.scan()
     if configMod.CONFIG.Players.Enabled then
         pcall(function()
             local localPlayerState = localPlayer.PlayerState
-            M.activePlayers = scanners.ScanPlayers(localPlayerState)
+            M.activePlayers = scanners.ScanPlayers(localPlayerState, playerPos)
         end)
     else
         M.activePlayers = {}
