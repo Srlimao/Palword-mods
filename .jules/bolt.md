@@ -20,3 +20,6 @@
 ## 2024-11-20 - [HUDLocator Scanner Optimization]
 **Learning:** In UE4SS Lua, performing C++ reflection checks like `utils.IsRelicPicked` or `utils.IsChestOpened` *before* filtering by distance means expensive C++ API calls are made for thousands of objects, even those halfway across the map.
 **Action:** Always defer boolean state queries on Unreal Engine actors until *after* the fast spatial/distance check (`IsWithinDistanceSq`) validates they are within tracking range.
+## 2024-05-18 - Early Short-Circuiting in Iterative Object Scanning
+**Learning:** Checking heavy properties, string-parsing character IDs, and fetching passive skills is expensive and shouldn't be done unless absolutely necessary. In `scan_pals.lua`, the code was previously processing these heavy lookups on all Pals before evaluating if they were dead or already owned by the player (which naturally filters them out).
+**Action:** When scanning objects, always perform cheap, decisive boolean checks (like `isDead` or `isOwned`) as early as possible and short-circuit (e.g. `if not isDead and not isOwned then ... end`) to avoid paying the cost of C++ reflection on irrelevant entities.
