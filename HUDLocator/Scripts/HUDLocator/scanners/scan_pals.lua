@@ -183,34 +183,34 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                             end)
                         end
 
-                        local charIdStr = ""
-                        if indivParam and indivParam:IsValid() then
-                            pcall(function()
-                                local cId = indivParam:GetCharacterID()
-                                if cId then charIdStr = cId:ToString() end
-                            end)
-                        end
-                        if charIdStr == "" and staticParam and staticParam:IsValid() then
-                            pcall(function()
-                                local cId = staticParam.CharacterID
-                                if cId then charIdStr = cId:ToString() end
-                            end)
-                        end
-
-                        local cleanCharId = utils.GetCleanPalId(charIdStr)
-                        if cleanCharId == "" then cleanCharId = charIdStr end
-
-                        local isBoss = false
-                        local lowerCharId = string.lower(charIdStr)
-
-                        -- Character ID checks (case-insensitive prefixes/suffixes: BOSS_Anubis, FBOSS_Deer, CaptainPenguin_BOSS)
-                        if string.find(lowerCharId, "boss_") or string.find(lowerCharId, "fboss_") or string.find(lowerCharId, "_boss") then
-                            isBoss = true
-                        elseif staticParam and staticParam:IsValid() and staticParam.IsBoss_Database == true then
-                            isBoss = true
-                        end
-
                         if not isDead and not isOwned then
+                            local charIdStr = ""
+                            if indivParam and indivParam:IsValid() then
+                                pcall(function()
+                                    local cId = indivParam:GetCharacterID()
+                                    if cId then charIdStr = cId:ToString() end
+                                end)
+                            end
+                            if charIdStr == "" and staticParam and staticParam:IsValid() then
+                                pcall(function()
+                                    local cId = staticParam.CharacterID
+                                    if cId then charIdStr = cId:ToString() end
+                                end)
+                            end
+
+                            local cleanCharId = utils.GetCleanPalId(charIdStr)
+                            if cleanCharId == "" then cleanCharId = charIdStr end
+
+                            local isBoss = false
+                            local lowerCharId = string.lower(charIdStr)
+
+                            -- Character ID checks (case-insensitive prefixes/suffixes: BOSS_Anubis, FBOSS_Deer, CaptainPenguin_BOSS)
+                            if string.find(lowerCharId, "boss_") or string.find(lowerCharId, "fboss_") or string.find(lowerCharId, "_boss") then
+                                isBoss = true
+                            elseif staticParam and staticParam:IsValid() and staticParam.IsBoss_Database == true then
+                                isBoss = true
+                            end
+
                             local isShiny = false
                             if indivParam and indivParam:IsValid() then
                                 pcall(function() isShiny = indivParam:IsRarePal() end)
