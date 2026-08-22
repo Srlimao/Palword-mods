@@ -2,6 +2,6 @@
     "publishedfileid":  "3764265846",
     "nexus_mod_id":  "3932",
     "nexus_mod_file_id":  "7676373",
-    "changenote":  "v2.11.0: PalTracker Wild Pal filtering, localized Boss name resolution \u0026 flexible search, zero-allocation rendering optimizations, and scanner engine conversion crash resilience.",
-    "last_published_version":  "2.11.0"
+    "changenote":  "v2.12.0: Wildcard Pal passive tracking (*), dual localized/raw passive matching, multi-passive thresholds \u0026 negative filters, PMO shorthand syntax, and startup config load protection.",
+    "last_published_version":  "2.12.0"
 }

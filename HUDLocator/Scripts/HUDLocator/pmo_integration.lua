@@ -11,20 +11,44 @@ local function FormatPalTrackerList(trackerPals)
     for _, item in ipairs(trackerPals) do
         if type(item) == "string" and item ~= "" then
             table.insert(list, item)
-        elseif type(item) == "table" and type(item.palname) == "string" and item.palname ~= "" then
-            table.insert(list, item.palname)
+        elseif type(item) == "table" then
+            local pName = item.palname
+            if not pName or pName == "" then pName = "*" end
+
+            local parts = {}
+            if item.passive and type(item.passive) == "table" and type(item.passive.passives) == "table" and #item.passive.passives > 0 then
+                local pListStr = table.concat(item.passive.passives, "/")
+                local thresh = item.passive.min_passive_threshold
+                if thresh and thresh > 1 then
+                    pListStr = pListStr .. "[" .. tostring(thresh) .. "]"
+                end
+                table.insert(parts, pListStr)
+            end
+
+            if item.shiny == true then
+                table.insert(parts, "Shiny")
+            end
+            if item.boss == true then
+                table.insert(parts, "Boss")
+            end
+
+            if #parts > 0 then
+                table.insert(list, pName .. ":" .. table.concat(parts, ":"))
+            else
+                table.insert(list, pName)
+            end
         end
     end
     return table.concat(list, ", ")
 end
 
 local function ParsePalTrackerList(str, existingTrackerPals)
-    local newNamesList = {}
+    local newTokensList = {}
     if type(str) == "string" then
-        for name in string.gmatch(str, "([^,]+)") do
-            local trimmed = name:match("^%s*(.-)%s*$")
+        for item in string.gmatch(str, "([^,]+)") do
+            local trimmed = item:match("^%s*(.-)%s*$")
             if trimmed and trimmed ~= "" then
-                table.insert(newNamesList, trimmed)
+                table.insert(newTokensList, trimmed)
             end
         end
     end
@@ -32,8 +56,9 @@ local function ParsePalTrackerList(str, existingTrackerPals)
     local existingMap = {}
     if type(existingTrackerPals) == "table" then
         for _, rule in ipairs(existingTrackerPals) do
-            if type(rule) == "table" and type(rule.palname) == "string" and rule.palname ~= "" then
-                existingMap[rule.palname:lower()] = rule
+            if type(rule) == "table" then
+                local key = (rule.palname and rule.palname ~= "") and rule.palname:lower() or "*"
+                existingMap[key] = rule
             elseif type(rule) == "string" and rule ~= "" then
                 existingMap[rule:lower()] = { palname = rule }
             end
@@ -41,18 +66,63 @@ local function ParsePalTrackerList(str, existingTrackerPals)
     end
 
     local result = {}
-    for _, name in ipairs(newNamesList) do
-        local lower = name:lower()
-        if existingMap[lower] then
-            local ruleCopy = existingMap[lower]
-            if type(ruleCopy) == "table" then
-                ruleCopy.palname = name
-                table.insert(result, ruleCopy)
-            else
-                table.insert(result, { palname = name })
+    for _, token in ipairs(newTokensList) do
+        if string.find(token, ":") then
+            local colonParts = {}
+            for segment in string.gmatch(token, "([^:]+)") do
+                local sTrimmed = segment:match("^%s*(.-)%s*$")
+                if sTrimmed and sTrimmed ~= "" then
+                    table.insert(colonParts, sTrimmed)
+                end
             end
+
+            local pName = "*"
+            local startIdx = 1
+            if not token:match("^%s*:") and #colonParts > 0 then
+                pName = colonParts[1]
+                startIdx = 2
+            end
+
+            local rule = { palname = pName }
+
+            for i = startIdx, #colonParts do
+                local sub = colonParts[i]
+                local subLower = sub:lower()
+                if subLower == "shiny" then
+                    rule.shiny = true
+                elseif subLower == "boss" or subLower == "alpha" then
+                    rule.boss = true
+                else
+                    local threshold = sub:match("%[(%d+)%]")
+                    local cleanSub = sub:gsub("%[%d+%]", "")
+                    local passives = {}
+                    for p in string.gmatch(cleanSub, "([^/%+|]+)") do
+                        local pTrimmed = p:match("^%s*(.-)%s*$")
+                        if pTrimmed and pTrimmed ~= "" then
+                            table.insert(passives, pTrimmed)
+                        end
+                    end
+                    if #passives > 0 then
+                        rule.passive = {
+                            passives = passives,
+                            min_passive_threshold = tonumber(threshold) or 1
+                        }
+                    end
+                end
+            end
+            table.insert(result, rule)
         else
-            table.insert(result, { palname = name })
+            local lower = token:lower()
+            if existingMap[lower] then
+                local ruleCopy = existingMap[lower]
+                if type(ruleCopy) == "table" then
+                    table.insert(result, ruleCopy)
+                else
+                    table.insert(result, { palname = token })
+                end
+            else
+                table.insert(result, { palname = token })
+            end
         end
     end
     return result
@@ -115,14 +185,21 @@ local function ApplySettings(settings, gen)
     if settings["Eggs_Filter"] ~= nil and CONFIG.Eggs then CONFIG.Eggs.Filter = settings["Eggs_Filter"] end
     if settings["Notes_Enabled"] ~= nil and CONFIG.Notes then CONFIG.Notes.Enabled = settings["Notes_Enabled"] end
     
+    local currentLootStr = FormatLootFilters(CONFIG.Loot and CONFIG.Loot.Filters)
     if settings["Loot_Enabled"] ~= nil and CONFIG.Loot then CONFIG.Loot.Enabled = settings["Loot_Enabled"] end
-    if settings["Loot_Filters"] ~= nil and CONFIG.Loot then CONFIG.Loot.Filters = ParseLootFilters(settings["Loot_Filters"]) end
+    if settings["Loot_Filters"] ~= nil and settings["Loot_Filters"] ~= currentLootStr and CONFIG.Loot then
+        CONFIG.Loot.Filters = ParseLootFilters(settings["Loot_Filters"])
+    end
 
+    local currentTrackerStr = FormatPalTrackerList(CONFIG.Pals and CONFIG.Pals.TrackerPals)
     if settings["Pals_Enabled"] ~= nil and CONFIG.Pals then CONFIG.Pals.Enabled = settings["Pals_Enabled"] end
     if settings["Pals_FilterMode"] ~= nil and CONFIG.Pals then CONFIG.Pals.FilterMode = settings["Pals_FilterMode"] end
     if settings["Pals_ShowPassives"] ~= nil and CONFIG.Pals then CONFIG.Pals.ShowPassives = settings["Pals_ShowPassives"] end
+    if settings["Pals_ShowOnlyMatchedPassives"] ~= nil and CONFIG.Pals then CONFIG.Pals.ShowOnlyMatchedPassives = settings["Pals_ShowOnlyMatchedPassives"] end
     if settings["Pals_ShowLevel"] ~= nil and CONFIG.Pals then CONFIG.Pals.ShowLevel = settings["Pals_ShowLevel"] end
-    if settings["Pals_TrackerList"] ~= nil and CONFIG.Pals then CONFIG.Pals.TrackerPals = ParsePalTrackerList(settings["Pals_TrackerList"], CONFIG.Pals.TrackerPals) end
+    if settings["Pals_TrackerList"] ~= nil and settings["Pals_TrackerList"] ~= currentTrackerStr and CONFIG.Pals then
+        CONFIG.Pals.TrackerPals = ParsePalTrackerList(settings["Pals_TrackerList"], CONFIG.Pals.TrackerPals)
+    end
 
     if settings["Completionist_ShowHUDTracker"] ~= nil and CONFIG.Completionist then CONFIG.Completionist.ShowHUDTracker = settings["Completionist_ShowHUDTracker"] end
     if settings["Completionist_ShowInMenu"] ~= nil and CONFIG.Completionist then CONFIG.Completionist.ShowInMenu = settings["Completionist_ShowInMenu"] end
@@ -181,6 +258,7 @@ function M.Init()
             Pals_Enabled = CONFIG.Pals and CONFIG.Pals.Enabled or true,
             Pals_FilterMode = CONFIG.Pals and CONFIG.Pals.FilterMode or "TrackerListOnly",
             Pals_ShowPassives = CONFIG.Pals and CONFIG.Pals.ShowPassives or true,
+            Pals_ShowOnlyMatchedPassives = CONFIG.Pals and CONFIG.Pals.ShowOnlyMatchedPassives or false,
             Pals_ShowLevel = CONFIG.Pals and CONFIG.Pals.ShowLevel or true,
             Pals_TrackerList = FormatPalTrackerList(CONFIG.Pals and CONFIG.Pals.TrackerPals),
             Completionist_ShowHUDTracker = CONFIG.Completionist and CONFIG.Completionist.ShowHUDTracker or true,
@@ -199,68 +277,67 @@ function M.Init()
                 key = "Global_ScanIntervalMs",
                 type = "integer",
                 label = "Scan Interval (ms)",
-                hint = "Background actor scan frequency in milliseconds.",
+                hint = "Milliseconds between background locator scan loops.",
                 default = 1500,
-                minimum = 500,
-                maximum = 5000,
+                min = 500,
+                max = 5000,
                 step = 250
             },
             {
                 key = "Global_MaxDistance",
-                type = "number",
-                label = "Max Distance",
-                hint = "Maximum detection distance for all trackers (in centimeters).",
+                type = "float",
+                label = "Scan Distance (UE Units)",
+                hint = "Maximum scan distance in unreal units (e.g. 15000 = 150m).",
                 default = 15000.0,
-                minimum = 5000.0,
-                maximum = 100000.0,
-                step = 5000.0
+                min = 1000.0,
+                max = 100000.0,
+                step = 1000.0
             },
             {
                 key = "Global_FontScale",
-                type = "number",
-                label = "Font Scale",
-                hint = "Global multiplier for text label sizing.",
+                type = "float",
+                label = "Global Font Scale",
+                hint = "Scale multiplier for HUD text overlays.",
                 default = 1.0,
-                minimum = 0.5,
-                maximum = 2.0,
+                min = 0.5,
+                max = 3.0,
                 step = 0.1
             },
             {
                 key = "Global_Language",
                 type = "enum",
-                label = "Language",
-                hint = "Override system language setting.",
+                label = "UI Language",
+                hint = "Interface display language ('system' autodetects game language).",
                 default = "system",
                 choices = { "system", "en", "es", "ja", "zh-Hans", "zh-Hant", "fr", "it", "de", "ko", "pt-BR", "ru", "th", "vi", "id", "tr", "pl", "es-MX" }
             },
-
-            { type = "section", label = "Trackers & Filters" },
+            { type = "section", label = "Category Toggles & Filters" },
             {
                 key = "Players_Enabled",
                 type = "boolean",
-                label = "Show Players",
-                hint = "Display markers for nearby players.",
+                label = "Show Other Players",
+                hint = "Display markers for other players in multiplayer.",
                 default = true
             },
             {
                 key = "Relics_Enabled",
                 type = "boolean",
-                label = "Show Lifmunk Relics",
+                label = "Show Lifmunk Effigies",
                 hint = "Display markers for Lifmunk Effigies.",
                 default = true
             },
             {
                 key = "Chests_Enabled",
                 type = "boolean",
-                label = "Show Chests & Junk",
-                hint = "Display markers for treasure chests and scrap loot.",
+                label = "Show Chests / Junk",
+                hint = "Display markers for treasure chests and junk piles.",
                 default = true
             },
             {
                 key = "Chests_Filter",
                 type = "enum",
-                label = "Chest Filter",
-                hint = "Filter between chests, junk items, or both.",
+                label = "Chest Filter Type",
+                hint = "Filter between chests, junk piles, or both.",
                 default = "Both",
                 choices = { "Both", "Chests", "Junk" }
             },
@@ -332,6 +409,13 @@ function M.Init()
                 default = true
             },
             {
+                key = "Pals_ShowOnlyMatchedPassives",
+                type = "boolean",
+                label = "Show Only Matched Passives",
+                hint = "Display only the passives that matched tracking rules instead of all 4 slots.",
+                default = false
+            },
+            {
                 key = "Pals_ShowLevel",
                 type = "boolean",
                 label = "Show Pal Level",
@@ -342,8 +426,8 @@ function M.Init()
                 key = "Pals_TrackerList",
                 type = "text",
                 label = "Tracked Pals List",
-                hint = "Comma-separated Pal names to track (e.g. Lamball, Anubis, Jetragon).",
-                default = "Lamball, Jetragon, Cattiva",
+                hint = "Comma-separated Pals or rules (e.g. 'Lamball, *:Runner, *:Swift/Legend[2], Cattiva:Shiny'). Use '*' for any Pal.",
+                default = "*:Runner/Swift/Legend/Artisan, Lamball:Runner, Jetragon:Boss:Legend/Swift[2]",
                 max_length = 256
             },
             {
@@ -365,7 +449,6 @@ function M.Init()
 
     pmo.register_when_ready(schema, function(settings, registration_error)
         if settings ~= nil then
-            ApplySettings(settings, pmo.generation())
             M.currentGeneration = pmo.generation()
         end
     end)

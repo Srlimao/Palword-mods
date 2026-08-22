@@ -79,6 +79,7 @@
         "Settings_ShowPals": "Show Pals",
         "Settings_PalFilter": "Pal Filter",
         "Settings_ShowPassives": "Show Passives",
+        "Settings_ShowOnlyMatchedPassives": "Only Matched Passives",
         "Settings_ShowLevel": "Show Level",
         "Filter_TrackerListOnly": "Tracker List Only",
         "Filter_ShinyOnly": "Shiny Only",

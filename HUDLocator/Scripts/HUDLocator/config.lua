@@ -163,8 +163,18 @@ M.CONFIG = {
         MaxDistance = 15000.0,
         FilterMode = "TrackerListOnly",
         ShowPassives = true,
+        ShowOnlyMatchedPassives = false,
         ShowLevel = true,
         TrackerPals = {
+            {
+                palname = "*",
+                shiny = false,
+                boss = false,
+                passive = {
+                    passives = { "Runner", "Swift", "Legend", "Artisan" },
+                    min_passive_threshold = 1
+                }
+            },
             {
                 palname = "Lamball",
                 shiny = false,
@@ -436,8 +446,23 @@ local defaultJSON = [[{
     "MaxDistance": 15000.0,
     "FilterMode": "TrackerListOnly",
     "ShowPassives": true,
+    "ShowOnlyMatchedPassives": false,
     "ShowLevel": true,
     "TrackerPals": [
+      {
+        "palname": "*",
+        "shiny": false,
+        "boss": false,
+        "passive": {
+          "passives": [
+            "Runner",
+            "Swift",
+            "Legend",
+            "Artisan"
+          ],
+          "min_passive_threshold": 1
+        }
+      },
       {
         "palname": "Lamball",
         "shiny": false,
@@ -549,8 +574,6 @@ function M.LoadConfig()
             M.DebugPrint("Configuration loaded from central path: " .. newConfigPath)
             centralLoaded = true
             M.ConfigLoadedOnce = true
-            -- Save back immediately to prune invalid keys and add missing keys
-            M.SaveConfig()
         end
     end
     

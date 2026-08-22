@@ -96,8 +96,9 @@ METADATA_HUD_LOCATOR = {
     "Pals.MaxDistance": { "description": "Maximum tracking range for Pals (cm).", "type": "number", "min": 1000, "max": 100000, "step": 1000 },
     "Pals.FilterMode": { "description": "Filtering mode for Pal radar (AllPals, BossOnly, ShinyOnly, TrackerListOnly, PassivesThreshold).", "type": "enum", "options": ["AllPals", "BossOnly", "ShinyOnly", "TrackerListOnly", "PassivesThreshold"] },
     "Pals.ShowPassives": { "description": "Display passive skill names on the Pal HUD tag.", "type": "boolean" },
+    "Pals.ShowOnlyMatchedPassives": { "description": "Display only the passive skills that matched tracking criteria.", "type": "boolean" },
     "Pals.ShowLevel": { "description": "Display Pal character level on the HUD tag.", "type": "boolean" },
-    "Pals.TrackerPals": { "description": "List of specific Pals and passive criteria to track.", "type": "array" },
+    "Pals.TrackerPals": { "description": "List of specific Pals and passive criteria to track. Use '*' or empty palname to track any species with desired passives.", "type": "array" },
 }
 
 # Add common Category Style fields recursively to avoid boilerplate
@@ -410,6 +411,12 @@ def parse_table_value(tokens, index):
         while index < len(tokens):
             t_type, t_val = tokens[index]
             if t_type == 'SYMBOL' and t_val == '}':
+                if table:
+                    keys = list(table.keys())
+                    if all(isinstance(k, int) for k in keys):
+                        sorted_keys = sorted(keys)
+                        if sorted_keys == list(range(1, len(keys) + 1)):
+                            return [table[k] for k in sorted_keys], index + 1
                 return table, index + 1
             
             is_kv = False
@@ -534,7 +541,7 @@ def main():
             "name": "HUDLocator",
             "lua_path": "HUDLocator/Scripts/HUDLocator/config.lua",
             "metadata": METADATA_HUD_LOCATOR,
-            "version": "2.5.0"
+            "version": "2.12.0"
         },
         {
             "name": "AccessoryToggler",
@@ -593,6 +600,16 @@ def main():
             with open(out_path, "w", encoding="utf-8") as out_f:
                 json.dump(mod_schema, out_f, indent=2)
             print(f"Successfully generated {out_path}")
+
+            # Sync to ModConfigWeb if directory exists
+            web_sync_targets = {
+                "HUDLocator": "d:/Mods/ModConfigWeb/will-palmods-configurator/src/features/hud-locator/utils/HUDLocator.schema.json",
+                "AccessoryToggler": "d:/Mods/ModConfigWeb/will-palmods-configurator/src/features/accessory-toggler/AccessoryToggler.schema.json"
+            }
+            if mod["name"] in web_sync_targets and os.path.exists(os.path.dirname(web_sync_targets[mod["name"]])):
+                with open(web_sync_targets[mod["name"]], "w", encoding="utf-8") as web_f:
+                    json.dump(mod_schema, web_f, indent=2)
+                print(f"Synced {mod['name']} schema to {web_sync_targets[mod['name']]}")
             
             # Add to combined schemas
             combined_schemas[mod["name"]] = mod_schema

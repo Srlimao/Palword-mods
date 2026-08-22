@@ -38,12 +38,35 @@ local function IsValidGuid(guid)
     return valid
 end
 
-local function EvaluatePalRule(rule, palName, charIdStr, cleanCharId, isShiny, isBoss, palPassives)
-    if not rule then return false, 0 end
+local function NormalizePassiveString(s)
+    if not s then return "" end
+    local clean = string.lower(tostring(s))
+    clean = string.gsub(clean, "[%s_%-]+", "")
+    return clean
+end
+
+local function ExtractList(val)
+    local list = {}
+    if not val then return list end
+    if type(val) == "string" then
+        if val ~= "" then table.insert(list, val) end
+    elseif type(val) == "table" then
+        for _, item in pairs(val) do
+            if type(item) == "string" and item ~= "" then
+                table.insert(list, item)
+            end
+        end
+    end
+    return list
+end
+
+local function EvaluatePalRule(rule, palName, charIdStr, cleanCharId, isShiny, isBoss, palPassiveMap)
+    if not rule then return false, 0, {} end
     if type(rule) == "string" then
         rule = { palname = rule }
     end
 
+    -- 1. Species / Pal Name filter (omitted, empty "", or "*" matches all Pals)
     if rule.palname and rule.palname ~= "" and rule.palname ~= "*" then
         local rawTarget = string.lower(rule.palname)
         local cleanTarget = rawTarget
@@ -63,40 +86,68 @@ local function EvaluatePalRule(rule, palName, charIdStr, cleanCharId, isShiny, i
         end
 
         if not matchedName then
-            return false, 0
+            return false, 0, {}
         end
     end
 
+    -- 2. Shiny / Boss attribute checks
     if rule.shiny == true and not isShiny then
-        return false, 0
+        return false, 0, {}
     end
 
     if rule.boss == true and not isBoss then
-        return false, 0
+        return false, 0, {}
     end
 
+    -- 3. Excluded passives check (negative filter)
+    local rawExclude = nil
+    if rule.passive and type(rule.passive) == "table" and rule.passive.exclude_passives then
+        rawExclude = rule.passive.exclude_passives
+    elseif rule.exclude_passives then
+        rawExclude = rule.exclude_passives
+    end
+
+    local excludeList = ExtractList(rawExclude)
+    if #excludeList > 0 and palPassiveMap then
+        for _, excP in ipairs(excludeList) do
+            local strExc = tostring(excP)
+            local lowerExc = string.lower(strExc)
+            local normExc = NormalizePassiveString(strExc)
+            if palPassiveMap[strExc] or palPassiveMap[lowerExc] or palPassiveMap[normExc] then
+                return false, 0, {}
+            end
+        end
+    end
+
+    -- 4. Required passives check
     local matchedPassivesCount = 0
     local matchedPassiveNames = {}
-    if rule.passive and type(rule.passive) == "table" then
-        local requiredList = rule.passive.passives
-        local minThreshold = rule.passive.min_passive_threshold or 1
+    if rule.passive then
+        local rawRequired = (type(rule.passive) == "table") and rule.passive.passives or rule.passive
+        local minThreshold = (type(rule.passive) == "table" and rule.passive.min_passive_threshold) or 1
+        local requiredList = ExtractList(rawRequired)
 
-        if requiredList and type(requiredList) == "table" and #requiredList > 0 then
-            local palPassiveMap = {}
-            for _, pName in ipairs(palPassives) do
-                palPassiveMap[string.lower(tostring(pName))] = true
+        if #requiredList > 0 then
+            if not palPassiveMap then
+                return false, 0, {}
             end
 
+            local alreadyMatched = {}
             for _, reqP in ipairs(requiredList) do
-                local lowerReq = string.lower(tostring(reqP))
-                if palPassiveMap[lowerReq] then
+                local strReq = tostring(reqP)
+                local lowerReq = string.lower(strReq)
+                local normReq = NormalizePassiveString(strReq)
+
+                local displayName = palPassiveMap[strReq] or palPassiveMap[lowerReq] or palPassiveMap[normReq]
+                if displayName and not alreadyMatched[displayName] then
+                    alreadyMatched[displayName] = true
                     matchedPassivesCount = matchedPassivesCount + 1
-                    table.insert(matchedPassiveNames, reqP)
+                    table.insert(matchedPassiveNames, displayName)
                 end
             end
 
             if matchedPassivesCount < minThreshold then
-                return false, 0
+                return false, 0, {}
             end
         end
     end
@@ -248,19 +299,35 @@ function M.Scan(playerPos, maxDistSq, palConfig)
 
                             local palPassivesStr = {}
                             local translatedPassives = {}
+                            local palPassiveMap = {}
+
                             for _, pName in ipairs(rawPassives) do
                                 local strP = utils.FNameToString(pName)
                                 if strP and strP ~= "" and strP ~= "None" then
                                     table.insert(palPassivesStr, strP)
                                     local transP = utils.GetTranslatedPassiveName(strP)
-                                    if transP and transP ~= "" then
-                                        table.insert(translatedPassives, transP)
+                                    if not transP or transP == "" then
+                                        transP = strP
                                     end
+                                    table.insert(translatedPassives, transP)
+
+                                    local lowerRaw = string.lower(strP)
+                                    local normRaw = NormalizePassiveString(strP)
+                                    local lowerTrans = string.lower(transP)
+                                    local normTrans = NormalizePassiveString(transP)
+
+                                    palPassiveMap[strP] = transP
+                                    palPassiveMap[transP] = transP
+                                    palPassiveMap[lowerRaw] = transP
+                                    palPassiveMap[normRaw] = transP
+                                    palPassiveMap[lowerTrans] = transP
+                                    palPassiveMap[normTrans] = transP
                                 end
                             end
 
                             local shouldTrack = false
                             local matchedPassiveCount = 0
+                            local matchedPassiveNames = {}
 
                             if filterMode == "All" then
                                 shouldTrack = true
@@ -271,12 +338,13 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                             elseif filterMode == "ShinyOrBoss" then
                                 shouldTrack = isShiny or isBoss
                             elseif filterMode == "TrackerListOnly" then
-                                for _, rule in ipairs(rulesList) do
-                                    local pass, count = EvaluatePalRule(rule, palName, charIdStr, cleanCharId, isShiny, isBoss, palPassivesStr)
+                                for _, rule in pairs(rulesList) do
+                                    local pass, count, matchedList = EvaluatePalRule(rule, palName, charIdStr, cleanCharId, isShiny, isBoss, palPassiveMap)
                                     if pass then
                                         shouldTrack = true
                                         if count > matchedPassiveCount then
                                             matchedPassiveCount = count
+                                            matchedPassiveNames = matchedList or {}
                                         end
                                         break
                                     end
@@ -307,9 +375,19 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                     table.insert(labelParts, "(" .. tostring(matchedPassiveCount) .. ")")
                                 end
 
+                                local showOnlyMatched = (palConfig.ShowOnlyMatchedPassives == true)
+                                local passivesToDisplay = {}
+                                if showPassives then
+                                    if showOnlyMatched and #matchedPassiveNames > 0 then
+                                        passivesToDisplay = matchedPassiveNames
+                                    else
+                                        passivesToDisplay = translatedPassives
+                                    end
+                                end
+
                                 local formattedLabel = table.concat(labelParts, " ")
                                 local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                                local passivesStr = (showPassives and #translatedPassives > 0) and table.concat(translatedPassives, ", ") or nil
+                                local passivesStr = #passivesToDisplay > 0 and table.concat(passivesToDisplay, ", ") or nil
 
                                 table.insert(newPals, {
                                     X = uePos.X, Y = uePos.Y, Z = uePos.Z,
@@ -318,7 +396,9 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                     Level = level,
                                     IsShiny = isShiny,
                                     IsBoss = isBoss,
-                                    Passives = showPassives and translatedPassives or {},
+                                    Passives = passivesToDisplay,
+                                    MatchedPassives = matchedPassiveNames,
+                                    MatchedPassiveCount = matchedPassiveCount,
                                     PassivesStr = passivesStr,
                                     DistStr = distStr,
                                     BracketDistStr = "[" .. distStr .. "]"

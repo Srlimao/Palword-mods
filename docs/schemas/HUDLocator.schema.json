@@ -1,6 +1,6 @@
 {
   "modName": "HUDLocator",
-  "version": "2.5.0",
+  "version": "2.12.0",
   "schema": {
     "Global": {
       "type": "section",
@@ -1118,6 +1118,11 @@
           "description": "Display passive skill names on the Pal HUD tag.",
           "default": true
         },
+        "ShowOnlyMatchedPassives": {
+          "type": "boolean",
+          "description": "Display only the passive skills that matched tracking criteria.",
+          "default": false
+        },
         "ShowLevel": {
           "type": "boolean",
           "description": "Display Pal character level on the HUD tag.",
@@ -1125,17 +1130,31 @@
         },
         "TrackerPals": {
           "type": "array",
-          "description": "List of specific Pals and passive criteria to track.",
+          "description": "List of specific Pals and passive criteria to track. Use '*' or empty palname to track any species with desired passives.",
           "default": [
+            {
+              "palname": "*",
+              "shiny": false,
+              "boss": false,
+              "passive": {
+                "passives": [
+                  "Runner",
+                  "Swift",
+                  "Legend",
+                  "Artisan"
+                ],
+                "min_passive_threshold": 1
+              }
+            },
             {
               "palname": "Lamball",
               "shiny": false,
               "boss": false,
               "passive": {
-                "passives": {
-                  "1": "Runner",
-                  "2": "Motivational Leader"
-                },
+                "passives": [
+                  "Runner",
+                  "Motivational Leader"
+                ],
                 "min_passive_threshold": 1
               }
             },
@@ -1144,12 +1163,12 @@
               "shiny": false,
               "boss": true,
               "passive": {
-                "passives": {
-                  "1": "Legend",
-                  "2": "Divine Dragon",
-                  "3": "Swift",
-                  "4": "Runner"
-                },
+                "passives": [
+                  "Legend",
+                  "Divine Dragon",
+                  "Swift",
+                  "Runner"
+                ],
                 "min_passive_threshold": 3
               }
             },
@@ -1158,10 +1177,10 @@
               "shiny": true,
               "boss": false,
               "passive": {
-                "passives": {
-                  "1": "Lucky",
-                  "2": "Coward"
-                },
+                "passives": [
+                  "Lucky",
+                  "Coward"
+                ],
                 "min_passive_threshold": 2
               }
             }

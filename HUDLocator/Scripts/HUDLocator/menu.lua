@@ -98,6 +98,13 @@ local menuItems = {
         transKey = "Settings_ShowPassives"
     },
     {
+        name = "Only Matched Passives",
+        get = function() return CONFIG.Pals and CONFIG.Pals.ShowOnlyMatchedPassives end,
+        set = function(v) if CONFIG.Pals then CONFIG.Pals.ShowOnlyMatchedPassives = v end end,
+        type = "boolean",
+        transKey = "Settings_ShowOnlyMatchedPassives"
+    },
+    {
         name = "Show Level",
         get = function() return CONFIG.Pals and CONFIG.Pals.ShowLevel end,
         set = function(v) if CONFIG.Pals then CONFIG.Pals.ShowLevel = v end end,
