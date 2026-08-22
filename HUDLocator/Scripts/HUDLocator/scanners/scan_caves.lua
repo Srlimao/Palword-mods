@@ -53,17 +53,22 @@ function M.Scan(playerPos, maxDistSq)
                     -- We can only short-circuit if dxSq ALONE is greater than maxDistSq AND
                     -- greater than closestDistSq (to preserve closest finding logic).
                     if dxSq <= maxDistSq or dxSq < closestDistSq then
-                        local cy, cz = ueCavePos.Y, ueCavePos.Z
+                        local cy = ueCavePos.Y
                         local dy = cy - playerPos.Y
-                        local dz = cz - playerPos.Z
-                        local distSq = dxSq + dy * dy + dz * dz
+                        local dySq = dy * dy
+                        local dxSq_dySq = dxSq + dySq
 
-                        if distSq < closestDistSq then
-                            closestDistSq = distSq
-                        end
+                        if dxSq_dySq <= maxDistSq or dxSq_dySq < closestDistSq then
+                            local cz = ueCavePos.Z
+                            local dz = cz - playerPos.Z
+                            local distSq = dxSq_dySq + dz * dz
 
-                        if distSq <= maxDistSq then
-                            local level, state = utils.GetDungeonDetails(cave)
+                            if distSq < closestDistSq then
+                                closestDistSq = distSq
+                            end
+
+                            if distSq <= maxDistSq then
+                                local level, state = utils.GetDungeonDetails(cave)
                             local dungeonName = nil
                             pcall(function()
                             local stageModel = cave.StageModel
@@ -91,20 +96,21 @@ function M.Scan(playerPos, maxDistSq)
                             nameStr = dungeonName .. " " .. lv .. level .. " (" .. stateStr .. ")"
                         else
                             local closed = configMod.GetTranslation("Cave_Closed", "(Closed)")
-                            nameStr = dungeonName .. " " .. closed
-                        end
-                        local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                        table.insert(M.tempCaves[cls], { 
-                            X = cx,
-                            Y = cy,
-                            Z = cz,
-                            Level = level,
-                            State = state,
-                            Name = nameStr,
-                            DistStr = distStr,
-                            BracketDistStr = "[" .. distStr .. "]"
-                        })
-                    end
+                                nameStr = dungeonName .. " " .. closed
+                            end
+                            local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
+                            table.insert(M.tempCaves[cls], {
+                                X = cx,
+                                Y = cy,
+                                Z = cz,
+                                Level = level,
+                                State = state,
+                                Name = nameStr,
+                                DistStr = distStr,
+                                BracketDistStr = "[" .. distStr .. "]"
+                            })
+                            end
+                        end -- End of dySq short-circuit block
                     end -- End of dxSq short-circuit block
                 end
             end)
