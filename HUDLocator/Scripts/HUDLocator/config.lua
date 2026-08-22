@@ -165,6 +165,7 @@ M.CONFIG = {
         ShowPassives = true,
         ShowOnlyMatchedPassives = false,
         ShowLevel = true,
+        IncludeOwned = false,
         TrackerPals = {
             {
                 palname = "*",
@@ -205,6 +206,7 @@ M.CONFIG = {
         },
         Style = {
             DrawBox = false,
+            UseRarityColors = true,
             FontScale = 1.2,
             SmallFontScale = 0.9,
             TextOffsetZ = 120.0,
@@ -448,6 +450,7 @@ local defaultJSON = [[{
     "ShowPassives": true,
     "ShowOnlyMatchedPassives": false,
     "ShowLevel": true,
+    "IncludeOwned": false,
     "TrackerPals": [
       {
         "palname": "*",
@@ -504,6 +507,7 @@ local defaultJSON = [[{
     ],
     "Style": {
       "DrawBox": false,
+      "UseRarityColors": true,
       "FontScale": 1.2,
       "SmallFontScale": 0.9,
       "TextOffsetZ": 120.0,

@@ -1,6 +1,6 @@
 {
   "modName": "HUDLocator",
-  "version": "2.12.0",
+  "version": "2.13.0",
   "schema": {
     "Global": {
       "type": "section",
@@ -1128,6 +1128,11 @@
           "description": "Display Pal character level on the HUD tag.",
           "default": true
         },
+        "IncludeOwned": {
+          "type": "boolean",
+          "description": "Include player-owned Pals and base camp workers in tracking.",
+          "default": false
+        },
         "TrackerPals": {
           "type": "array",
           "description": "List of specific Pals and passive criteria to track. Use '*' or empty palname to track any species with desired passives.",
@@ -1194,6 +1199,11 @@
               "type": "boolean",
               "description": "Draw a background border box around the label.",
               "default": false
+            },
+            "UseRarityColors": {
+              "type": "boolean",
+              "description": "Render passive skills in distinct colors according to rarity tier (Gold for Legend/Tier 3, Blue for Tier 2, White for Tier 1, Red for Negative).",
+              "default": true
             },
             "FontScale": {
               "type": "number",

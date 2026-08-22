@@ -172,11 +172,28 @@ function M.Scan(playerPos, maxDistSq, palConfig)
     local rulesList = palConfig.TrackerPals or {}
     local showPassives = palConfig.ShowPassives ~= false
     local showLevel = palConfig.ShowLevel ~= false
+    local includeOwned = (palConfig.IncludeOwned == true)
     local palUtil = GetPalUtility()
 
+    local seenActors = {}
+    local seenGuids = {}
+
     for _, actor in ipairs(actors) do
-        if actor:IsValid() then
+        if actor and actor:IsValid() then
             pcall(function()
+                local isDestroyed = false
+                pcall(function() isDestroyed = actor:IsActorBeingDestroyed() end)
+                if isDestroyed then return end
+
+                local isHidden = false
+                pcall(function() isHidden = actor.bHidden or (actor.IsHidden and actor:IsHidden()) end)
+                if isHidden then return end
+
+                local fullName = nil
+                pcall(function() fullName = actor:GetFullName() end)
+                if not fullName or seenActors[fullName] then return end
+                seenActors[fullName] = true
+
                 local uePos = actor:K2_GetActorLocation()
                 if uePos then
                     local within, distSq = utils.IsWithinDistanceSq(uePos, playerPos, maxDistSq)
@@ -190,6 +207,26 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                         local indivParam = nil
                         if charParam and charParam:IsValid() then
                             pcall(function() indivParam = charParam:GetIndividualParameter() end)
+                        end
+
+                        if indivParam and indivParam:IsValid() then
+                            local guidStr = nil
+                            pcall(function()
+                                local g = indivParam:GetIndividualId()
+                                if g then guidStr = g:ToString() end
+                            end)
+                            if not guidStr or guidStr == "" then
+                                pcall(function()
+                                    local saveP = indivParam.SaveParameter
+                                    if saveP and saveP.IndividualId then
+                                        guidStr = saveP.IndividualId:ToString()
+                                    end
+                                end)
+                            end
+                            if guidStr and guidStr ~= "" and guidStr ~= "00000000000000000000000000000000" then
+                                if seenGuids[guidStr] then return end
+                                seenGuids[guidStr] = true
+                            end
                         end
 
                         local isDead = false
@@ -261,7 +298,8 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                             isBoss = true
                         end
 
-                        if not isDead and not isOwned then
+                        local isIgnored = isDead or (isOwned and not includeOwned)
+                        if not isIgnored then
                             local isShiny = false
                             if indivParam and indivParam:IsValid() then
                                 pcall(function() isShiny = indivParam:IsRarePal() end)
@@ -299,6 +337,7 @@ function M.Scan(playerPos, maxDistSq, palConfig)
 
                             local palPassivesStr = {}
                             local translatedPassives = {}
+                            local structuredPassives = {}
                             local palPassiveMap = {}
 
                             for _, pName in ipairs(rawPassives) do
@@ -310,6 +349,15 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                         transP = strP
                                     end
                                     table.insert(translatedPassives, transP)
+
+                                    local pRank = utils.GetPassiveRank(strP)
+                                    local pColor = utils.GetPassiveRarityColor(pRank)
+                                    table.insert(structuredPassives, {
+                                        name = transP,
+                                        rawId = strP,
+                                        rank = pRank,
+                                        color = pColor
+                                    })
 
                                     local lowerRaw = string.lower(strP)
                                     local normRaw = NormalizePassiveString(strP)
@@ -371,32 +419,51 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                     table.insert(labelParts, "Boss")
                                 end
 
+                                if isOwned then
+                                    table.insert(labelParts, "Owned")
+                                end
+
                                 if matchedPassiveCount > 0 then
                                     table.insert(labelParts, "(" .. tostring(matchedPassiveCount) .. ")")
                                 end
 
                                 local showOnlyMatched = (palConfig.ShowOnlyMatchedPassives == true)
                                 local passivesToDisplay = {}
+                                local passiveNamesToDisplay = {}
+
                                 if showPassives then
                                     if showOnlyMatched and #matchedPassiveNames > 0 then
-                                        passivesToDisplay = matchedPassiveNames
+                                        local matchedSet = {}
+                                        for _, mName in ipairs(matchedPassiveNames) do
+                                            matchedSet[mName] = true
+                                        end
+                                        for _, pItem in ipairs(structuredPassives) do
+                                            if matchedSet[pItem.name] or matchedSet[pItem.rawId] then
+                                                table.insert(passivesToDisplay, pItem)
+                                                table.insert(passiveNamesToDisplay, pItem.name)
+                                            end
+                                        end
                                     else
-                                        passivesToDisplay = translatedPassives
+                                        passivesToDisplay = structuredPassives
+                                        passiveNamesToDisplay = translatedPassives
                                     end
                                 end
 
                                 local formattedLabel = table.concat(labelParts, " ")
                                 local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                                local passivesStr = #passivesToDisplay > 0 and table.concat(passivesToDisplay, ", ") or nil
+                                local passivesStr = #passiveNamesToDisplay > 0 and table.concat(passiveNamesToDisplay, ", ") or nil
 
                                 table.insert(newPals, {
+                                    Actor = actor,
                                     X = uePos.X, Y = uePos.Y, Z = uePos.Z,
                                     Name = formattedLabel,
                                     PalName = palName,
                                     Level = level,
                                     IsShiny = isShiny,
                                     IsBoss = isBoss,
+                                    IsOwned = isOwned,
                                     Passives = passivesToDisplay,
+                                    PassivesNames = passiveNamesToDisplay,
                                     MatchedPassives = matchedPassiveNames,
                                     MatchedPassiveCount = matchedPassiveCount,
                                     PassivesStr = passivesStr,

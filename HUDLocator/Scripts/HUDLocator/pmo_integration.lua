@@ -196,7 +196,9 @@ local function ApplySettings(settings, gen)
     if settings["Pals_FilterMode"] ~= nil and CONFIG.Pals then CONFIG.Pals.FilterMode = settings["Pals_FilterMode"] end
     if settings["Pals_ShowPassives"] ~= nil and CONFIG.Pals then CONFIG.Pals.ShowPassives = settings["Pals_ShowPassives"] end
     if settings["Pals_ShowOnlyMatchedPassives"] ~= nil and CONFIG.Pals then CONFIG.Pals.ShowOnlyMatchedPassives = settings["Pals_ShowOnlyMatchedPassives"] end
+    if settings["Pals_UseRarityColors"] ~= nil and CONFIG.Pals and CONFIG.Pals.Style then CONFIG.Pals.Style.UseRarityColors = settings["Pals_UseRarityColors"] end
     if settings["Pals_ShowLevel"] ~= nil and CONFIG.Pals then CONFIG.Pals.ShowLevel = settings["Pals_ShowLevel"] end
+    if settings["Pals_IncludeOwned"] ~= nil and CONFIG.Pals then CONFIG.Pals.IncludeOwned = settings["Pals_IncludeOwned"] end
     if settings["Pals_TrackerList"] ~= nil and settings["Pals_TrackerList"] ~= currentTrackerStr and CONFIG.Pals then
         CONFIG.Pals.TrackerPals = ParsePalTrackerList(settings["Pals_TrackerList"], CONFIG.Pals.TrackerPals)
     end
@@ -259,7 +261,9 @@ function M.Init()
             Pals_FilterMode = CONFIG.Pals and CONFIG.Pals.FilterMode or "TrackerListOnly",
             Pals_ShowPassives = CONFIG.Pals and CONFIG.Pals.ShowPassives or true,
             Pals_ShowOnlyMatchedPassives = CONFIG.Pals and CONFIG.Pals.ShowOnlyMatchedPassives or false,
+            Pals_UseRarityColors = (CONFIG.Pals and CONFIG.Pals.Style and CONFIG.Pals.Style.UseRarityColors ~= false) or true,
             Pals_ShowLevel = CONFIG.Pals and CONFIG.Pals.ShowLevel or true,
+            Pals_IncludeOwned = CONFIG.Pals and CONFIG.Pals.IncludeOwned or false,
             Pals_TrackerList = FormatPalTrackerList(CONFIG.Pals and CONFIG.Pals.TrackerPals),
             Completionist_ShowHUDTracker = CONFIG.Completionist and CONFIG.Completionist.ShowHUDTracker or true,
             Completionist_ShowInMenu = CONFIG.Completionist and CONFIG.Completionist.ShowInMenu or true,
@@ -416,11 +420,25 @@ function M.Init()
                 default = false
             },
             {
+                key = "Pals_UseRarityColors",
+                type = "boolean",
+                label = "Passive Rarity Colors",
+                hint = "Color passives according to tier (Gold for Legend/Tier 3, Blue for Tier 2, White for Tier 1, Red for negative).",
+                default = true
+            },
+            {
                 key = "Pals_ShowLevel",
                 type = "boolean",
                 label = "Show Pal Level",
                 hint = "Display level numbers on Pal markers.",
                 default = true
+            },
+            {
+                key = "Pals_IncludeOwned",
+                type = "boolean",
+                label = "Include Owned Pals",
+                hint = "Display markers for player-owned and base camp worker Pals.",
+                default = false
             },
             {
                 key = "Pals_TrackerList",

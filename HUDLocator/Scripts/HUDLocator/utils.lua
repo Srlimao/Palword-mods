@@ -681,6 +681,123 @@ function M.GetTranslatedPassiveName(passiveId)
     return idStr
 end
 
+M.RarityColors = {
+    Rank4 = { R = 1.0, G = 0.84, B = 0.0, A = 1.0 },   -- Gold / Legend / Rainbow
+    Rank3 = { R = 0.96, G = 0.68, B = 0.15, A = 1.0 }, -- Warm Amber / Tier 3
+    Rank2 = { R = 0.32, G = 0.78, B = 1.0, A = 1.0 },  -- Cyan / Tier 2
+    Rank1 = { R = 0.88, G = 0.88, B = 0.88, A = 1.0 }, -- Silver / White / Tier 1
+    RankNeg = { R = 1.0, G = 0.32, B = 0.32, A = 1.0 },-- Coral Red / Negative
+    Rank0 = { R = 0.75, G = 0.75, B = 0.75, A = 1.0 }  -- Neutral
+}
+
+M.PassiveRankCache = {}
+M.PassiveSkillManager = nil
+
+M.StaticPassiveRanks = {
+    -- Tier 4 / Legend / Rare / Element Emperor
+    ["legend"] = 4, ["rare"] = 4, ["lucky"] = 4, ["divinedragon"] = 4, ["flameemperor"] = 4,
+    ["lordoftheunderworld"] = 4, ["sirenofthevoid"] = 4, ["spiritemperor"] = 4, ["iceemperor"] = 4,
+    ["celestialemperor"] = 4, ["eternalflame"] = 4, ["earthemperor"] = 4, ["legendary"] = 4,
+    ["elementmaster"] = 4, ["invader"] = 4,
+    -- Tier 3 (Gold)
+    ["swift"] = 3, ["artisan"] = 3, ["musclehead"] = 3, ["ferocious"] = 3, ["burlybody"] = 3,
+    ["vanguard"] = 3, ["strongholdstrategist"] = 3, ["motivationalleader"] = 3, ["mineforeman"] = 3,
+    ["loggingforeman"] = 3, ["dragonslayer"] = 3, ["craftspeedup2"] = 3, ["movespeedup2"] = 3,
+    ["movespeedup3"] = 3, ["attackup2"] = 3, ["defenseup2"] = 3, ["craftspeedup3"] = 3,
+    ["craftspeedup3downattack"] = 3, ["runspeedup2"] = 3, ["runspeedup3"] = 3,
+    -- Tier 2 (Blue)
+    ["runner"] = 2, ["workslave"] = 2, ["zenmind"] = 2, ["dietmaster"] = 2, ["workaholic"] = 2,
+    ["serious"] = 2, ["conceited"] = 2, ["masochist"] = 2, ["sadist"] = 2, ["hooligan"] = 2,
+    ["craftspeedup1"] = 2, ["movespeedup1"] = 2, ["attackup1"] = 2, ["defenseup1"] = 2,
+    ["runspeedup1"] = 2, ["staminaup1"] = 2, ["staminaup2"] = 2,
+    -- Tier 1 (White)
+    ["nimble"] = 1, ["brave"] = 1, ["hardskin"] = 1, ["positivethinker"] = 1, ["glutton"] = 1,
+    ["daintyeater"] = 1, ["hydromaniac"] = 1, ["abnormal"] = 1, ["cheery"] = 1,
+    -- Negative (Red)
+    ["coward"] = -1, ["slacker"] = -1, ["clumsy"] = -1, ["fragile"] = -1, ["bottomlessstomach"] = -2,
+    ["pacifist"] = -1, ["destructive"] = -2, ["downtrodden"] = -1, ["brittle"] = -1, ["unstable"] = -1
+}
+
+function M.GetPassiveRank(passiveId)
+    local idStr = M.FNameToString(passiveId)
+    if not idStr or idStr == "" or idStr == "None" then return 1 end
+
+    if M.PassiveRankCache[idStr] ~= nil then
+        return M.PassiveRankCache[idStr]
+    end
+
+    -- 1. Try native UPalPassiveSkillManager / DT_PassiveSkillData reflection
+    pcall(function()
+        if not M.PassiveSkillManager or not M.PassiveSkillManager:IsValid() then
+            local status, mgr = pcall(function() return StaticFindObject("/Script/Pal.Default__PalPassiveSkillManager") end)
+            if status and mgr and mgr:IsValid() then
+                M.PassiveSkillManager = mgr
+            else
+                local statusClass, mClass = pcall(function() return FindFirstOf("PalPassiveSkillManager") end)
+                if statusClass and mClass and mClass:IsValid() then
+                    M.PassiveSkillManager = mClass
+                end
+            end
+        end
+
+        if M.PassiveSkillManager and M.PassiveSkillManager:IsValid() then
+            local dt = M.PassiveSkillManager.PassiveSkillDataTable
+            if dt and dt:IsValid() then
+                local row = dt:FindRow(FName(idStr))
+                if not row or not row:IsValid() then
+                    row = dt:FindRow(FName("PASSIVE_" .. idStr))
+                end
+                if row and row.Rank ~= nil then
+                    M.PassiveRankCache[idStr] = row.Rank
+                    return row.Rank
+                end
+            end
+        end
+    end)
+
+    if M.PassiveRankCache[idStr] ~= nil then
+        return M.PassiveRankCache[idStr]
+    end
+
+    -- 2. Try static dictionary fallback
+    local cleanKey = string.lower(string.gsub(idStr, "[%s_%-]+", ""))
+    if M.StaticPassiveRanks[cleanKey] ~= nil then
+        local r = M.StaticPassiveRanks[cleanKey]
+        M.PassiveRankCache[idStr] = r
+        return r
+    end
+
+    local trans = M.PassiveNameCache[idStr]
+    if trans then
+        local cleanTrans = string.lower(string.gsub(trans, "[%s_%-]+", ""))
+        if M.StaticPassiveRanks[cleanTrans] ~= nil then
+            local r = M.StaticPassiveRanks[cleanTrans]
+            M.PassiveRankCache[idStr] = r
+            return r
+        end
+    end
+
+    M.PassiveRankCache[idStr] = 1
+    return 1
+end
+
+function M.GetPassiveRarityColor(rank)
+    if type(rank) ~= "number" then rank = 1 end
+    if rank >= 4 then
+        return M.RarityColors.Rank4
+    elseif rank == 3 then
+        return M.RarityColors.Rank3
+    elseif rank == 2 then
+        return M.RarityColors.Rank2
+    elseif rank == 1 then
+        return M.RarityColors.Rank1
+    elseif rank < 0 then
+        return M.RarityColors.RankNeg
+    else
+        return M.RarityColors.Rank0
+    end
+end
+
 -- Fast sequential axis spatial distance evaluation
 function M.IsWithinDistanceSq(uePos, playerPos, maxDistSq)
     if not uePos or not playerPos then return false, math.huge end

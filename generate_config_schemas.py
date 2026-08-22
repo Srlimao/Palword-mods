@@ -98,6 +98,7 @@ METADATA_HUD_LOCATOR = {
     "Pals.ShowPassives": { "description": "Display passive skill names on the Pal HUD tag.", "type": "boolean" },
     "Pals.ShowOnlyMatchedPassives": { "description": "Display only the passive skills that matched tracking criteria.", "type": "boolean" },
     "Pals.ShowLevel": { "description": "Display Pal character level on the HUD tag.", "type": "boolean" },
+    "Pals.IncludeOwned": { "description": "Include player-owned Pals and base camp workers in tracking.", "type": "boolean" },
     "Pals.TrackerPals": { "description": "List of specific Pals and passive criteria to track. Use '*' or empty palname to track any species with desired passives.", "type": "array" },
 }
 
@@ -120,6 +121,7 @@ for category in ["Players", "Relics", "Chests", "Eggs", "Caves", "Loot", "Notes"
 
 METADATA_HUD_LOCATOR["Pals.Style.ShinyColor"] = { "description": "RGBA color of Shiny Pal labels.", "type": "color" }
 METADATA_HUD_LOCATOR["Pals.Style.BossColor"] = { "description": "RGBA color of Alpha Boss Pal labels.", "type": "color" }
+METADATA_HUD_LOCATOR["Pals.Style.UseRarityColors"] = { "description": "Render passive skills in distinct colors according to rarity tier (Gold for Legend/Tier 3, Blue for Tier 2, White for Tier 1, Red for Negative).", "type": "boolean" }
 
 
 METADATA_ACCESSORY_TOGGLER = {
@@ -541,7 +543,7 @@ def main():
             "name": "HUDLocator",
             "lua_path": "HUDLocator/Scripts/HUDLocator/config.lua",
             "metadata": METADATA_HUD_LOCATOR,
-            "version": "2.12.0"
+            "version": "2.13.0"
         },
         {
             "name": "AccessoryToggler",

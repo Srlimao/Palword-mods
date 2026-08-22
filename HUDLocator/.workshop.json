@@ -2,6 +2,6 @@
     "publishedfileid":  "3764265846",
     "nexus_mod_id":  "3932",
     "nexus_mod_file_id":  "7676373",
-    "changenote":  "v2.12.0: Wildcard Pal passive tracking (*), dual localized/raw passive matching, multi-passive thresholds \u0026 negative filters, PMO shorthand syntax, and startup config load protection.",
-    "last_published_version":  "2.12.0"
+    "changenote":  "v2.13.0: Passive Skill Rarity Colors (Gold/Blue/White/Red), 2D Screen Anti-Overlap \u0026 Label Stacking for packs, real-time live movement tracking, actor/GUID deduplication, and Include Owned Pals setting.",
+    "last_published_version":  "2.13.0"
 }

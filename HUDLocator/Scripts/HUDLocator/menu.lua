@@ -105,11 +105,25 @@ local menuItems = {
         transKey = "Settings_ShowOnlyMatchedPassives"
     },
     {
+        name = "Passive Rarity Colors",
+        get = function() return CONFIG.Pals and CONFIG.Pals.Style and CONFIG.Pals.Style.UseRarityColors ~= false end,
+        set = function(v) if CONFIG.Pals and CONFIG.Pals.Style then CONFIG.Pals.Style.UseRarityColors = v end end,
+        type = "boolean",
+        transKey = "Settings_UseRarityColors"
+    },
+    {
         name = "Show Level",
         get = function() return CONFIG.Pals and CONFIG.Pals.ShowLevel end,
         set = function(v) if CONFIG.Pals then CONFIG.Pals.ShowLevel = v end end,
         type = "boolean",
         transKey = "Settings_ShowLevel"
+    },
+    {
+        name = "Include Owned Pals",
+        get = function() return CONFIG.Pals and CONFIG.Pals.IncludeOwned end,
+        set = function(v) if CONFIG.Pals then CONFIG.Pals.IncludeOwned = v end end,
+        type = "boolean",
+        transKey = "Settings_IncludeOwned"
     },
     {
         name = "Egg Filter",
