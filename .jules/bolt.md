@@ -20,3 +20,6 @@
 ## 2024-11-20 - [HUDLocator Scanner Optimization]
 **Learning:** In UE4SS Lua, performing C++ reflection checks like `utils.IsRelicPicked` or `utils.IsChestOpened` *before* filtering by distance means expensive C++ API calls are made for thousands of objects, even those halfway across the map.
 **Action:** Always defer boolean state queries on Unreal Engine actors until *after* the fast spatial/distance check (`IsWithinDistanceSq`) validates they are within tracking range.
+## 2024-11-20 - [HUDLocator Pal Scanner String Allocation Optimization]
+**Learning:** In UE4SS Lua loops (like scanning hundreds of Pals), unconditionally querying C++ string properties like `GetCharacterID():ToString()` and running substring searches *before* determining if the entity should be ignored due to cheap boolean checks (`isDead` or `isOwned`) causes massive unnecessary string allocations and C++ reflection overhead.
+**Action:** Always calculate the `isIgnored` state via basic `isDead` and `isOwned` checks, and wrap all string operations, `pcall`s, and ID-based logic inside a `if not isIgnored then` block to short-circuit processing.
