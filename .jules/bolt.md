@@ -20,3 +20,7 @@
 ## 2024-11-20 - [HUDLocator Scanner Optimization]
 **Learning:** In UE4SS Lua, performing C++ reflection checks like `utils.IsRelicPicked` or `utils.IsChestOpened` *before* filtering by distance means expensive C++ API calls are made for thousands of objects, even those halfway across the map.
 **Action:** Always defer boolean state queries on Unreal Engine actors until *after* the fast spatial/distance check (`IsWithinDistanceSq`) validates they are within tracking range.
+
+## 2024-11-20 - Deferred Computation in Loops
+**Learning:** In UE4SS Lua, performing expensive string manipulations, `ToString()` calls, and `GetTranslatedPalName()` database lookups before checking boolean states (like `isDead` or `isOwned`) causes unnecessary CPU cycles for objects that will be ignored anyway.
+**Action:** Always compute simple boolean conditions first and defer expensive object evaluation or string modifications until *after* checking whether the object should be skipped.
