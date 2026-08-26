@@ -300,8 +300,12 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                     labelStr = "@ " .. otherPlayer.Name
                     otherPlayer.LabelStr = labelStr
                 end
-                local distStr = distMeters .. "m"
-                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, distStr, CONFIG.Players.Style, screenW, screenH, nil, nil, "[" .. distStr .. "]")
+                if otherPlayer.LastDistMeters ~= distMeters then
+                    otherPlayer.LastDistMeters = distMeters
+                    otherPlayer.DistStr = distMeters .. "m"
+                    otherPlayer.BracketDistStr = "[" .. otherPlayer.DistStr .. "]"
+                end
+                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, otherPlayer.DistStr, CONFIG.Players.Style, screenW, screenH, nil, nil, otherPlayer.BracketDistStr)
             end
         end
     end
@@ -374,13 +378,28 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                     local liveLoc = nil
                     pcall(function() liveLoc = pal.Actor:K2_GetActorLocation() end)
                     if liveLoc then
-                        drawPos = liveLoc
-                        local dx = liveLoc.X - playerPosBuffer.X
-                        local dy = liveLoc.Y - playerPosBuffer.Y
-                        local dz = liveLoc.Z - playerPosBuffer.Z
-                        local m = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0) .. "m"
-                        distStr = m
-                        bracketDistStr = "[" .. m .. "]"
+                        local px = liveLoc.X
+                        local py = liveLoc.Y
+                        local pz = liveLoc.Z
+
+                        pal.X = px
+                        pal.Y = py
+                        pal.Z = pz
+                        drawPos = pal
+
+                        local dx = px - playerPosBuffer.X
+                        local dy = py - playerPosBuffer.Y
+                        local dz = pz - playerPosBuffer.Z
+                        local distMeters = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0)
+
+                        if pal.LastDistMeters ~= distMeters then
+                            pal.LastDistMeters = distMeters
+                            local m = distMeters .. "m"
+                            pal.DistStr = m
+                            pal.BracketDistStr = "[" .. m .. "]"
+                        end
+                        distStr = pal.DistStr
+                        bracketDistStr = pal.BracketDistStr
                     end
                 else
                     drawPos = nil
