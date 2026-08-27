@@ -23,3 +23,6 @@
 ## 2024-11-20 - [HUDLocator Scanner Optimization: Deferring C++ Reflection and String Operations]
 **Learning:** In UE4SS Lua loops (like scanning thousands of Pals), extracting C++ properties via reflection (e.g., `GetCharacterID()`) and performing string manipulations/lookups are computationally expensive operations.
 **Action:** When filtering objects, defer heavy C++ reflection and string processing until *after* checking basic boolean exclusion criteria (e.g., `isDead`, `isOwned`). This short-circuits evaluation and avoids reflection/string overhead on irrelevant entities.
+## 2024-11-20 - GC Optimization in Render Loops
+**Learning:** In UE4SS Lua, performing string concatenation every frame (like `distMeters .. "m"`) inside high-frequency render loops (e.g., `ReceiveDrawHUD` via `renderer.lua`) causes excessive garbage collection pressure.
+**Action:** When strings depend on values that change less frequently than the frame rate (like integer distances), cache the formatted string on the object (e.g., `CachedDistStr`) and only re-calculate and re-concatenate it when the underlying value changes.
