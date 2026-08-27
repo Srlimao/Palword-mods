@@ -295,13 +295,21 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             if distSq > graceRadiusSq then
                 local dist = math.sqrt(distSq)
                 local distMeters = math.floor(dist / 100.0)
+
+                -- Optimization: cache distance strings on the entity to prevent garbage collection
+                -- spikes from concatenating strings every single frame during the ReceiveDrawHUD loop.
+                if distMeters ~= otherPlayer.LastDistMeters then
+                    otherPlayer.LastDistMeters = distMeters
+                    otherPlayer.CachedDistStr = distMeters .. "m"
+                    otherPlayer.CachedBracketDistStr = "[" .. otherPlayer.CachedDistStr .. "]"
+                end
+
                 local labelStr = otherPlayer.LabelStr
                 if not labelStr then
                     labelStr = "@ " .. otherPlayer.Name
                     otherPlayer.LabelStr = labelStr
                 end
-                local distStr = distMeters .. "m"
-                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, distStr, CONFIG.Players.Style, screenW, screenH, nil, nil, "[" .. distStr .. "]")
+                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, otherPlayer.CachedDistStr, CONFIG.Players.Style, screenW, screenH, nil, nil, otherPlayer.CachedBracketDistStr)
             end
         end
     end
@@ -378,9 +386,18 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                         local dx = liveLoc.X - playerPosBuffer.X
                         local dy = liveLoc.Y - playerPosBuffer.Y
                         local dz = liveLoc.Z - playerPosBuffer.Z
-                        local m = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0) .. "m"
-                        distStr = m
-                        bracketDistStr = "[" .. m .. "]"
+                        local distMeters = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0)
+
+                        -- Optimization: cache distance strings on the entity to prevent garbage collection
+                        -- spikes from concatenating strings every single frame during the ReceiveDrawHUD loop.
+                        if distMeters ~= pal.LastDistMeters then
+                            pal.LastDistMeters = distMeters
+                            pal.CachedDistStr = distMeters .. "m"
+                            pal.CachedBracketDistStr = "[" .. pal.CachedDistStr .. "]"
+                        end
+
+                        distStr = pal.CachedDistStr
+                        bracketDistStr = pal.CachedBracketDistStr
                     end
                 else
                     drawPos = nil
