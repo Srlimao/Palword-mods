@@ -300,8 +300,15 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                     labelStr = "@ " .. otherPlayer.Name
                     otherPlayer.LabelStr = labelStr
                 end
-                local distStr = distMeters .. "m"
-                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, distStr, CONFIG.Players.Style, screenW, screenH, nil, nil, "[" .. distStr .. "]")
+
+                -- Optimization: Cache string concatenation to reduce GC thrashing
+                if otherPlayer.LastDistMeters ~= distMeters then
+                    otherPlayer.LastDistMeters = distMeters
+                    otherPlayer.DistStr = distMeters .. "m"
+                    otherPlayer.BracketDistStr = "[" .. otherPlayer.DistStr .. "]"
+                end
+
+                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, otherPlayer.DistStr, CONFIG.Players.Style, screenW, screenH, nil, nil, otherPlayer.BracketDistStr)
             end
         end
     end
@@ -378,9 +385,16 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                         local dx = liveLoc.X - playerPosBuffer.X
                         local dy = liveLoc.Y - playerPosBuffer.Y
                         local dz = liveLoc.Z - playerPosBuffer.Z
-                        local m = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0) .. "m"
-                        distStr = m
-                        bracketDistStr = "[" .. m .. "]"
+                        local distMeters = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0)
+
+                        -- Optimization: Cache string concatenation to reduce GC thrashing
+                        if pal.LastDistMeters ~= distMeters then
+                            pal.LastDistMeters = distMeters
+                            pal.LiveDistStr = distMeters .. "m"
+                            pal.LiveBracketDistStr = "[" .. pal.LiveDistStr .. "]"
+                        end
+                        distStr = pal.LiveDistStr or (distMeters .. "m")
+                        bracketDistStr = pal.LiveBracketDistStr or ("[" .. distStr .. "]")
                     end
                 else
                     drawPos = nil
