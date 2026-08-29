@@ -300,8 +300,15 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                     labelStr = "@ " .. otherPlayer.Name
                     otherPlayer.LabelStr = labelStr
                 end
-                local distStr = distMeters .. "m"
-                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, distStr, CONFIG.Players.Style, screenW, screenH, nil, nil, "[" .. distStr .. "]")
+
+                if otherPlayer.lastDistMeters ~= distMeters then
+                    otherPlayer.lastDistMeters = distMeters
+                    local mStr = distMeters .. "m"
+                    otherPlayer.cachedDistStr = mStr
+                    otherPlayer.cachedBracketStr = "[" .. mStr .. "]"
+                end
+
+                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, otherPlayer.cachedDistStr or (distMeters .. "m"), CONFIG.Players.Style, screenW, screenH, nil, nil, otherPlayer.cachedBracketStr)
             end
         end
     end
@@ -378,9 +385,17 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                         local dx = liveLoc.X - playerPosBuffer.X
                         local dy = liveLoc.Y - playerPosBuffer.Y
                         local dz = liveLoc.Z - playerPosBuffer.Z
-                        local m = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0) .. "m"
-                        distStr = m
-                        bracketDistStr = "[" .. m .. "]"
+                        local mInt = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0)
+
+                        if pal.lastLiveMeters ~= mInt then
+                            pal.lastLiveMeters = mInt
+                            local mStr = mInt .. "m"
+                            pal.cachedLiveDistStr = mStr
+                            pal.cachedLiveBracketStr = "[" .. mStr .. "]"
+                        end
+
+                        distStr = pal.cachedLiveDistStr
+                        bracketDistStr = pal.cachedLiveBracketStr
                     end
                 else
                     drawPos = nil

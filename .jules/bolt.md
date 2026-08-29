@@ -23,3 +23,6 @@
 ## 2024-11-20 - [HUDLocator Scanner Optimization: Deferring C++ Reflection and String Operations]
 **Learning:** In UE4SS Lua loops (like scanning thousands of Pals), extracting C++ properties via reflection (e.g., `GetCharacterID()`) and performing string manipulations/lookups are computationally expensive operations.
 **Action:** When filtering objects, defer heavy C++ reflection and string processing until *after* checking basic boolean exclusion criteria (e.g., `isDead`, `isOwned`). This short-circuits evaluation and avoids reflection/string overhead on irrelevant entities.
+## 2024-03-24 - Cached String Allocation in Tick Rendering
+**Learning:** In UE4SS Lua mods, repeatedly concatenating strings (e.g., `distMeters .. "m"`) inside the `ReceiveDrawHUD` tick (which runs every frame) creates immense, unnecessary Garbage Collection (GC) thrashing and performance spikes over time, especially when tracking multiple entities on-screen.
+**Action:** For dynamic values like distance strings that are updated every frame, cache the resulting string locally on the entity's table and only recalculate/re-concatenate when the underlying scalar integer (like the floor value of meters) changes.
