@@ -26,3 +26,6 @@
 ## 2024-03-24 - Cached String Allocation in Tick Rendering
 **Learning:** In UE4SS Lua mods, repeatedly concatenating strings (e.g., `distMeters .. "m"`) inside the `ReceiveDrawHUD` tick (which runs every frame) creates immense, unnecessary Garbage Collection (GC) thrashing and performance spikes over time, especially when tracking multiple entities on-screen.
 **Action:** For dynamic values like distance strings that are updated every frame, cache the resulting string locally on the entity's table and only recalculate/re-concatenate when the underlying scalar integer (like the floor value of meters) changes.
+## 2026-11-20 - Avoiding math.sqrt in Tick Render Loops
+**Learning:** Even when caching string allocations for dynamic UI distances (e.g., in `ReceiveDrawHUD`), calling `math.sqrt` every frame just to check if the integer meter value changed adds unnecessary CPU overhead when tracking many dynamic actors on-screen.
+**Action:** Cache not only the generated string but also the lower (`mInt * 100`) and upper (`(mInt+1) * 100`) squared distance bounds. Compare the current squared distance against these bounds and only recompute `math.sqrt` when the bounds are exceeded.
