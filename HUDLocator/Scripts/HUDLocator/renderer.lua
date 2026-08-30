@@ -293,22 +293,27 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local distSq = dx*dx + dy*dy + dz*dz
             
             if distSq > graceRadiusSq then
-                local dist = math.sqrt(distSq)
-                local distMeters = math.floor(dist / 100.0)
                 local labelStr = otherPlayer.LabelStr
                 if not labelStr then
                     labelStr = "@ " .. otherPlayer.Name
                     otherPlayer.LabelStr = labelStr
                 end
 
-                if otherPlayer.lastDistMeters ~= distMeters then
+                if not otherPlayer.distSqUpper or distSq < otherPlayer.distSqLower or distSq >= otherPlayer.distSqUpper then
+                    local dist = math.sqrt(distSq)
+                    local distMeters = math.floor(dist / 100.0)
                     otherPlayer.lastDistMeters = distMeters
                     local mStr = distMeters .. "m"
                     otherPlayer.cachedDistStr = mStr
                     otherPlayer.cachedBracketStr = "[" .. mStr .. "]"
+
+                    local lowerDist = distMeters * 100.0
+                    local upperDist = lowerDist + 100.0
+                    otherPlayer.distSqLower = lowerDist * lowerDist
+                    otherPlayer.distSqUpper = upperDist * upperDist
                 end
 
-                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, otherPlayer.cachedDistStr or (distMeters .. "m"), CONFIG.Players.Style, screenW, screenH, nil, nil, otherPlayer.cachedBracketStr)
+                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, otherPlayer.cachedDistStr, CONFIG.Players.Style, screenW, screenH, nil, nil, otherPlayer.cachedBracketStr)
             end
         end
     end
@@ -385,13 +390,19 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                         local dx = liveLoc.X - playerPosBuffer.X
                         local dy = liveLoc.Y - playerPosBuffer.Y
                         local dz = liveLoc.Z - playerPosBuffer.Z
-                        local mInt = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0)
+                        local liveDistSq = dx*dx + dy*dy + dz*dz
 
-                        if pal.lastLiveMeters ~= mInt then
+                        if not pal.liveDistSqUpper or liveDistSq < pal.liveDistSqLower or liveDistSq >= pal.liveDistSqUpper then
+                            local mInt = math.floor(math.sqrt(liveDistSq) / 100.0)
                             pal.lastLiveMeters = mInt
                             local mStr = mInt .. "m"
                             pal.cachedLiveDistStr = mStr
                             pal.cachedLiveBracketStr = "[" .. mStr .. "]"
+
+                            local lowerDist = mInt * 100.0
+                            local upperDist = lowerDist + 100.0
+                            pal.liveDistSqLower = lowerDist * lowerDist
+                            pal.liveDistSqUpper = upperDist * upperDist
                         end
 
                         distStr = pal.cachedLiveDistStr
