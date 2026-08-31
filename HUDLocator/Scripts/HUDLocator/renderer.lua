@@ -293,22 +293,28 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local distSq = dx*dx + dy*dy + dz*dz
             
             if distSq > graceRadiusSq then
-                local dist = math.sqrt(distSq)
-                local distMeters = math.floor(dist / 100.0)
                 local labelStr = otherPlayer.LabelStr
                 if not labelStr then
                     labelStr = "@ " .. otherPlayer.Name
                     otherPlayer.LabelStr = labelStr
                 end
 
-                if otherPlayer.lastDistMeters ~= distMeters then
-                    otherPlayer.lastDistMeters = distMeters
-                    local mStr = distMeters .. "m"
-                    otherPlayer.cachedDistStr = mStr
-                    otherPlayer.cachedBracketStr = "[" .. mStr .. "]"
+                if not otherPlayer.distSqUpper or distSq < otherPlayer.distSqLower or distSq >= otherPlayer.distSqUpper then
+                    local dist = math.sqrt(distSq)
+                    local distMeters = math.floor(dist / 100.0)
+
+                    otherPlayer.distSqLower = (distMeters * 100.0) * (distMeters * 100.0)
+                    otherPlayer.distSqUpper = ((distMeters + 1) * 100.0) * ((distMeters + 1) * 100.0)
+
+                    if otherPlayer.lastDistMeters ~= distMeters then
+                        otherPlayer.lastDistMeters = distMeters
+                        local mStr = distMeters .. "m"
+                        otherPlayer.cachedDistStr = mStr
+                        otherPlayer.cachedBracketStr = "[" .. mStr .. "]"
+                    end
                 end
 
-                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, otherPlayer.cachedDistStr or (distMeters .. "m"), CONFIG.Players.Style, screenW, screenH, nil, nil, otherPlayer.cachedBracketStr)
+                DrawTrackerLabel(hud, otherPlayer.Pos, labelStr, otherPlayer.cachedDistStr, CONFIG.Players.Style, screenW, screenH, nil, nil, otherPlayer.cachedBracketStr)
             end
         end
     end
@@ -385,13 +391,19 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                         local dx = liveLoc.X - playerPosBuffer.X
                         local dy = liveLoc.Y - playerPosBuffer.Y
                         local dz = liveLoc.Z - playerPosBuffer.Z
-                        local mInt = math.floor(math.sqrt(dx*dx + dy*dy + dz*dz) / 100.0)
+                        local distSq = dx*dx + dy*dy + dz*dz
+                        if not pal.liveDistSqUpper or distSq < pal.liveDistSqLower or distSq >= pal.liveDistSqUpper then
+                            local mInt = math.floor(math.sqrt(distSq) / 100.0)
 
-                        if pal.lastLiveMeters ~= mInt then
-                            pal.lastLiveMeters = mInt
-                            local mStr = mInt .. "m"
-                            pal.cachedLiveDistStr = mStr
-                            pal.cachedLiveBracketStr = "[" .. mStr .. "]"
+                            pal.liveDistSqLower = (mInt * 100.0) * (mInt * 100.0)
+                            pal.liveDistSqUpper = ((mInt + 1) * 100.0) * ((mInt + 1) * 100.0)
+
+                            if pal.lastLiveMeters ~= mInt then
+                                pal.lastLiveMeters = mInt
+                                local mStr = mInt .. "m"
+                                pal.cachedLiveDistStr = mStr
+                                pal.cachedLiveBracketStr = "[" .. mStr .. "]"
+                            end
                         end
 
                         distStr = pal.cachedLiveDistStr
