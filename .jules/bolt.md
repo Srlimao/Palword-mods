@@ -26,3 +26,15 @@
 ## 2024-03-24 - Cached String Allocation in Tick Rendering
 **Learning:** In UE4SS Lua mods, repeatedly concatenating strings (e.g., `distMeters .. "m"`) inside the `ReceiveDrawHUD` tick (which runs every frame) creates immense, unnecessary Garbage Collection (GC) thrashing and performance spikes over time, especially when tracking multiple entities on-screen.
 **Action:** For dynamic values like distance strings that are updated every frame, cache the resulting string locally on the entity's table and only recalculate/re-concatenate when the underlying scalar integer (like the floor value of meters) changes.
+
+## 2024-11-20 - [HUDLocator Renderer Optimization: Avoid duplicate FVector reflection]
+**Learning:** Passing an Unreal `FVector` userdata to a function (`DrawTrackerLabel`) that accesses its properties (.X, .Y, .Z) triggers C++ reflection overhead *again*, even if those properties were just accessed in the calling scope to calculate distances.
+**Action:** When working in high-frequency tick loops (like `ReceiveDrawHUD`), if you already extract `.X`, `.Y`, and `.Z` from an `FVector` for local math, cache those values into a native Lua table (e.g., `pal.X = lx`) and pass that table down to child rendering functions to prevent duplicate reflection overhead.
+
+## 2024-11-20 - [HUDLocator Renderer Optimization Pitfall: FVector Table Mutation]
+**Learning:** Attempting to optimize C++ reflection overhead by mutating a native Lua table to impersonate an `FVector` userdata (e.g., passing `pal` instead of `liveLoc` as `drawPos` into `DrawTrackerLabel` where C++ engine projection expects an `FVector`) is dangerous. This can break engine interoperability and actually worsen GC overhead due to engine auto-conversion.
+**Action:** Do not substitute expected C++ UserData types with custom Lua tables when those variables are subsequently passed back into Unreal Engine C++ functions.
+
+## 2024-11-20 - [HUDLocator Scanner Optimization: Unused Table Allocations]
+**Learning:** In high-frequency scanner loops that iterate over thousands of game entities, declaring and populating tables that are never utilized downstream creates completely unnecessary memory allocations and heavy garbage collection (GC) thrashing.
+**Action:** Always audit tight loops for dead variables and table insertions (e.g., `palPassivesStr` in Pal tracking logic) and strip them out entirely to improve performance.
