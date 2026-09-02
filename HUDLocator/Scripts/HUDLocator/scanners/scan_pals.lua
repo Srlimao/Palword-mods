@@ -335,7 +335,6 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                 end
                             end
 
-                            local palPassivesStr = {}
                             local translatedPassives = {}
                             local structuredPassives = {}
                             local palPassiveMap = {}
@@ -343,7 +342,6 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                             for _, pName in ipairs(rawPassives) do
                                 local strP = utils.FNameToString(pName)
                                 if strP and strP ~= "" and strP ~= "None" then
-                                    table.insert(palPassivesStr, strP)
                                     local transP = utils.GetTranslatedPassiveName(strP)
                                     if not transP or transP == "" then
                                         transP = strP
