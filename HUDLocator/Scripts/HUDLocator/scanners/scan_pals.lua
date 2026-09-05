@@ -322,54 +322,55 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                             end
 
                             local rawPassives = {}
-                            if indivParam and indivParam:IsValid() then
-                                pcall(function()
-                                    local pList = indivParam:GetPassiveSkillList()
-                                    rawPassives = utils.TArrayToTable(pList)
-                                end)
-                                if #rawPassives == 0 then
-                                    pcall(function()
-                                        local pList = indivParam.PassiveSkillList
-                                        rawPassives = utils.TArrayToTable(pList)
-                                    end)
-                                end
-                            end
-
-                            local palPassivesStr = {}
                             local translatedPassives = {}
                             local structuredPassives = {}
                             local palPassiveMap = {}
 
-                            for _, pName in ipairs(rawPassives) do
-                                local strP = utils.FNameToString(pName)
-                                if strP and strP ~= "" and strP ~= "None" then
-                                    table.insert(palPassivesStr, strP)
-                                    local transP = utils.GetTranslatedPassiveName(strP)
-                                    if not transP or transP == "" then
-                                        transP = strP
+                            local needsPassives = showPassives or filterMode == "TrackerListOnly"
+                            if needsPassives then
+                                if indivParam and indivParam:IsValid() then
+                                    pcall(function()
+                                        local pList = indivParam:GetPassiveSkillList()
+                                        rawPassives = utils.TArrayToTable(pList)
+                                    end)
+                                    if #rawPassives == 0 then
+                                        pcall(function()
+                                            local pList = indivParam.PassiveSkillList
+                                            rawPassives = utils.TArrayToTable(pList)
+                                        end)
                                     end
-                                    table.insert(translatedPassives, transP)
+                                end
 
-                                    local pRank = utils.GetPassiveRank(strP)
-                                    local pColor = utils.GetPassiveRarityColor(pRank)
-                                    table.insert(structuredPassives, {
-                                        name = transP,
-                                        rawId = strP,
-                                        rank = pRank,
-                                        color = pColor
-                                    })
+                                for _, pName in ipairs(rawPassives) do
+                                    local strP = utils.FNameToString(pName)
+                                    if strP and strP ~= "" and strP ~= "None" then
+                                        local transP = utils.GetTranslatedPassiveName(strP)
+                                        if not transP or transP == "" then
+                                            transP = strP
+                                        end
+                                        table.insert(translatedPassives, transP)
 
-                                    local lowerRaw = string.lower(strP)
-                                    local normRaw = NormalizePassiveString(strP)
-                                    local lowerTrans = string.lower(transP)
-                                    local normTrans = NormalizePassiveString(transP)
+                                        local pRank = utils.GetPassiveRank(strP)
+                                        local pColor = utils.GetPassiveRarityColor(pRank)
+                                        table.insert(structuredPassives, {
+                                            name = transP,
+                                            rawId = strP,
+                                            rank = pRank,
+                                            color = pColor
+                                        })
 
-                                    palPassiveMap[strP] = transP
-                                    palPassiveMap[transP] = transP
-                                    palPassiveMap[lowerRaw] = transP
-                                    palPassiveMap[normRaw] = transP
-                                    palPassiveMap[lowerTrans] = transP
-                                    palPassiveMap[normTrans] = transP
+                                        local lowerRaw = string.lower(strP)
+                                        local normRaw = NormalizePassiveString(strP)
+                                        local lowerTrans = string.lower(transP)
+                                        local normTrans = NormalizePassiveString(transP)
+
+                                        palPassiveMap[strP] = transP
+                                        palPassiveMap[transP] = transP
+                                        palPassiveMap[lowerRaw] = transP
+                                        palPassiveMap[normRaw] = transP
+                                        palPassiveMap[lowerTrans] = transP
+                                        palPassiveMap[normTrans] = transP
+                                    end
                                 end
                             end
 
