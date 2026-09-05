@@ -40,6 +40,14 @@ METADATA_HUD_LOCATOR = {
         "description": "Hotkey to toggle the configuration menu overlay (requires the configured Modifier).",
         "type": "keybind"
     },
+    "Global.KeyBinds.ToggleEditMode": {
+        "description": "Hotkey to toggle the interactive HUD repositioning mode.",
+        "type": "keybind"
+    },
+    "Global.KeyBinds.ResetCoords": {
+        "description": "Hotkey to reset HUD coordinates back to default position in edit mode.",
+        "type": "keybind"
+    },
     "Global.KeyBinds.MenuUp": {
         "description": "Hotkey to navigate up the configuration menu list.",
         "type": "keybind"
@@ -100,6 +108,38 @@ METADATA_HUD_LOCATOR = {
     "Pals.ShowLevel": { "description": "Display Pal character level on the HUD tag.", "type": "boolean" },
     "Pals.IncludeOwned": { "description": "Include player-owned Pals and base camp workers in tracking.", "type": "boolean" },
     "Pals.TrackerPals": { "description": "List of specific Pals and passive criteria to track. Use '*' or empty palname to track any species with desired passives.", "type": "array" },
+
+    "Completionist": { "description": "Configure regional collectables and progress tracker HUD card." },
+    "Completionist.Enabled": { "description": "Enable scanning for regional completion data.", "type": "boolean" },
+    "Completionist.ShowHUDTracker": { "description": "Display the active region progress tracker card on the HUD.", "type": "boolean" },
+    "Completionist.ShowInMenu": { "description": "Show the regional completionist overview in the menu.", "type": "boolean" },
+    "Completionist.AutoHighlightRegion": { "description": "Automatically detect and highlight the current world region.", "type": "boolean" },
+    "Completionist.HUDAnchor": {
+        "description": "Preset screen position anchor for the HUD progress tracker card.",
+        "type": "enum",
+        "options": ["TopRight", "TopLeft", "BottomRight", "BottomLeft", "Custom"]
+    },
+    "Completionist.HUDX": {
+        "description": "Manual horizontal coordinate of the tracker card as a percentage of screen width (0 to 100).",
+        "type": "number",
+        "min": 0,
+        "max": 100,
+        "step": 0.1
+    },
+    "Completionist.HUDY": {
+        "description": "Manual vertical coordinate of the tracker card as a percentage of screen height (0 to 100).",
+        "type": "number",
+        "min": 0,
+        "max": 100,
+        "step": 0.1
+    },
+    "Completionist.HUDScale": {
+        "description": "Scale factor for the HUD progress tracker card.",
+        "type": "number",
+        "min": 0.5,
+        "max": 2.0,
+        "step": 0.05
+    }
 }
 
 # Add common Category Style fields recursively to avoid boilerplate

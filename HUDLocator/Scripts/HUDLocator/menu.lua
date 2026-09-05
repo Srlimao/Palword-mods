@@ -141,6 +141,74 @@ local menuItems = {
         transKey = "Settings_ShowProgressTracker"
     },
     {
+        name = "Reposition HUD (Edit Mode)",
+        get = function() return configMod.EditModeActive and "Active" or "Press ALT+Right" end,
+        type = "action",
+        action = function()
+            M.Toggle()
+            configMod.ToggleEditMode()
+        end,
+        transKey = "Settings_RepositionHUD",
+        valKey = "Action_OpenEditMode"
+    },
+    {
+        name = "HUD Position Preset",
+        get = function() return (CONFIG.Completionist and CONFIG.Completionist.HUDAnchor) or "TopRight" end,
+        set = function(v)
+            if not CONFIG.Completionist then CONFIG.Completionist = {} end
+            CONFIG.Completionist.HUDAnchor = v
+            if v == "TopRight" then
+                CONFIG.Completionist.HUDX = 95.0
+                CONFIG.Completionist.HUDY = 4.0
+            elseif v == "TopLeft" then
+                CONFIG.Completionist.HUDX = 3.0
+                CONFIG.Completionist.HUDY = 4.0
+            elseif v == "BottomRight" then
+                CONFIG.Completionist.HUDX = 95.0
+                CONFIG.Completionist.HUDY = 85.0
+            elseif v == "BottomLeft" then
+                CONFIG.Completionist.HUDX = 3.0
+                CONFIG.Completionist.HUDY = 85.0
+            end
+            pcall(configMod.SaveConfig)
+        end,
+        type = "enum",
+        values = { "TopRight", "TopLeft", "BottomRight", "BottomLeft", "Custom" },
+        transKey = "Settings_HUDAnchor"
+    },
+    {
+        name = "HUD Tracker Scale",
+        get = function() return (CONFIG.Completionist and CONFIG.Completionist.HUDScale) or 1.0 end,
+        set = function(v)
+            if not CONFIG.Completionist then CONFIG.Completionist = {} end
+            CONFIG.Completionist.HUDScale = tonumber(string.format("%.1f", v))
+            pcall(configMod.SaveConfig)
+        end,
+        type = "number",
+        min = 0.5,
+        max = 2.0,
+        step = 0.1,
+        format = function(v) return string.format("%.1fx", v or 1.0) end,
+        transKey = "Settings_HUDScale"
+    },
+    {
+        name = "Reset HUD Position",
+        get = function() return "Press ALT+Right" end,
+        type = "action",
+        action = function()
+            if CONFIG.Completionist then
+                CONFIG.Completionist.HUDX = nil
+                CONFIG.Completionist.HUDY = nil
+                CONFIG.Completionist.HUDScale = 1.0
+                CONFIG.Completionist.HUDAnchor = "TopRight"
+            end
+            pcall(configMod.SaveConfig)
+            popup.Show(configMod.GetTranslation("Popup_HUDReset", "HUD Position Reset to Default"), 120)
+        end,
+        transKey = "Settings_ResetHUD",
+        valKey = "Action_Reset"
+    },
+    {
         name = "Completionist List",
         get = function() return M.isCompletionistViewOpen and "Opened" or "Press ALT+Right" end,
         type = "action",
@@ -208,6 +276,10 @@ local function GetVisibleItems()
         local isVisible = true
         if item.name == "Chest Filter" then
             if not CONFIG.Chests.Enabled then
+                isVisible = false
+            end
+        elseif item.name == "Reposition HUD (Edit Mode)" or item.name == "HUD Position Preset" or item.name == "HUD Tracker Scale" or item.name == "Reset HUD Position" then
+            if not CONFIG.Completionist or not CONFIG.Completionist.Enabled or not CONFIG.Completionist.ShowHUDTracker then
                 isVisible = false
             end
         end

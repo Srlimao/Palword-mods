@@ -19,6 +19,14 @@ local fontScanInterval = 10.0
 
 function M.GetFontAndScale()
     local font = M.CachedFont
+    if font then
+        local isValid = false
+        pcall(function() isValid = font:IsValid() end)
+        if not isValid then
+            M.CachedFont = nil
+            font = nil
+        end
+    end
     local systemMult = font and M.FontScaleMultiplier or 1.0
     local userScale = 1.0
     if configMod.CONFIG and configMod.CONFIG.Global and configMod.CONFIG.Global.FontScale then
@@ -502,7 +510,9 @@ function M.DumpAllLoadedTextures()
     if hasDumpedTextures then return end
     hasDumpedTextures = true
     
-    logger.log("Starting background texture scan...")
+    if not (configMod.CONFIG and configMod.CONFIG.Global and configMod.CONFIG.Global.Debug) then
+        return
+    end
     local status, textures = pcall(function() return FindAllOf("Texture2D") end)
     if status and textures then
         logger.log(string.format("Texture scan completed. Found %d loaded Texture2D objects.", #textures))
@@ -726,40 +736,7 @@ function M.GetPassiveRank(passiveId)
         return M.PassiveRankCache[idStr]
     end
 
-    -- 1. Try native UPalPassiveSkillManager / DT_PassiveSkillData reflection
-    pcall(function()
-        if not M.PassiveSkillManager or not M.PassiveSkillManager:IsValid() then
-            local status, mgr = pcall(function() return StaticFindObject("/Script/Pal.Default__PalPassiveSkillManager") end)
-            if status and mgr and mgr:IsValid() then
-                M.PassiveSkillManager = mgr
-            else
-                local statusClass, mClass = pcall(function() return FindFirstOf("PalPassiveSkillManager") end)
-                if statusClass and mClass and mClass:IsValid() then
-                    M.PassiveSkillManager = mClass
-                end
-            end
-        end
-
-        if M.PassiveSkillManager and M.PassiveSkillManager:IsValid() then
-            local dt = M.PassiveSkillManager.PassiveSkillDataTable
-            if dt and dt:IsValid() then
-                local row = dt:FindRow(FName(idStr))
-                if not row or not row:IsValid() then
-                    row = dt:FindRow(FName("PASSIVE_" .. idStr))
-                end
-                if row and row.Rank ~= nil then
-                    M.PassiveRankCache[idStr] = row.Rank
-                    return row.Rank
-                end
-            end
-        end
-    end)
-
-    if M.PassiveRankCache[idStr] ~= nil then
-        return M.PassiveRankCache[idStr]
-    end
-
-    -- 2. Try static dictionary fallback
+    -- 1. Try static dictionary first (zero reflection overhead, 100% safe)
     local cleanKey = string.lower(string.gsub(idStr, "[%s_%-]+", ""))
     if M.StaticPassiveRanks[cleanKey] ~= nil then
         local r = M.StaticPassiveRanks[cleanKey]
@@ -775,6 +752,42 @@ function M.GetPassiveRank(passiveId)
             M.PassiveRankCache[idStr] = r
             return r
         end
+    end
+
+    -- 2. Try native UPalPassiveSkillManager / DT_PassiveSkillData reflection as fallback
+    pcall(function()
+        if not M.PassiveSkillManager or not M.PassiveSkillManager:IsValid() then
+            local status, mgr = pcall(function() return StaticFindObject("/Script/Pal.Default__PalPassiveSkillManager") end)
+            if status and mgr and mgr:IsValid() then
+                M.PassiveSkillManager = mgr
+            else
+                local statusClass, mClass = pcall(function() return FindFirstOf("PalPassiveSkillManager") end)
+                if statusClass and mClass and mClass:IsValid() then
+                    M.PassiveSkillManager = mClass
+                end
+            end
+        end
+
+        if M.PassiveSkillManager and M.PassiveSkillManager:IsValid() then
+            local dt = M.PassiveSkillManager.PassiveSkillDataTable
+            if dt and dt:IsValid() and dt.FindRow then
+                local fn = FName(idStr)
+                local row = nil
+                pcall(function() row = dt:FindRow(fn) end)
+                if not row or not row:IsValid() then
+                    local fn2 = FName("PASSIVE_" .. idStr)
+                    pcall(function() row = dt:FindRow(fn2) end)
+                end
+                if row and row:IsValid() and row.Rank ~= nil then
+                    M.PassiveRankCache[idStr] = row.Rank
+                    return row.Rank
+                end
+            end
+        end
+    end)
+
+    if M.PassiveRankCache[idStr] ~= nil then
+        return M.PassiveRankCache[idStr]
     end
 
     M.PassiveRankCache[idStr] = 1

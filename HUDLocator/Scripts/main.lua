@@ -18,6 +18,141 @@ DebugPrint("Initializing Mod...")
 -- Initialize Mod Options Framework Integration
 pcall(pmoIntegration.Init)
 
+-- Pre-allocated static FKey wrappers for edit mode to avoid per-frame GC spikes
+local KeyLeft = { KeyName = FName("Left") }
+local KeyRight = { KeyName = FName("Right") }
+local KeyUp = { KeyName = FName("Up") }
+local KeyDown = { KeyName = FName("Down") }
+
+local KeyEquals = { KeyName = FName("Equals") }
+local KeyAdd = { KeyName = FName("Add") }
+local KeyRightBracket = { KeyName = FName("RightBracket") }
+local KeyLeftBracket = { KeyName = FName("LeftBracket") }
+local KeyBackslash = { KeyName = FName("Backslash") }
+
+local KeyHyphen = { KeyName = FName("Hyphen") }
+local KeySubtract = { KeyName = FName("Subtract") }
+local KeySlash = { KeyName = FName("Slash") }
+local KeyPeriod = { KeyName = FName("Period") }
+
+local holdFrames = 0
+local lastInputCheckTime = 0
+local cachedDx = 0
+local cachedDy = 0
+local cachedDScale = 0
+local cachedIsAnyHeld = false
+
+local function UpdateEditCoordinates(sx, sy, dx, dy, dScale, moveAmount, scaleAmount)
+    local screenW = (type(sx) == "number" and sx > 0) and sx or 1920.0
+    local screenH = (type(sy) == "number" and sy > 0) and sy or 1080.0
+
+    local scale = (CONFIG.Completionist and CONFIG.Completionist.HUDScale) or 1.0
+    local cardW = 340.0 * scale
+    local cardH = 125.0 * scale
+
+    local maxScrollX = math.max(1.0, screenW - cardW)
+    local maxScrollY = math.max(1.0, screenH - cardH)
+
+    if not CONFIG.Completionist.HUDX then
+        local defaultX = screenW - cardW - (30.0 * scale)
+        CONFIG.Completionist.HUDX = tonumber(string.format("%.1f", (defaultX / maxScrollX) * 100.0))
+    end
+    if not CONFIG.Completionist.HUDY then
+        local defaultY = 40.0 * scale
+        CONFIG.Completionist.HUDY = tonumber(string.format("%.1f", (defaultY / maxScrollY) * 100.0))
+    end
+
+    local pctDx = (dx * moveAmount) / maxScrollX * 100.0
+    local pctDy = (dy * moveAmount) / maxScrollY * 100.0
+
+    CONFIG.Completionist.HUDX = math.max(0.0, math.min(100.0, CONFIG.Completionist.HUDX + pctDx))
+    CONFIG.Completionist.HUDY = math.max(0.0, math.min(100.0, CONFIG.Completionist.HUDY + pctDy))
+
+    CONFIG.Completionist.HUDX = tonumber(string.format("%.1f", CONFIG.Completionist.HUDX))
+    CONFIG.Completionist.HUDY = tonumber(string.format("%.1f", CONFIG.Completionist.HUDY))
+    CONFIG.Completionist.HUDAnchor = "Custom"
+
+    if dScale ~= 0 then
+        local currentScale = CONFIG.Completionist.HUDScale or 1.0
+        local newScale = math.max(0.5, math.min(2.0, currentScale + (dScale * scaleAmount)))
+        CONFIG.Completionist.HUDScale = tonumber(string.format("%.2f", newScale))
+    end
+end
+
+local function HandleEditModeHolding(SizeX, SizeY)
+    if not configMod.EditModeActive then
+        holdFrames = 0
+        return
+    end
+
+    local now = os.clock()
+    -- Throttle polling to 50Hz (20ms interval) to eliminate C++ reflection overhead
+    if now - lastInputCheckTime >= 0.02 then
+        lastInputCheckTime = now
+
+        local pc = UEHelpers.GetPlayerController()
+        if not pc or not pc:IsValid() then return end
+
+        local dx = 0
+        local dy = 0
+        local dScale = 0
+        local isAnyHeld = false
+
+        local isLeft = pc:IsInputKeyDown(KeyLeft)
+        local isRight = pc:IsInputKeyDown(KeyRight)
+        local isUp = pc:IsInputKeyDown(KeyUp)
+        local isDown = pc:IsInputKeyDown(KeyDown)
+
+        local isPlus = pc:IsInputKeyDown(KeyEquals)
+                    or pc:IsInputKeyDown(KeyAdd)
+                    or pc:IsInputKeyDown(KeyRightBracket)
+                    or pc:IsInputKeyDown(KeyLeftBracket)
+                    or pc:IsInputKeyDown(KeyBackslash)
+
+        local isMinus = pc:IsInputKeyDown(KeyHyphen)
+                     or pc:IsInputKeyDown(KeySubtract)
+                     or pc:IsInputKeyDown(KeySlash)
+                     or pc:IsInputKeyDown(KeyPeriod)
+
+        if isLeft then dx = dx - 1; isAnyHeld = true end
+        if isRight then dx = dx + 1; isAnyHeld = true end
+        if isUp then dy = dy - 1; isAnyHeld = true end
+        if isDown then dy = dy + 1; isAnyHeld = true end
+
+        if isPlus then dScale = dScale + 1; isAnyHeld = true end
+        if isMinus then dScale = dScale - 1; isAnyHeld = true end
+
+        cachedDx = dx
+        cachedDy = dy
+        cachedDScale = dScale
+        cachedIsAnyHeld = isAnyHeld
+    end
+
+    if cachedIsAnyHeld then
+        holdFrames = holdFrames + 1
+    else
+        holdFrames = 0
+        return
+    end
+
+    local speedMultiplier = 1.0
+    if holdFrames > 45 then
+        speedMultiplier = 3.5
+    elseif holdFrames > 12 then
+        speedMultiplier = 2.0
+    end
+
+    local moveAmount = 2.0 * speedMultiplier
+    local scaleAmount = 0.005 * speedMultiplier
+
+    local sx = SizeX
+    if type(sx) == "userdata" or type(sx) == "table" then pcall(function() sx = sx:get() end) end
+    local sy = SizeY
+    if type(sy) == "userdata" or type(sy) == "table" then pcall(function() sy = sy:get() end) end
+
+    pcall(UpdateEditCoordinates, sx, sy, cachedDx, cachedDy, cachedDScale, moveAmount, scaleAmount)
+end
+
 -- Hook into HUD Draw frame tick (ReceiveDrawHUD)
 local isHUDHooked = false
 local hasLoggedDraw = false
@@ -37,6 +172,9 @@ local function RegisterHUDHook()
             end
             local hud = self:get()
             if not hud or not hud:IsValid() then return end
+            
+            -- Apply continuous holding checks in edit mode
+            HandleEditModeHolding(SizeX, SizeY)
             
             renderer.draw(
                 hud, 
@@ -120,7 +258,17 @@ RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.ToggleM
     menu.Toggle()
 end)
 
--- 6. HUD Config Menu Navigation
+-- 6. HUD Edit Mode Toggle (Alt + F7)
+RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.ToggleEditMode, Key.F7), utilityModifier, function()
+    pcall(function()
+        configMod.ToggleEditMode()
+        if not configMod.EditModeActive then
+            holdFrames = 0
+        end
+    end)
+end)
+
+-- 7. HUD Config Menu Navigation
 RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.MenuUp, Key.UP_ARROW), {}, function()
     if menu.isOpen then menu.Navigate("up") end
 end)
@@ -137,19 +285,30 @@ RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.MenuRig
     if menu.isOpen then menu.Navigate("right") end
 end)
 
--- Alt+R: Manual Config Reload from file
-RegisterKeyBind(Key.R, utilityModifier, function()
+-- 8. Alt+R: Reset HUD Coordinates in Edit Mode, or Reload Config outside Edit Mode
+RegisterKeyBind(GetKey(CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.ResetCoords, Key.R), utilityModifier, function()
     if menu.isOpen then return end
-    
-    local status, err = pcall(function()
-        configMod.LoadConfig()
-    end)
-    
-    if status then
-        print("[HUDLocator] Configuration reloaded successfully from central file.")
-        pcall(popup.Show, "HUD Settings Reloaded", 120)
+
+    if configMod.EditModeActive then
+        pcall(function()
+            CONFIG.Completionist.HUDX = nil
+            CONFIG.Completionist.HUDY = nil
+            CONFIG.Completionist.HUDScale = 1.0
+            CONFIG.Completionist.HUDAnchor = "TopRight"
+            popup.Show(configMod.GetTranslation("Popup_HUDReset", "HUD Position Reset to Default"), 120)
+            configMod.DebugPrint("HUD coordinates and scale reset to default via modifier+R!")
+        end)
     else
-        print("[HUDLocator] ERROR: Failed to manually reload configuration: " .. tostring(err))
+        local status, err = pcall(function()
+            configMod.LoadConfig()
+        end)
+        
+        if status then
+            print("[HUDLocator] Configuration reloaded successfully from central file.")
+            pcall(popup.Show, configMod.GetTranslation("Popup_HUDLoaded", "HUD Settings Reloaded"), 120)
+        else
+            print("[HUDLocator] ERROR: Failed to manually reload configuration: " .. tostring(err))
+        end
     end
 end)
 

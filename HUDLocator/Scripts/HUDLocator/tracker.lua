@@ -108,11 +108,10 @@ function M.scan()
         utils.FindAndCacheFont()
     end
 
-    -- Run texture scanner/dumper to identify icon paths
-    utils.DumpAllLoadedTextures()
-
-    -- Run path resolver
-    pcall(ResolvePaths, hudCheck)
+    -- Run path resolver only in debug mode
+    if configMod.CONFIG and configMod.CONFIG.Global and configMod.CONFIG.Global.Debug then
+        pcall(ResolvePaths, hudCheck)
+    end
 
     local localPlayer = UEHelpers.GetPlayer()
     if not localPlayer or not localPlayer:IsValid() then

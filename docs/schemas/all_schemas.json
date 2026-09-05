@@ -80,6 +80,16 @@
                 "description": "Hotkey to toggle the configuration menu overlay (requires the configured Modifier).",
                 "default": "F6"
               },
+              "ToggleEditMode": {
+                "type": "keybind",
+                "description": "Hotkey to toggle the interactive HUD repositioning mode.",
+                "default": "F7"
+              },
+              "ResetCoords": {
+                "type": "keybind",
+                "description": "Hotkey to reset HUD coordinates back to default position in edit mode.",
+                "default": "R"
+              },
               "MenuUp": {
                 "type": "keybind",
                 "description": "Hotkey to navigate up the configuration menu list.",
@@ -1336,27 +1346,63 @@
       },
       "Completionist": {
         "type": "section",
-        "description": "Completionist settings.",
+        "description": "Configure regional collectables and progress tracker HUD card.",
         "properties": {
           "Enabled": {
             "type": "boolean",
-            "description": "Configuration for Enabled.",
+            "description": "Enable scanning for regional completion data.",
             "default": true
           },
           "ShowHUDTracker": {
             "type": "boolean",
-            "description": "Configuration for ShowHUDTracker.",
+            "description": "Display the active region progress tracker card on the HUD.",
             "default": true
           },
           "ShowInMenu": {
             "type": "boolean",
-            "description": "Configuration for ShowInMenu.",
+            "description": "Show the regional completionist overview in the menu.",
             "default": true
           },
           "AutoHighlightRegion": {
             "type": "boolean",
-            "description": "Configuration for AutoHighlightRegion.",
+            "description": "Automatically detect and highlight the current world region.",
             "default": true
+          },
+          "HUDX": {
+            "type": "number",
+            "description": "Manual horizontal coordinate of the tracker card as a percentage of screen width (0 to 100).",
+            "default": null,
+            "min": 0,
+            "max": 100,
+            "step": 0.1
+          },
+          "HUDY": {
+            "type": "number",
+            "description": "Manual vertical coordinate of the tracker card as a percentage of screen height (0 to 100).",
+            "default": null,
+            "min": 0,
+            "max": 100,
+            "step": 0.1
+          },
+          "HUDScale": {
+            "type": "number",
+            "description": "Scale factor for the HUD progress tracker card.",
+            "default": 1.0,
+            "min": 0.5,
+            "max": 2.0,
+            "step": 0.05
+          },
+          "HUDAnchor": {
+            "type": "enum",
+            "description": "Preset screen position anchor for the HUD progress tracker card.",
+            "default": "TopRight",
+            "options": [
+              "TopRight",
+              "TopLeft",
+              "BottomRight",
+              "BottomLeft",
+              "Custom"
+            ]
           }
         }
       }

@@ -25,3 +25,4 @@
   - [x] Add separate text color configuration.
   - [x] Add separate text size configuration.
   - [x] Add filters for eggs by size.
+  - [x] Add in-game interactive repositioning and scaling (Alt + F7 Edit Mode & presets) for Collectables / Progress Tracker.

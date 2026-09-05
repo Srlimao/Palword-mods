@@ -1,6 +1,6 @@
 [size=5][b]HUD Locator All in 1[/b][/size]
 
-A clean, customizable on-screen 3D locator for Palworld that highlights [b]Pals[/b], [b]players[/b], [b]Lifmunk Effigies[/b], [b]chests[/b], [b]Pal eggs[/b], [b]dungeons[/b], [b]journals[/b], and [b]loot[/b].
+A clean, customizable on-screen 3D locator for Palworld that highlights [b]Pals[/b], [b]players[/b], [b]Lifmunk Effigies[/b], [b]chests[/b], [b]Pal eggs[/b], [b]dungeons[/b], [b]journals[/b], and [b]loot[/b]. Includes an interactive [b]Regional Progress Tracker[/b] with real-time [b]in-game HUD repositioning and scaling[/b].
 
 🎨 [b]Visual Web Configurator[/b]: Easily adjust colors, sliders, and options with a live preview at [url=https://pal-mod-configurator.dunhas.com/]https://pal-mod-configurator.dunhas.com/[/url] (openable directly in-game!).
 
@@ -9,17 +9,20 @@ A clean, customizable on-screen 3D locator for Palworld that highlights [b]Pals[
 [size=4][b]Features[/b][/size]
 
 [list]
+[*] 🏆 [b]Regional Progress & Collectables Tracker[/b]: Live HUD overlay tracking Lifmunk Effigies, Fast Travel points, Alpha Pals, Boss Towers, and Bounties per region and global save progress.
+[*] 🎯 [b]Interactive In-Game Repositioning (Alt + F7)[/b]: Seamlessly move and reposition the tracker HUD card anywhere on screen using Arrow keys with smooth hold-acceleration.
+[*] 🔍 [b]Live HUD Scaling & Presets[/b]: Dynamically scale the tracker ([b]0.5x[/b] - [b]2.0x[/b]) using [b]+[/b] / [b]-[/b] keys or choose instant corner presets ([i]Top-Right[/i], [i]Top-Left[/i], [i]Bottom-Right[/i], [i]Bottom-Left[/i]) in the menu.
 [*] 🐾 [b]Advanced Pal Tracker[/b]: Locate specific wild & boss Pals by species, Lucky/Shiny status, Alpha/Boss status, and level.
 [*] 🧬 [b]Passive Skill Filtering[/b]: Filter Pals by specific passive skills (e.g., [i]Swift[/i], [i]Legend[/i], [i]Runner[/i]) with customizable minimum passive match thresholds.
 [*] 📍 [b]Player Tracker[/b]: Displays server players and real-time distances.
 [*] 🗿 [b]Lifmunk Effigies[/b]: Highlights nearby relics.
-[*] 📦 [b]Treasure Chests[/b]: Shows chest locations and distances.
+[*] 📦 [b]Treasure Chests[/b]: Shows chest locations, tiers/grades, and distances.
 [*] 🥚 [b]Pal Eggs[/b]: Displays egg type/size with filters (All, Large+, Huge Only, Off).
 [*] 🏰 [b]Dungeon Entrances[/b]: Marks active dungeon caves.
 [*] 📜 [b]Journals & Lore Memos[/b]: Marks uncollected journals and note pickups.
 [*] 💎 [b]Ground Loot[/b]: Shows dropped items like spheres, skill fruits, arrows, and gold.
-[*] ⚙️ [b]In-Game Menu (Alt + F6)[/b]: Toggle features, filter modes, and tweak distances live.
-[*] 🔄 [b]Quick Reload (Alt + R)[/b]: Apply settings instantly without restarting.
+[*] ⚙️ [b]In-Game Menu (Alt + F6)[/b]: Toggle features, filter modes, choose placement presets, and tweak distances live.
+[*] 🔄 [b]Quick Reload / Reset (Alt + R)[/b]: Reset HUD position when in edit mode, or reload config settings instantly without restarting.
 [*] 🌐 [b]Multi-Language[/b]: Automatically supports English, Chinese, Spanish, German, French, Japanese, and 10+ languages.
 [/list]
 
@@ -28,7 +31,9 @@ A clean, customizable on-screen 3D locator for Palworld that highlights [b]Pals[
 [size=4][b]Controls[/b][/size]
 
 [list]
-[*] [b]Alt + F6[/b]: Open / close in-game menu.
-[*] [b]Arrow Keys[/b]: Navigate menu and adjust options.
-[*] [b]Alt + R[/b]: Reload config settings.
+[*] [b]Alt + F6[/b]: Open / close in-game settings menu.
+[*] [b]Alt + F7[/b]: Toggle interactive HUD Edit Mode (move/scale tracker card).
+[*] [b]Arrow Keys[/b]: Move menu selection or move HUD card (in Edit Mode).
+[*] [b]+ / -[/b] (or [b][ / ][/b]): Scale HUD card size (in Edit Mode).
+[*] [b]Alt + R[/b]: Reset HUD position to default (in Edit Mode) or reload config from file (in game).
 [/list]

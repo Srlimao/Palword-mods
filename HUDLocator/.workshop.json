@@ -2,6 +2,6 @@
     "publishedfileid":  "3764265846",
     "nexus_mod_id":  "3932",
     "nexus_mod_file_id":  "7676373",
-    "changenote":  "v2.13.0: Passive Skill Rarity Colors (Gold/Blue/White/Red), 2D Screen Anti-Overlap \u0026 Label Stacking for packs, real-time live movement tracking, actor/GUID deduplication, and Include Owned Pals setting.",
-    "last_published_version":  "2.13.0"
+    "changenote":  "v2.14.0 - Added in-game interactive HUD repositioning (Alt+F7 Edit Mode), live scaling, corner presets, and Regional Progress Tracker overlay",
+    "last_published_version":  "2.14.0"
 }

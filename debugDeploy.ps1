@@ -12,16 +12,22 @@ if (-not (Test-Path $ModDir)) {
     Write-Error "Mod directory '$ModName' does not exist at: $ModDir"
 }
 
-# Primary local debug game directory
-$BaseDebugDir = "C:\Program Files (x86)\Steam\steamapps\common\Palworld\Mods\NativeMods\UE4SS\Mods"
+# Potential local debug game directories
+$PossibleDebugDirs = @(
+    "D:\SteamLibrary\steamapps\common\Palworld\Mods\NativeMods\UE4SS\Mods",
+    "C:\Program Files (x86)\Steam\steamapps\common\Palworld\Mods\NativeMods\UE4SS\Mods",
+    "E:\SteamLibrary\steamapps\common\Palworld\Mods\NativeMods\UE4SS\Mods"
+)
 $ServerDebugDir = "D:\Games\GameServers\PalworldLocal\Mods\NativeMods\UE4SS\Mods"
 
 # Determine target directories
 $Targets = @()
 
-if (Test-Path $BaseDebugDir) {
-    $Targets += (Join-Path $BaseDebugDir "$($ModName)DEBUG")
-    $Targets += (Join-Path $BaseDebugDir $ModName)
+foreach ($dir in $PossibleDebugDirs) {
+    if (Test-Path $dir) {
+        $Targets += (Join-Path $dir "$($ModName)DEBUG")
+        $Targets += (Join-Path $dir $ModName)
+    }
 }
 
 # MapsPlusServer special handling for local test server

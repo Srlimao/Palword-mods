@@ -14,6 +14,38 @@ local beaconBaseWorldBuffer = { X = 0.0, Y = 0.0, Z = 0.0 }
 local beaconTopWorldBuffer = { X = 0.0, Y = 0.0, Z = 0.0 }
 local beaconColorBuffer = { R = 0.0, G = 0.0, B = 0.0, A = 1.0 }
 
+-- Pre-allocated color tables for Progress Tracker Card and Edit Mode
+local cardBgCol = { R = 0.05, G = 0.07, B = 0.15, A = 0.85 }
+local cardBorderCol = { R = 0.0, G = 0.95, B = 1.0, A = 0.6 }
+local cardShadowCol = { R = 0.0, G = 0.0, B = 0.0, A = 0.9 }
+local cardTitleCol = { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }
+local cardTextCol = { R = 0.9, G = 0.9, B = 0.95, A = 1.0 }
+local cardPctCol = { R = 0.0, G = 0.96, B = 0.83, A = 1.0 }
+local cardBarBgCol = { R = 0.15, G = 0.15, B = 0.25, A = 0.8 }
+local cardBarFillCol = { R = 0.0, G = 0.96, B = 0.83, A = 0.9 }
+
+local editBorderCol = { R = 0.0, G = 0.95, B = 1.0, A = 0.8 }
+local editBgCol = { R = 0.0, G = 0.1, B = 0.2, A = 0.35 }
+local bannerBgCol = { R = 0.02, G = 0.05, B = 0.12, A = 0.92 }
+local editBannerTextCol1 = { R = 0.0, G = 1.0, B = 0.8, A = 1.0 }
+local editBannerTextCol2 = { R = 0.9, G = 0.9, B = 0.95, A = 0.9 }
+
+local modalBgCol = { R = 0.04, G = 0.06, B = 0.12, A = 0.92 }
+local modalBorderCol = { R = 0.0, G = 0.95, B = 1.0, A = 0.8 }
+local modalShadowCol = { R = 0.0, G = 0.0, B = 0.0, A = 0.95 }
+local modalHeaderCol = { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }
+local modalSepCol = { R = 0.2, G = 0.25, B = 0.35, A = 0.5 }
+local modalCurrBgCol = { R = 0.0, G = 0.3, B = 0.4, A = 0.35 }
+local modalNormalBgCol = { R = 0.08, G = 0.1, B = 0.18, A = 0.6 }
+local modalCurrBorderCol = { R = 0.0, G = 0.96, B = 0.83, A = 0.9 }
+local modalNormalBorderCol = { R = 0.2, G = 0.2, B = 0.3, A = 0.4 }
+local modalCurrTextCol = { R = 0.0, G = 0.96, B = 0.83, A = 1.0 }
+local modalNormalTextCol = { R = 0.95, G = 0.95, B = 1.0, A = 1.0 }
+local modalDetTextCol = { R = 0.8, G = 0.85, B = 0.9, A = 1.0 }
+
+local cachedEditBanner1 = nil
+local cachedEditBanner2 = nil
+
 local drawnBoxCount = 0
 local drawnBoxes = {}
 for i = 1, 150 do
@@ -258,6 +290,218 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     -- 2. Draw Popups (always allowed)
     popup.Draw(hud, SizeX, SizeY)
 
+    -- Unwrap screen dimensions safely
+    local sx = SizeX
+    if type(sx) == "userdata" or type(sx) == "table" then pcall(function() sx = sx:get() end) end
+    local sy = SizeY
+    if type(sy) == "userdata" or type(sy) == "table" then pcall(function() sy = sy:get() end) end
+
+    local screenW = (type(sx) == "number" and sx > 0) and sx or 1920.0
+    local screenH = (type(sy) == "number" and sy > 0) and sy or 1080.0
+
+    -- 3. Draw Active Region Progress Tracker HUD Overlay (if enabled or edit mode active)
+    if (CONFIG.Completionist and CONFIG.Completionist.Enabled and CONFIG.Completionist.ShowHUDTracker) or configMod.EditModeActive then
+        pcall(function()
+            local activeRegName = completion.currentRegionName or "Grasslands & Central Isles"
+            local activeRegId = completion.currentRegionId or "grasslands"
+            local statsMap = completion.cachedRegionStats or {}
+            local regStats = statsMap[activeRegId]
+
+            local scale = (CONFIG.Completionist and CONFIG.Completionist.HUDScale) or 1.0
+            scale = math.max(0.5, math.min(2.0, scale))
+
+            local cardW = 340.0 * scale
+            local cardH = 125.0 * scale
+
+            local maxScrollX = math.max(1.0, screenW - cardW)
+            local maxScrollY = math.max(1.0, screenH - cardH)
+
+            local cardX, cardY
+            if CONFIG.Completionist and CONFIG.Completionist.HUDX then
+                cardX = (CONFIG.Completionist.HUDX / 100.0) * maxScrollX
+            else
+                cardX = screenW - cardW - (30.0 * scale)
+            end
+
+            if CONFIG.Completionist and CONFIG.Completionist.HUDY then
+                cardY = (CONFIG.Completionist.HUDY / 100.0) * maxScrollY
+            else
+                cardY = 40.0 * scale
+            end
+
+            -- Clamp inside screen bounds
+            cardX = math.max(0.0, math.min(screenW - cardW, cardX))
+            cardY = math.max(0.0, math.min(screenH - cardH, cardY))
+
+            -- Materialize percentage coordinates if Edit Mode is active
+            if configMod.EditModeActive then
+                if not CONFIG.Completionist.HUDX then
+                    CONFIG.Completionist.HUDX = tonumber(string.format("%.1f", (cardX / maxScrollX) * 100.0))
+                end
+                if not CONFIG.Completionist.HUDY then
+                    CONFIG.Completionist.HUDY = tonumber(string.format("%.1f", (cardY / maxScrollY) * 100.0))
+                end
+            end
+
+            -- Draw Card Background & Shadow
+            hud:DrawRect(cardShadowCol, cardX - 2.0 * scale, cardY - 2.0 * scale, cardW + 4.0 * scale, cardH + 4.0 * scale)
+            hud:DrawRect(cardBgCol, cardX, cardY, cardW, cardH)
+            hud:DrawRect(cardBorderCol, cardX, cardY, cardW, 3.0 * scale)
+
+            -- Header: Region Name & Progress
+            local pct = regStats and regStats.percent or 0
+            utils.DrawText(hud, "[>] " .. activeRegName, cardTitleCol, cardX + 15.0 * scale, cardY + 12.0 * scale, 1.0 * scale, false)
+            utils.DrawText(hud, pct .. "% Completed", cardPctCol, cardX + cardW - (120.0 * scale), cardY + 12.0 * scale, 0.9 * scale, false)
+
+            -- Progress Bar
+            local barX = cardX + 15.0 * scale
+            local barY = cardY + 38.0 * scale
+            local barW = cardW - 30.0 * scale
+            local barH = 6.0 * scale
+            hud:DrawRect(cardBarBgCol, barX, barY, barW, barH)
+            local fillW = math.max(0.0, math.min(barW, barW * (pct / 100.0)))
+            if fillW > 0 then
+                hud:DrawRect(cardBarFillCol, barX, barY, fillW, barH)
+            end
+
+            -- Stat Lines
+            if regStats then
+                local line1 = string.format("Effigies: %d/%d   Alphas: %d/%d", 
+                    regStats.effigies.collected, regStats.effigies.total,
+                    regStats.alphas.defeated, regStats.alphas.total)
+                local line2 = string.format("Fast Travel: %d/%d  Towers: %d/%d  Bounties: %d/%d",
+                    regStats.fastTravels.unlocked, regStats.fastTravels.total,
+                    regStats.towers.defeated, regStats.towers.total,
+                    regStats.bounties.cleared, regStats.bounties.total)
+
+                utils.DrawText(hud, line1, cardTextCol, cardX + 15.0 * scale, cardY + 54.0 * scale, 0.8 * scale, false)
+                utils.DrawText(hud, line2, cardTextCol, cardX + 15.0 * scale, cardY + 84.0 * scale, 0.75 * scale, false)
+            end
+
+            -- Draw Edit Mode Overlay if active
+            if configMod.EditModeActive then
+                local pad = 8.0 * scale
+                local boxX = cardX - pad
+                local boxY = cardY - pad
+                local boxW = cardW + pad * 2.0
+                local boxH = cardH + pad * 2.0
+
+                hud:DrawRect(editBorderCol, boxX, boxY, boxW, boxH)
+                hud:DrawRect(editBgCol, boxX + 1.5, boxY + 1.5, boxW - 3.0, boxH - 3.0)
+
+                -- Instruction Banner
+                if not cachedEditBanner1 then
+                    local textLine1 = configMod.GetTranslation("EditModeActive", "EDIT MODE ACTIVE")
+                    local rawEditKey = (CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.ToggleEditMode) or "F7"
+                    local rawResetKey = (CONFIG.Global.KeyBinds and CONFIG.Global.KeyBinds.ResetCoords) or "R"
+
+                    local textLine2 = configMod.GetTranslation("EditModeInstructions", "ARROWS: MOVE | +/-: SCALE | ALT+R: RESET | ALT+F7: SAVE")
+                    textLine2 = textLine2:gsub("ALT%+F7", "ALT+" .. rawEditKey)
+                    textLine2 = textLine2:gsub("ALT%+R", "ALT+" .. rawResetKey)
+
+                    cachedEditBanner1 = textLine1
+                    cachedEditBanner2 = textLine2
+                end
+
+                local textLine1 = cachedEditBanner1
+                local textLine2 = cachedEditBanner2
+
+                local textScale1 = 0.65 * scale
+                local textScale2 = 0.5 * scale
+
+                local font, scaleMult = utils.GetFontAndScale()
+                local textW1 = utils.GetTextSize(hud, textLine1, textScale1)
+                if not textW1 or textW1 == 0 then
+                    textW1 = utils.GetStringLength(textLine1) * 8.4 * textScale1 * scaleMult
+                end
+
+                local textW2 = utils.GetTextSize(hud, textLine2, textScale2)
+                if not textW2 or textW2 == 0 then
+                    textW2 = utils.GetStringLength(textLine2) * 8.4 * textScale2 * scaleMult
+                end
+
+                local bannerW = math.max(textW1, textW2) + 24.0 * scale
+                local bannerH = 44.0 * scale
+                local bannerX = cardX + (cardW / 2.0) - (bannerW / 2.0)
+                
+                local bannerY = (cardY > bannerH + 12.0 * scale) and (cardY - bannerH - 10.0 * scale) or (cardY + cardH + 10.0 * scale)
+
+                hud:DrawRect(editBorderCol, bannerX, bannerY, bannerW, bannerH)
+                hud:DrawRect(bannerBgCol, bannerX + 1.5, bannerY + 1.5, bannerW - 3.0, bannerH - 3.0)
+
+                utils.DrawText(hud, textLine1, editBannerTextCol1, bannerX + (bannerW / 2.0) - (textW1 / 2.0), bannerY + 6.0 * scale, textScale1, false)
+                utils.DrawText(hud, textLine2, editBannerTextCol2, bannerX + (bannerW / 2.0) - (textW2 / 2.0), bannerY + bannerH - 18.0 * scale, textScale2, false)
+            else
+                cachedEditBanner1 = nil
+                cachedEditBanner2 = nil
+            end
+        end)
+    end
+
+    -- 4. Draw Full Completionist List Modal (if toggled open in menu)
+    if menu.isCompletionistViewOpen then
+        pcall(function()
+            local modalW = 540.0
+            local modalH = 600.0
+            local modalX = screenW - modalW - 40.0
+            local modalY = (screenH / 2.0) - (modalH / 2.0)
+
+            -- Draw Panel Shadow & Base
+            hud:DrawRect(modalShadowCol, modalX - 2.0, modalY - 2.0, modalW + 4.0, modalH + 4.0)
+            hud:DrawRect(modalBgCol, modalX, modalY, modalW, modalH)
+            hud:DrawRect(modalBorderCol, modalX, modalY, modalW, 4.0)
+
+            -- Header Title & Subtitle
+            utils.DrawText(hud, "REGIONAL COMPLETIONIST LIST", modalHeaderCol, modalX + 20.0, modalY + 16.0, 1.25, false)
+            local globPct = completion.globalSaveProgress and completion.globalSaveProgress.overallPercent or 0
+            utils.DrawText(hud, "Global Save Progress: " .. globPct .. "%", { R = 0.0, G = 0.96, B = 0.83, A = 1.0 }, modalX + modalW - 200.0, modalY + 18.0, 0.9, false)
+
+            -- Separator Line
+            hud:DrawRect(modalSepCol, modalX + 20.0, modalY + 48.0, modalW - 40.0, 1.0)
+
+            -- Render List of Regions
+            local startY = modalY + 60.0
+            local cardH = 70.0
+            local gapY = 6.0
+
+            for idx, reg in ipairs(completion.Regions) do
+                local rY = startY + (idx - 1) * (cardH + gapY)
+                local stats = completion.cachedRegionStats and completion.cachedRegionStats[reg.id]
+                local isCurr = (reg.id == completion.currentRegionId)
+
+                local rBg = isCurr and modalCurrBgCol or modalNormalBgCol
+                local rBorder = isCurr and modalCurrBorderCol or modalNormalBorderCol
+
+                hud:DrawRect(rBg, modalX + 20.0, rY, modalW - 40.0, cardH)
+                hud:DrawRect(rBorder, modalX + 20.0, rY, 3.0, cardH)
+
+                -- Region Title & Current Location Badge
+                local titleStr = (reg.icon or "") .. " " .. reg.name
+                if isCurr then titleStr = titleStr .. "  [CURRENT LOCATION]" end
+                local tCol = isCurr and modalCurrTextCol or modalNormalTextCol
+                utils.DrawText(hud, titleStr, tCol, modalX + 30.0, rY + 8.0, 0.95, false)
+
+                local regPct = stats and stats.percent or 0
+                utils.DrawText(hud, regPct .. "%", { R = 0.0, G = 0.96, B = 0.83, A = 1.0 }, modalX + modalW - 75.0, rY + 8.0, 0.9, false)
+
+                -- Details Line: Effigies, Alphas, Fast Travels, Watch Towers, Bounties
+                if stats then
+                    local detStr = string.format("Effigies: %d/%d   Alphas: %d/%d   Fast Travel: %d/%d",
+                        stats.effigies.collected, stats.effigies.total,
+                        stats.alphas.defeated, stats.alphas.total,
+                        stats.fastTravels.unlocked, stats.fastTravels.total)
+                    local detStr2 = string.format("Watch Towers: %d/%d   Bounties: %d/%d",
+                        stats.towers.defeated, stats.towers.total,
+                        stats.bounties.cleared, stats.bounties.total)
+
+                    utils.DrawText(hud, detStr, modalDetTextCol, modalX + 30.0, rY + 30.0, 0.72, false)
+                    utils.DrawText(hud, detStr2, modalDetTextCol, modalX + 30.0, rY + 48.0, 0.72, false)
+                end
+            end
+        end)
+    end
+
+    -- 5. Draw 3D World Markers
     if not CONFIG.Global.Enabled then return end
 
     drawnBoxCount = 0
@@ -272,15 +516,6 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
     playerPosBuffer.X = uePlayerPos.X
     playerPosBuffer.Y = uePlayerPos.Y
     playerPosBuffer.Z = uePlayerPos.Z
-
-    -- Unwrap screen dimensions safely
-    local sx = SizeX
-    if type(sx) == "userdata" or type(sx) == "table" then pcall(function() sx = sx:get() end) end
-    local sy = SizeY
-    if type(sy) == "userdata" or type(sy) == "table" then pcall(function() sy = sy:get() end) end
-
-    local screenW = (type(sx) == "number" and sx > 0) and sx or 1920.0
-    local screenH = (type(sy) == "number" and sy > 0) and sy or 1080.0
 
     -- 1. Draw Players
     if CONFIG.Players.Enabled then
@@ -377,16 +612,21 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
             local distStr = pal.DistStr
             local bracketDistStr = pal.BracketDistStr
 
-            if pal.Actor and pal.Actor:IsValid() then
+            local actor = pal.Actor
+            if actor and actor:IsValid() then
                 local isDestroyed = false
-                pcall(function() isDestroyed = pal.Actor:IsActorBeingDestroyed() end)
+                local okD, resD = pcall(actor.IsActorBeingDestroyed, actor)
+                if okD then isDestroyed = resD end
+
                 local isHidden = false
-                pcall(function() isHidden = pal.Actor.bHidden or (pal.Actor.IsHidden and pal.Actor:IsHidden()) end)
+                if not isDestroyed then
+                    local okH, resH = pcall(function() return actor.bHidden or (actor.IsHidden and actor:IsHidden()) end)
+                    if okH and resH then isHidden = true end
+                end
 
                 if not isDestroyed and not isHidden then
-                    local liveLoc = nil
-                    pcall(function() liveLoc = pal.Actor:K2_GetActorLocation() end)
-                    if liveLoc then
+                    local okLoc, liveLoc = pcall(actor.K2_GetActorLocation, actor)
+                    if okLoc and liveLoc then
                         drawPos = liveLoc
                         local dx = liveLoc.X - playerPosBuffer.X
                         local dy = liveLoc.Y - playerPosBuffer.Y
@@ -423,134 +663,9 @@ function M.draw(hud, activePlayers, activeRelics, activeChests, activeEggs, acti
                 end
 
                 local subStr = pal.PassivesStr
-
                 DrawTrackerLabel(hud, drawPos, pal.Name, distStr, CONFIG.Pals.Style, screenW, screenH, subStr, colorOverride, bracketDistStr, pal.Passives)
             end
         end
-    end
-
-    -- 9. Draw Active Region Progress Tracker HUD Overlay (if enabled)
-    if CONFIG.Completionist and CONFIG.Completionist.Enabled and CONFIG.Completionist.ShowHUDTracker then
-        pcall(function()
-            local activeRegName = completion.currentRegionName or "Grasslands & Central Isles"
-            local activeRegId = completion.currentRegionId or "grasslands"
-            local statsMap = completion.cachedRegionStats or {}
-            local regStats = statsMap[activeRegId]
-
-            local cardW = 340.0
-            local cardH = 125.0
-            local cardX = screenW - cardW - 30.0
-            local cardY = 40.0
-
-            local bgCol = { R = 0.05, G = 0.07, B = 0.15, A = 0.85 }
-            local borderCol = { R = 0.0, G = 0.95, B = 1.0, A = 0.6 }
-            local shadowCol = { R = 0.0, G = 0.0, B = 0.0, A = 0.9 }
-            local titleCol = { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }
-            local textCol = { R = 0.9, G = 0.9, B = 0.95, A = 1.0 }
-
-            -- Draw Card Background & Shadow
-            hud:DrawRect(shadowCol, cardX - 2.0, cardY - 2.0, cardW + 4.0, cardH + 4.0)
-            hud:DrawRect(bgCol, cardX, cardY, cardW, cardH)
-            hud:DrawRect(borderCol, cardX, cardY, cardW, 3.0)
-
-            -- Header: Region Name & Progress
-            local pct = regStats and regStats.percent or 0
-            utils.DrawText(hud, "📍 " .. activeRegName, titleCol, cardX + 15.0, cardY + 12.0, 1.0, false)
-            utils.DrawText(hud, pct .. "% Completed", { R = 0.0, G = 0.96, B = 0.83, A = 1.0 }, cardX + cardW - 120.0, cardY + 12.0, 0.9, false)
-
-            -- Progress Bar
-            local barX = cardX + 15.0
-            local barY = cardY + 38.0
-            local barW = cardW - 30.0
-            local barH = 6.0
-            hud:DrawRect({ R = 0.15, G = 0.15, B = 0.25, A = 0.8 }, barX, barY, barW, barH)
-            local fillW = math.max(0.0, math.min(barW, barW * (pct / 100.0)))
-            if fillW > 0 then
-                hud:DrawRect({ R = 0.0, G = 0.96, B = 0.83, A = 0.9 }, barX, barY, fillW, barH)
-            end
-
-            -- Stat Lines
-            if regStats then
-                local line1 = string.format("🗿 Effigies: %d/%d   👹 Alphas: %d/%d", 
-                    regStats.effigies.collected, regStats.effigies.total,
-                    regStats.alphas.defeated, regStats.alphas.total)
-                local line2 = string.format("🦅 Fast Travel: %d/%d  🏰 Towers: %d/%d  🎯 Bounties: %d/%d",
-                    regStats.fastTravels.unlocked, regStats.fastTravels.total,
-                    regStats.towers.defeated, regStats.towers.total,
-                    regStats.bounties.cleared, regStats.bounties.total)
-
-                utils.DrawText(hud, line1, textCol, cardX + 15.0, cardY + 54.0, 0.8, false)
-                utils.DrawText(hud, line2, textCol, cardX + 15.0, cardY + 84.0, 0.75, false)
-            end
-        end)
-    end
-
-    -- 10. Draw Full Completionist List Modal (if toggled open in menu)
-    if menu.isCompletionistViewOpen then
-        pcall(function()
-            local modalW = 540.0
-            local modalH = 600.0
-            local modalX = screenW - modalW - 40.0
-            local modalY = (screenH / 2.0) - (modalH / 2.0)
-
-            local bgCol = { R = 0.04, G = 0.06, B = 0.12, A = 0.92 }
-            local borderCol = { R = 0.0, G = 0.95, B = 1.0, A = 0.8 }
-            local shadowCol = { R = 0.0, G = 0.0, B = 0.0, A = 0.95 }
-            local headerCol = { R = 0.0, G = 0.95, B = 1.0, A = 1.0 }
-
-            -- Draw Panel Shadow & Base
-            hud:DrawRect(shadowCol, modalX - 2.0, modalY - 2.0, modalW + 4.0, modalH + 4.0)
-            hud:DrawRect(bgCol, modalX, modalY, modalW, modalH)
-            hud:DrawRect(borderCol, modalX, modalY, modalW, 4.0)
-
-            -- Header Title & Subtitle
-            utils.DrawText(hud, "🏆 REGIONAL COMPLETIONIST LIST", headerCol, modalX + 20.0, modalY + 16.0, 1.25, false)
-            local globPct = completion.globalSaveProgress and completion.globalSaveProgress.overallPercent or 0
-            utils.DrawText(hud, "Global Save Progress: " .. globPct .. "%", { R = 0.0, G = 0.96, B = 0.83, A = 1.0 }, modalX + modalW - 200.0, modalY + 18.0, 0.9, false)
-
-            -- Separator Line
-            hud:DrawRect({ R = 0.2, G = 0.25, B = 0.35, A = 0.5 }, modalX + 20.0, modalY + 48.0, modalW - 40.0, 1.0)
-
-            -- Render List of Regions
-            local startY = modalY + 60.0
-            local cardH = 70.0
-            local gapY = 6.0
-
-            for idx, reg in ipairs(completion.Regions) do
-                local rY = startY + (idx - 1) * (cardH + gapY)
-                local stats = completion.cachedRegionStats and completion.cachedRegionStats[reg.id]
-                local isCurr = (reg.id == completion.currentRegionId)
-
-                local rBg = isCurr and { R = 0.0, G = 0.3, B = 0.4, A = 0.35 } or { R = 0.08, G = 0.1, B = 0.18, A = 0.6 }
-                local rBorder = isCurr and { R = 0.0, G = 0.96, B = 0.83, A = 0.9 } or { R = 0.2, G = 0.2, B = 0.3, A = 0.4 }
-
-                hud:DrawRect(rBg, modalX + 20.0, rY, modalW - 40.0, cardH)
-                hud:DrawRect(rBorder, modalX + 20.0, rY, 3.0, cardH)
-
-                -- Region Title & Current Location Badge
-                local titleStr = (reg.icon or "") .. " " .. reg.name
-                if isCurr then titleStr = titleStr .. "  [CURRENT LOCATION]" end
-                local tCol = isCurr and { R = 0.0, G = 0.96, B = 0.83, A = 1.0 } or { R = 0.95, G = 0.95, B = 1.0, A = 1.0 }
-                utils.DrawText(hud, titleStr, tCol, modalX + 30.0, rY + 8.0, 0.95, false)
-
-                local regPct = stats and stats.percent or 0
-                utils.DrawText(hud, regPct .. "%", { R = 0.0, G = 0.96, B = 0.83, A = 1.0 }, modalX + modalW - 75.0, rY + 8.0, 0.9, false)
-
-                -- Details Line: Effigies, Alphas, Fast Travels, Watch Towers, Bounties
-                if stats then
-                    local detStr = string.format("🗿 Effigies: %d/%d   👹 Alphas: %d/%d   🦅 Fast Travel: %d/%d",
-                        stats.effigies.collected, stats.effigies.total,
-                        stats.alphas.defeated, stats.alphas.total,
-                        stats.fastTravels.unlocked, stats.fastTravels.total)
-                    local detStr2 = string.format("🏰 Watch Towers: %d/%d   🎯 Bounties: %d/%d",
-                        stats.towers.defeated, stats.towers.total,
-                        stats.bounties.cleared, stats.bounties.total)
-
-                    utils.DrawText(hud, detStr, { R = 0.8, G = 0.85, B = 0.9, A = 1.0 }, modalX + 30.0, rY + 30.0, 0.72, false)
-                    utils.DrawText(hud, detStr2, { R = 0.8, G = 0.85, B = 0.9, A = 1.0 }, modalX + 30.0, rY + 48.0, 0.72, false)
-                end
-            end
-        end)
     end
 end
 

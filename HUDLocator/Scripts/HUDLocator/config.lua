@@ -15,6 +15,8 @@ M.CONFIG = {
         KeyBinds = {
             Modifier = "ALT",
             ToggleMenu = "F6",
+            ToggleEditMode = "F7",
+            ResetCoords = "R",
             MenuUp = "UP_ARROW",
             MenuDown = "DOWN_ARROW",
             MenuLeft = "LEFT_ARROW",
@@ -227,7 +229,11 @@ M.CONFIG = {
         Enabled = true,
         ShowHUDTracker = true,
         ShowInMenu = true,
-        AutoHighlightRegion = true
+        AutoHighlightRegion = true,
+        HUDX = nil,
+        HUDY = nil,
+        HUDScale = 1.0,
+        HUDAnchor = "TopRight"
     }
 }
 
@@ -299,7 +305,10 @@ local defaultJSON = [[{
     "FontScale": 1.0,
     "Debug": false,
     "KeyBinds": {
+      "Modifier": "ALT",
       "ToggleMenu": "F6",
+      "ToggleEditMode": "F7",
+      "ResetCoords": "R",
       "MenuUp": "UP_ARROW",
       "MenuDown": "DOWN_ARROW",
       "MenuLeft": "LEFT_ARROW",
@@ -523,6 +532,16 @@ local defaultJSON = [[{
       "FontCharW": 8.0,
       "FontLineH": 12.0
     }
+  },
+  "Completionist": {
+    "Enabled": true,
+    "ShowHUDTracker": true,
+    "ShowInMenu": true,
+    "AutoHighlightRegion": true,
+    "HUDX": null,
+    "HUDY": null,
+    "HUDScale": 1.0,
+    "HUDAnchor": "TopRight"
   }
 }
 ]]
@@ -722,6 +741,26 @@ function M.LoadConfig()
         M.ConfigLoadedOnce = true
     else
         print("[HUDLocator] ERROR: Failed to write default config at: " .. newConfigPath)
+    end
+end
+
+M.EditModeActive = false
+
+function M.ToggleEditMode()
+    M.EditModeActive = not M.EditModeActive
+    if M.EditModeActive then
+        print("[HUDLocator] HUD Edit Mode Activated!")
+        pcall(function()
+            local popup = require("HUDLocator.popup")
+            popup.Show(M.GetTranslation("Popup_EditModeActive", "HUD Edit Mode Active\nUse Arrows to Move | +/- to Scale\nALT+R: Reset | ALT+F7: Save"), 180)
+        end)
+    else
+        print("[HUDLocator] HUD Edit Mode Deactivated! Saving layout changes...")
+        pcall(M.SaveConfig)
+        pcall(function()
+            local popup = require("HUDLocator.popup")
+            popup.Show(M.GetTranslation("Popup_EditModeSaved", "HUD Position Saved"), 120)
+        end)
     end
 end
 
