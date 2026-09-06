@@ -26,3 +26,6 @@
 ## 2024-03-24 - Cached String Allocation in Tick Rendering
 **Learning:** In UE4SS Lua mods, repeatedly concatenating strings (e.g., `distMeters .. "m"`) inside the `ReceiveDrawHUD` tick (which runs every frame) creates immense, unnecessary Garbage Collection (GC) thrashing and performance spikes over time, especially when tracking multiple entities on-screen.
 **Action:** For dynamic values like distance strings that are updated every frame, cache the resulting string locally on the entity's table and only recalculate/re-concatenate when the underlying scalar integer (like the floor value of meters) changes.
+## 2024-08-11 - Unused Table Allocations in Scanner Loops
+**Learning:** In high-frequency UE4SS Lua scanner loops (like iterating over thousands of Pals), declaring and populating tables that are never used downstream creates unnecessary Garbage Collection (GC) pressure and CPU overhead.
+**Action:** Always scan for and remove unused variable allocations, especially tables and string concatenations, within tight execution loops to prevent GC thrashing.
