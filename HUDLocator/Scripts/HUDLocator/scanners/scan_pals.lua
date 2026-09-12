@@ -209,26 +209,6 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                             pcall(function() indivParam = charParam:GetIndividualParameter() end)
                         end
 
-                        if indivParam and indivParam:IsValid() then
-                            local guidStr = nil
-                            pcall(function()
-                                local g = indivParam:GetIndividualId()
-                                if g then guidStr = g:ToString() end
-                            end)
-                            if not guidStr or guidStr == "" then
-                                pcall(function()
-                                    local saveP = indivParam.SaveParameter
-                                    if saveP and saveP.IndividualId then
-                                        guidStr = saveP.IndividualId:ToString()
-                                    end
-                                end)
-                            end
-                            if guidStr and guidStr ~= "" and guidStr ~= "00000000000000000000000000000000" then
-                                if seenGuids[guidStr] then return end
-                                seenGuids[guidStr] = true
-                            end
-                        end
-
                         local isDead = false
                         if indivParam and indivParam:IsValid() then
                             pcall(function() isDead = indivParam:IsDead() end)
@@ -273,7 +253,29 @@ function M.Scan(playerPos, maxDistSq, palConfig)
 
                         local isIgnored = isDead or (isOwned and not includeOwned)
                         if not isIgnored then
-                            local charIdStr = ""
+                            local isDuplicate = false
+                            if indivParam and indivParam:IsValid() then
+                                local guidStr = nil
+                                pcall(function()
+                                    local g = indivParam:GetIndividualId()
+                                    if g then guidStr = g:ToString() end
+                                end)
+                                if not guidStr or guidStr == "" then
+                                    pcall(function()
+                                        local saveP = indivParam.SaveParameter
+                                        if saveP and saveP.IndividualId then
+                                            guidStr = saveP.IndividualId:ToString()
+                                        end
+                                    end)
+                                end
+                                if guidStr and guidStr ~= "" and guidStr ~= "00000000000000000000000000000000" then
+                                    if seenGuids[guidStr] then isDuplicate = true end
+                                    seenGuids[guidStr] = true
+                                end
+                            end
+
+                            if not isDuplicate then
+                                local charIdStr = ""
                             if indivParam and indivParam:IsValid() then
                                 pcall(function()
                                     local cId = indivParam:GetCharacterID()
@@ -471,6 +473,7 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                                     DistStr = distStr,
                                     BracketDistStr = "[" .. distStr .. "]"
                                 })
+                            end
                             end
                         end
                     end
