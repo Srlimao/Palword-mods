@@ -29,3 +29,6 @@
 ## 2024-03-24 - Unused Table Allocations in Scanner Loops
 **Learning:** In high-frequency Lua scanner loops, allocating and populating tables that are never utilized downstream causes unnecessary Garbage Collection (GC) pressure and CPU overhead.
 **Action:** Always identify and remove unused table declarations (e.g., `palPassivesStr`) and their associated `table.insert` operations inside intensive iterative loops.
+## 2024-12-07 - [HUDLocator Scanner Optimization: Deferring GUID deductions]
+**Learning:** In UE4SS Lua loops, deduplicating loop items by allocating a string via `ToString()` on C++ property `GetIndividualId()` can create significant GC and reflection overhead when done unconditionally.
+**Action:** Always defer object deduplication that requires string conversions until *after* checking fast, basic boolean exclusions (e.g., `isDead`, `isOwned`). This short-circuits evaluation and skips the deduplication overhead for entities that will be ignored anyway.
