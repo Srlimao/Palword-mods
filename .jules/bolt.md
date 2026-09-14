@@ -32,3 +32,6 @@
 ## 2024-12-07 - [HUDLocator Scanner Optimization: Deferring GUID deductions]
 **Learning:** In UE4SS Lua loops, deduplicating loop items by allocating a string via `ToString()` on C++ property `GetIndividualId()` can create significant GC and reflection overhead when done unconditionally.
 **Action:** Always defer object deduplication that requires string conversions until *after* checking fast, basic boolean exclusions (e.g., `isDead`, `isOwned`). This short-circuits evaluation and skips the deduplication overhead for entities that will be ignored anyway.
+## 2026-09-14 - Optimization of Vector Normalization in Flight Camera
+**Learning:** Unconditional `math.sqrt` calculations for vector magnitude and limits in per-frame rendering hooks (e.g. `ReceiveDrawHUD`) unnecessarily waste CPU cycles, particularly when vectors are zero or within defined boundaries.
+**Action:** Codebase performance pattern: To optimize vector normalization or boundary checks in high-frequency loops (e.g., camera movement), calculate the squared length/distance first. Only compute `math.sqrt` if the squared value exceeds the required threshold (e.g., `lengthSq > 0.000001` or `limitRadius * limitRadius`), avoiding unconditional and expensive square root operations.
