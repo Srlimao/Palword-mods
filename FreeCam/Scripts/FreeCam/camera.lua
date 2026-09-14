@@ -187,8 +187,9 @@ function camera.UpdateCameraMovement()
     
     -- Apply speed
     -- Optimize: Use multiplication instead of exponentiation (`^2`)
-    local length = math.sqrt(moveDir.X * moveDir.X + moveDir.Y * moveDir.Y + moveDir.Z * moveDir.Z)
-    if length > 0.001 then
+    local lengthSq = moveDir.X * moveDir.X + moveDir.Y * moveDir.Y + moveDir.Z * moveDir.Z
+    if lengthSq > (0.001 * 0.001) then
+        local length = math.sqrt(lengthSq)
         currentCameraLocation.X = currentCameraLocation.X + (moveDir.X / length) * currentSpeed
         currentCameraLocation.Y = currentCameraLocation.Y + (moveDir.Y / length) * currentSpeed
         currentCameraLocation.Z = currentCameraLocation.Z + (moveDir.Z / length) * currentSpeed
@@ -200,8 +201,9 @@ function camera.UpdateCameraMovement()
         if origLoc then
             local dx = currentCameraLocation.X - origLoc.X
             local dy = currentCameraLocation.Y - origLoc.Y
-            local dist2D = math.sqrt(dx * dx + dy * dy)
-            if dist2D > limitRadius then
+            local distSq2D = dx * dx + dy * dy
+            if distSq2D > (limitRadius * limitRadius) then
+                local dist2D = math.sqrt(distSq2D)
                 local ratio = limitRadius / dist2D
                 currentCameraLocation.X = origLoc.X + dx * ratio
                 currentCameraLocation.Y = origLoc.Y + dy * ratio
