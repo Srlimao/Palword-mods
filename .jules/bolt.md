@@ -32,3 +32,6 @@
 ## 2024-12-07 - [HUDLocator Scanner Optimization: Deferring GUID deductions]
 **Learning:** In UE4SS Lua loops, deduplicating loop items by allocating a string via `ToString()` on C++ property `GetIndividualId()` can create significant GC and reflection overhead when done unconditionally.
 **Action:** Always defer object deduplication that requires string conversions until *after* checking fast, basic boolean exclusions (e.g., `isDead`, `isOwned`). This short-circuits evaluation and skips the deduplication overhead for entities that will be ignored anyway.
+## 2024-11-20 - [Camera Movement Math Optimization]
+**Learning:** In frame update loops, unconditionally calling `math.sqrt()` to calculate movement vector length when the entity is stationary generates unnecessary CPU overhead.
+**Action:** Calculate the squared length first (`lengthSq = dx*dx + dy*dy + dz*dz`) and only compute the square root if `lengthSq > 0.000001` (or your desired threshold).
