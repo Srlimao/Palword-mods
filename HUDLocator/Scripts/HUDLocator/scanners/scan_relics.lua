@@ -17,7 +17,7 @@ function M.Scan(playerPos, maxDistSq)
             pcall(function()
                 local ueRelicPos = relic:K2_GetActorLocation()
                 if ueRelicPos then
-                    local within, distSq = utils.IsWithinDistanceSq(ueRelicPos, playerPos, maxDistSq)
+                    local within, distSq, px, py, pz = utils.IsWithinDistanceSq(ueRelicPos, playerPos, maxDistSq)
                     -- Defer expensive C++ reflection check until after spatial distance check
                     if within and not utils.IsRelicPicked(relic) then
                         local name = nil
@@ -33,7 +33,7 @@ function M.Scan(playerPos, maxDistSq)
                             name = configMod.GetTranslation("Relic", "Relic")
                         end
                         local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                        table.insert(newRelics, { X = ueRelicPos.X, Y = ueRelicPos.Y, Z = ueRelicPos.Z, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
+                        table.insert(newRelics, { X = px, Y = py, Z = pz, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
                     end
                 end
             end)

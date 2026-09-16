@@ -32,3 +32,6 @@
 ## 2024-12-07 - [HUDLocator Scanner Optimization: Deferring GUID deductions]
 **Learning:** In UE4SS Lua loops, deduplicating loop items by allocating a string via `ToString()` on C++ property `GetIndividualId()` can create significant GC and reflection overhead when done unconditionally.
 **Action:** Always defer object deduplication that requires string conversions until *after* checking fast, basic boolean exclusions (e.g., `isDead`, `isOwned`). This short-circuits evaluation and skips the deduplication overhead for entities that will be ignored anyway.
+## 2025-01-20 - Reusing Coordinates from Helper Functions
+**Learning:** In UE4SS Lua, when checking spatial distance using a helper function like `IsWithinDistanceSq`, the helper often reads C++ FVector components (X, Y, Z). Re-reading these properties downstream triggers redundant, expensive C++ reflection lookups.
+**Action:** Modify distance checking functions to return the cached native `px, py, pz` values alongside the boolean result. Reuse these returned values in scanner scripts to eliminate redundant C++ reflection calls per active tracked entity.
