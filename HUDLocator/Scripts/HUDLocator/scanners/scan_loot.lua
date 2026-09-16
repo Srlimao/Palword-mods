@@ -88,7 +88,7 @@ function M.Scan(playerPos, maxDistSq, filters)
             pcall(function()
                 local ueLootPos = actor:K2_GetActorLocation()
                 if ueLootPos then
-                    local within, distSq = utils.IsWithinDistanceSq(ueLootPos, playerPos, maxDistSq)
+                    local within, distSq, px, py, pz = utils.IsWithinDistanceSq(ueLootPos, playerPos, maxDistSq)
                     if within then
                         local name, itemIdStr = GetItemDetails(actor)
                         if name and name ~= "" then
@@ -108,7 +108,7 @@ function M.Scan(playerPos, maxDistSq, filters)
                             
                             if shouldAdd then
                                 local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                                table.insert(newLoot, { X = ueLootPos.X, Y = ueLootPos.Y, Z = ueLootPos.Z, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
+                                table.insert(newLoot, { X = px, Y = py, Z = pz, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
                             end
                         end
                     end

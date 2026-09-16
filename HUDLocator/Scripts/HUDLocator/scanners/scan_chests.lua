@@ -100,7 +100,7 @@ function M.Scan(playerPos, maxDistSq)
             pcall(function()
                 local ueChestPos = chest:K2_GetActorLocation()
                 if ueChestPos then
-                    local within, distSq = utils.IsWithinDistanceSq(ueChestPos, playerPos, maxDistSq)
+                    local within, distSq, px, py, pz = utils.IsWithinDistanceSq(ueChestPos, playerPos, maxDistSq)
                     -- Defer expensive C++ reflection check until after spatial distance check
                     if within and not utils.IsChestOpened(chest) then
                         local name = configMod.GetTranslation("Chest", "Chest")
@@ -154,7 +154,7 @@ function M.Scan(playerPos, maxDistSq)
 
                         if shouldAdd then
                             local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                            table.insert(newChests, { X = ueChestPos.X, Y = ueChestPos.Y, Z = ueChestPos.Z, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
+                            table.insert(newChests, { X = px, Y = py, Z = pz, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
                         end
                     end
                 end

@@ -196,7 +196,7 @@ function M.Scan(playerPos, maxDistSq, palConfig)
 
                 local uePos = actor:K2_GetActorLocation()
                 if uePos then
-                    local within, distSq = utils.IsWithinDistanceSq(uePos, playerPos, maxDistSq)
+                    local within, distSq, px, py, pz = utils.IsWithinDistanceSq(uePos, playerPos, maxDistSq)
                     if within then
                         local charParam = nil
                         pcall(function() charParam = actor:GetCharacterParameterComponent() end)
@@ -458,7 +458,7 @@ function M.Scan(playerPos, maxDistSq, palConfig)
 
                                 table.insert(newPals, {
                                     Actor = actor,
-                                    X = uePos.X, Y = uePos.Y, Z = uePos.Z,
+                                    X = px, Y = py, Z = pz,
                                     Name = formattedLabel,
                                     PalName = palName,
                                     Level = level,
