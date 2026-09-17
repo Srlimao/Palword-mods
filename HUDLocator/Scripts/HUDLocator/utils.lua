@@ -829,7 +829,7 @@ function M.IsWithinDistanceSq(uePos, playerPos, maxDistSq)
     local distSq = dxSq + dySq + dz * dz
     if distSq > maxDistSq then return false, math.huge end
 
-    return true, distSq
+    return true, distSq, px, py, pz
 end
 
 return M

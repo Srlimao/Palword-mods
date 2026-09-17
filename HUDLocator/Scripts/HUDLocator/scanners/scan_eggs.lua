@@ -17,7 +17,7 @@ function M.Scan(playerPos, maxDistSq, eggFilter)
             pcall(function()
                 local ueEggPos = egg:K2_GetActorLocation()
                 if ueEggPos then
-                    local within, distSq = utils.IsWithinDistanceSq(ueEggPos, playerPos, maxDistSq)
+                    local within, distSq, px, py, pz = utils.IsWithinDistanceSq(ueEggPos, playerPos, maxDistSq)
                     -- Defer expensive C++ reflection check until after spatial distance check
                     if within and not utils.IsEggPicked(egg) then
                         local sizeStr = ""
@@ -76,7 +76,7 @@ function M.Scan(playerPos, maxDistSq, eggFilter)
                             end
                             
                             local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                            table.insert(newEggs, { X = ueEggPos.X, Y = ueEggPos.Y, Z = ueEggPos.Z, SizePrefix = transSize, Name = name, FullName = transSize .. name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
+                            table.insert(newEggs, { X = px, Y = py, Z = pz, SizePrefix = transSize, Name = name, FullName = transSize .. name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
                         end
                     end
                 end

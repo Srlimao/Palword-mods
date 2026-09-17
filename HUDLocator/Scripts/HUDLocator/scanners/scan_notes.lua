@@ -17,7 +17,7 @@ function M.Scan(playerPos, maxDistSq)
             pcall(function()
                 local ueNotePos = note:K2_GetActorLocation()
                 if ueNotePos then
-                    local within, distSq = utils.IsWithinDistanceSq(ueNotePos, playerPos, maxDistSq)
+                    local within, distSq, px, py, pz = utils.IsWithinDistanceSq(ueNotePos, playerPos, maxDistSq)
                     -- Defer expensive C++ reflection check until after spatial distance check
                     if within and not utils.IsNotePicked(note) then
                         local name = nil
@@ -33,7 +33,7 @@ function M.Scan(playerPos, maxDistSq)
                             name = configMod.GetTranslation("Note", "Journal")
                         end
                         local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                        table.insert(newNotes, { X = ueNotePos.X, Y = ueNotePos.Y, Z = ueNotePos.Z, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
+                        table.insert(newNotes, { X = px, Y = py, Z = pz, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
                     end
                 end
             end)
