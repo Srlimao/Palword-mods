@@ -35,3 +35,7 @@
 ## 2024-12-08 - HUDLocator Scanner Optimization: Caching FVector Components
 **Learning:** In UE4SS Lua, repeatedly extracting properties from an Unreal Engine FVector (like `.X`, `.Y`, `.Z`) triggers slow C++ reflection. If a helper function like `IsWithinDistanceSq` already extracts these values for computation, making the calling script extract them again (e.g., to build a table) effectively doubles the C++ reflection overhead.
 **Action:** When evaluating spatial distance, have the helper function return the extracted native Unreal Engine `FVector` components `px`, `py`, `pz` alongside the boolean result. Reuse these returned values in the downstream scanner scripts to eliminate the redundant reflection lookups.
+
+## 2024-12-08 - HUDLocator Scanner Optimization: Deferring Actor Deduplication
+**Learning:** In UE4SS Lua loops (like scanning for loot or pals), deduplicating loop items by allocating a string via `actor:GetFullName()` causes massive Garbage Collection (GC) and C++ reflection overhead when done unconditionally on every entity.
+**Action:** Always defer object deduplication using strings (`GetFullName()`, `ToString()`) until *after* the fast spatial/distance check (`IsWithinDistanceSq`) validates they are actually nearby and worth processing.
