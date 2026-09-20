@@ -72,25 +72,25 @@ function M.Scan(playerPos, maxDistSq, filters)
     end
     
     local seen = {}
-    local uniqueActors = {}
-    for _, actor in ipairs(actors) do
-        local key = nil
-        pcall(function() key = actor:GetFullName() end)
-        key = key or tostring(actor)
-        if not seen[key] then
-            seen[key] = true
-            table.insert(uniqueActors, actor)
-        end
-    end
     
-    for _, actor in ipairs(uniqueActors) do
+    for _, actor in ipairs(actors) do
         if actor:IsValid() then
             pcall(function()
                 local ueLootPos = actor:K2_GetActorLocation()
                 if ueLootPos then
                     local within, distSq, px, py, pz = utils.IsWithinDistanceSq(ueLootPos, playerPos, maxDistSq)
                     if within then
-                        local name, itemIdStr = GetItemDetails(actor)
+                        -- ⚡ Bolt Performance Optimization:
+                        -- Defer object deduplication (which allocates strings via GetFullName)
+                        -- until AFTER the fast spatial distance check. This drastically reduces
+                        -- Garbage Collection (GC) pressure in the high-frequency loot scanning loop.
+                        local key = nil
+                        pcall(function() key = actor:GetFullName() end)
+                        key = key or tostring(actor)
+
+                        if not seen[key] then
+                            seen[key] = true
+                            local name, itemIdStr = GetItemDetails(actor)
                         if name and name ~= "" then
                             local shouldAdd = true
                             if filters and #filters > 0 then
@@ -110,6 +110,7 @@ function M.Scan(playerPos, maxDistSq, filters)
                                 local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
                                 table.insert(newLoot, { X = px, Y = py, Z = pz, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
                             end
+                        end
                         end
                     end
                 end
