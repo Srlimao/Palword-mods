@@ -189,15 +189,16 @@ function M.Scan(playerPos, maxDistSq, palConfig)
                 pcall(function() isHidden = actor.bHidden or (actor.IsHidden and actor:IsHidden()) end)
                 if isHidden then return end
 
-                local fullName = nil
-                pcall(function() fullName = actor:GetFullName() end)
-                if not fullName or seenActors[fullName] then return end
-                seenActors[fullName] = true
-
                 local uePos = actor:K2_GetActorLocation()
                 if uePos then
                     local within, distSq, px, py, pz = utils.IsWithinDistanceSq(uePos, playerPos, maxDistSq)
                     if within then
+                        -- Defer deduplication logic to avoid expensive string allocations and C++ reflection for distant objects
+                        local fullName = nil
+                        pcall(function() fullName = actor:GetFullName() end)
+                        if not fullName or seenActors[fullName] then return end
+                        seenActors[fullName] = true
+
                         local charParam = nil
                         pcall(function() charParam = actor:GetCharacterParameterComponent() end)
 
