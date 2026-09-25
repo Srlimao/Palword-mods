@@ -72,43 +72,38 @@ function M.Scan(playerPos, maxDistSq, filters)
     end
     
     local seen = {}
-    local uniqueActors = {}
     for _, actor in ipairs(actors) do
-        local key = nil
-        pcall(function() key = actor:GetFullName() end)
-        key = key or tostring(actor)
-        if not seen[key] then
-            seen[key] = true
-            table.insert(uniqueActors, actor)
-        end
-    end
-    
-    for _, actor in ipairs(uniqueActors) do
         if actor:IsValid() then
             pcall(function()
                 local ueLootPos = actor:K2_GetActorLocation()
                 if ueLootPos then
                     local within, distSq, px, py, pz = utils.IsWithinDistanceSq(ueLootPos, playerPos, maxDistSq)
                     if within then
-                        local name, itemIdStr = GetItemDetails(actor)
-                        if name and name ~= "" then
-                            local shouldAdd = true
-                            if filters and #filters > 0 then
-                                shouldAdd = false
-                                local lowerName = name:lower()
-                                local lowerId = (itemIdStr or ""):lower()
-                                for _, filter in ipairs(filters) do
-                                    local lowerFilter = tostring(filter):lower()
-                                    if string.find(lowerName, lowerFilter, 1, true) or string.find(lowerId, lowerFilter, 1, true) then
-                                        shouldAdd = true
-                                        break
+                        local key = nil
+                        pcall(function() key = actor:GetFullName() end)
+                        key = key or tostring(actor)
+                        if not seen[key] then
+                            seen[key] = true
+                            local name, itemIdStr = GetItemDetails(actor)
+                            if name and name ~= "" then
+                                local shouldAdd = true
+                                if filters and #filters > 0 then
+                                    shouldAdd = false
+                                    local lowerName = name:lower()
+                                    local lowerId = (itemIdStr or ""):lower()
+                                    for _, filter in ipairs(filters) do
+                                        local lowerFilter = tostring(filter):lower()
+                                        if string.find(lowerName, lowerFilter, 1, true) or string.find(lowerId, lowerFilter, 1, true) then
+                                            shouldAdd = true
+                                            break
+                                        end
                                     end
                                 end
-                            end
-                            
-                            if shouldAdd then
-                                local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
-                                table.insert(newLoot, { X = px, Y = py, Z = pz, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
+
+                                if shouldAdd then
+                                    local distStr = math.floor(math.sqrt(distSq) / 100.0) .. "m"
+                                    table.insert(newLoot, { X = px, Y = py, Z = pz, Name = name, DistStr = distStr, BracketDistStr = "[" .. distStr .. "]" })
+                                end
                             end
                         end
                     end
