@@ -60,23 +60,23 @@ end
 function camera.ToggleFreeCam()
     local pc = UEHelpers.GetPlayerController()
     if not pc or not pc:IsValid() then return end
-    
+
     local localPlayer = UEHelpers.GetPlayer()
     if not localPlayer or not localPlayer:IsValid() then return end
-    
+
     local builder = localPlayer.BuilderComponent
     if not builder or not builder:IsValid() then return end
-    
+
     if not isSpectating then
         local inBase, baseCampObj = helpers.GetPlayerBaseCamp(localPlayer)
-        
+
         -- Enforce BaseOnly restriction if enabled in configuration
         local baseOnlySetting = (config.CONFIG.BaseOnly == true)
         if baseOnlySetting and (not inBase or not baseCampObj) then
             print("[FreeCam] Cannot enable FreeCam: Player is not within Base Camp boundaries ('BaseOnly': true).")
             return
         end
-        
+
         -- Determine Flight Limit Radius
         local maxRangeMeters = tonumber(config.CONFIG.MaxRange) or 0.0
         if maxRangeMeters > 0 then
@@ -96,14 +96,14 @@ function camera.ToggleFreeCam()
             print("[FreeCam] Flight radius limit: Unlimited (BaseOnly=false, MaxRange=0)")
         end
     end
-    
+
     isSpectating = not isSpectating
-    
+
     if isSpectating then
         print("[FreeCam] FreeCam Enabled.")
         activePC = pc
         activePlayer = localPlayer
-        
+
         -- Setup sub-managers
         if not player_m.Setup(activePlayer, activePC) then
             isSpectating = false
@@ -115,7 +115,7 @@ function camera.ToggleFreeCam()
             return
         end
         builder_m.Setup(activePlayer)
-        
+
         -- Cache camera initial coordinates
         local camComp = camera_m.GetCameraComponent()
         if camComp and camComp:IsValid() then
@@ -125,20 +125,20 @@ function camera.ToggleFreeCam()
             local rP, rY, rR = rot.Pitch, rot.Yaw, rot.Roll
             if type(lX) == "userdata" and lX.get then lX = lX:get() lY = lY:get() lZ = lZ:get() end
             if type(rP) == "userdata" and rP.get then rP = rP:get() rY = rY:get() rR = rR:get() end
-            
+
             currentCameraLocation.X, currentCameraLocation.Y, currentCameraLocation.Z = lX, lY, lZ
             currentCameraRotation.Pitch, currentCameraRotation.Yaw, currentCameraRotation.Roll = rP, rY, rR
         end
-        
+
         hasLastSetAimLoc = false
     else
         print("[FreeCam] FreeCam Disabled.")
-        
+
         -- Teardown sub-managers
         player_m.Teardown(activePlayer, activePC)
         camera_m.Teardown(activePlayer, activePC)
         builder_m.Teardown(activePlayer)
-        
+
         activePC = nil
         activePlayer = nil
         hasLastSetAimLoc = false
@@ -153,80 +153,74 @@ function camera.UpdateCameraMovement()
         print("[FreeCam] Gamepad toggle shortcut detected!")
         camera.ToggleFreeCam()
     end
-    
+
     if not isSpectating or not activePC or not activePC:IsValid() or not activePlayer or not activePlayer:IsValid() then return end
-    
+
     local camComp = camera_m.GetCameraComponent()
     if not camComp or not camComp:IsValid() then return end
-    
+
     -- Sync camera rotation with ControlRotation
     local controlRot = activePC:GetControlRotation()
     currentCameraRotation.Pitch = controlRot.Pitch
     currentCameraRotation.Yaw = controlRot.Yaw
     currentCameraRotation.Roll = controlRot.Roll
-    
+
     -- Get camera direction vectors
     local ueForward = camComp:GetForwardVector()
     local ueRight = camComp:GetRightVector()
     local ueUp = camComp:GetUpVector()
-    
+
     local fX, fY, fZ = ueForward.X, ueForward.Y, ueForward.Z
     if type(fX) == "userdata" and fX.get then fX = fX:get() fY = fY:get() fZ = fZ:get() end
     forwardVec.X, forwardVec.Y, forwardVec.Z = fX, fY, fZ
-    
+
     local rX, rY, rZ = ueRight.X, ueRight.Y, ueRight.Z
     if type(rX) == "userdata" and rX.get then rX = rX:get() rY = rY:get() rZ = rZ:get() end
     rightVec.X, rightVec.Y, rightVec.Z = rX, rY, rZ
-    
+
     local uX, uY, uZ = ueUp.X, ueUp.Y, ueUp.Z
     if type(uX) == "userdata" and uX.get then uX = uX:get() uY = uY:get() uZ = uZ:get() end
     upVec.X, upVec.Y, upVec.Z = uX, uY, uZ
-    
+
     -- Poll flight inputs
     input.PollMovement(activePC, moveDir, forwardVec, rightVec, upVec)
-    
+
     -- Apply speed
-    -- ⚡ Bolt Performance Optimization:
-    -- Use multiplication instead of exponentiation (`^2`) and calculate squared length first.
-    -- Only compute the expensive math.sqrt if there's actual movement.
-    local lengthSq = moveDir.X * moveDir.X + moveDir.Y * moveDir.Y + moveDir.Z * moveDir.Z
-    if lengthSq > 0.000001 then
-        local length = math.sqrt(lengthSq)
+    -- Optimize: Use multiplication instead of exponentiation (`^2`)
+    local length = math.sqrt(moveDir.X * moveDir.X + moveDir.Y * moveDir.Y + moveDir.Z * moveDir.Z)
+    if length > 0.001 then
         currentCameraLocation.X = currentCameraLocation.X + (moveDir.X / length) * currentSpeed
         currentCameraLocation.Y = currentCameraLocation.Y + (moveDir.Y / length) * currentSpeed
         currentCameraLocation.Z = currentCameraLocation.Z + (moveDir.Z / length) * currentSpeed
     end
-    
+
     -- Limit camera's 2D horizontal movement to flight limit radius (if enforced)
     if limitRadius and limitRadius > 0 then
         local origLoc = player_m.GetOriginalPlayerLocation()
         if origLoc then
             local dx = currentCameraLocation.X - origLoc.X
             local dy = currentCameraLocation.Y - origLoc.Y
-            -- ⚡ Bolt Performance Optimization:
-            -- Compare squared distances first to avoid expensive math.sqrt operations in tight game loops
-            local dist2DSq = dx * dx + dy * dy
-            if dist2DSq > (limitRadius * limitRadius) then
-                local dist2D = math.sqrt(dist2DSq)
+            local dist2D = math.sqrt(dx * dx + dy * dy)
+            if dist2D > limitRadius then
                 local ratio = limitRadius / dist2D
                 currentCameraLocation.X = origLoc.X + dx * ratio
                 currentCameraLocation.Y = origLoc.Y + dy * ratio
             end
         end
     end
-    
+
     -- Update camera coordinates
     camera_m.Update(currentCameraLocation, currentCameraRotation)
-    
+
     -- Calculate reticle aim intersection location
     local aimDist, hitActor = helpers.GetAimDistanceAndLocation(activePlayer, camComp, currentCameraLocation, aimLocCache)
-    
+
     -- Update building/dismantling snap ranges and visual outlines
     builder_m.Update(activePlayer, activePC, currentCameraRotation, aimLocCache, aimDist, hitActor)
-    
+
     -- Teleport and re-hide player actor
     player_m.UpdateLocation(activePlayer, aimLocCache)
-    
+
     -- Save telemetry
     lastSetAimLoc.X = aimLocCache.X
     lastSetAimLoc.Y = aimLocCache.Y
