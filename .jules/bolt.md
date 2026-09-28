@@ -38,3 +38,6 @@
 ## 2024-12-07 - [HUDLocator Scanner Optimization: Deferring GUID deductions in Loot Scanner]
 **Learning:** In UE4SS Lua loops, deduplicating loop items by allocating a string via `ToString()` on C++ property `GetFullName()` creates significant GC and reflection overhead when done unconditionally, even for entities that are not within distance.
 **Action:** Always defer object deduplication that requires string conversions until *after* checking fast spatial exclusions (e.g., `IsWithinDistanceSq`). This short-circuits evaluation and skips the deduplication overhead for entities that will be ignored anyway.
+## 2024-12-07 - [HUDLocator Scanner Optimization: Deferring GUID deductions in Pal Scanner]
+**Learning:** In UE4SS Lua loops, deduplicating loop items by allocating a string via `ToString()` on C++ property `GetFullName()` creates significant GC and reflection overhead when done unconditionally, even for entities that are not within distance.
+**Action:** Always defer object deduplication that requires string conversions until *after* checking fast spatial exclusions (e.g., `IsWithinDistanceSq`). This short-circuits evaluation and skips the deduplication overhead for entities that will be ignored anyway.
